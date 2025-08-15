@@ -31,6 +31,13 @@ if [ "x$NS" = "x" ]; then
 	exit 37
 fi
 
+# Pull the clusterUrl value
+CU=$(grep clusterUrl $CFGFILE | awk '{ print $2 }')
+if [ "x$CU" = "x" ]; then
+	# Default to localhost
+	CU="https://127.0.0.1:6433"
+fi
+
 # Pull the storageclass value
 SC=$(grep storageclass $CFGFILE | awk '{ print $2 }')
 if [ "x$SC" = "x" ]; then
@@ -60,6 +67,7 @@ if [ $RC -ne 0 ]; then
 else
 	if [ "x$kubectl" = "xoc" ]; then
 		OCP=true
+		echo "Detected oc. Enabling OpenShift settings."
 	else
 		OCP=false
 	fi
@@ -97,6 +105,7 @@ fi
 # Update values.yaml
 $SED "s/\(  className:\).*$/\1 $SC/" $VALFILE
 $SED "s/\(namespace:\).*$/\1 $NS/" $VALFILE
+$SED "s;\(clusterUrl:\).*;\1 $CU;" $VALFILE
 $SED "s/\(    auditlog:\).*$/\1 $AL/" $VALFILE
 $SED "s/\(isOpenShift:\).*$/\1 $OCP/" $VALFILE
 $SED "s/\(licenseType:\).*$/\1 $LT/" $VALFILE
@@ -111,6 +120,7 @@ fi
 
 # Remove entries from config.yaml
 $SED '/namespace:/d' $CFGFILE
+$SED '/clusterUrl:/d' $CFGFILE
 $SED '/storageclass:/d' $CFGFILE
 $SED '/licenseType:/d' $CFGFILE
 $SED '/enableAuditLog:/d' $CFGFILE

@@ -147,6 +147,20 @@ get_namespace() {
 	done
 } #get_namespace
 
+get_clusterUrl() {
+	DCLUSTERURL=$($kubectl cluster-info | grep -i "control plane" | awk '{ print $NF }' | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g")
+	LOOPCHECK=$(echo $DCLUSTERURL | cut -d '/' -f 3 | cut -d '.' -f 1)
+	if [ "x$LOOPCHECK" = "x127" ]; then
+		printf "\nFound Kubernetes cluster URL of: $DCLUSTERURL\n"
+		printf "\nThis is a loopback address, which is not available from a pod.\n"
+		printf "Please provide the URL with the externally accessible IP address.\n\n"
+		read -p "ClusterUrl [$DCLUSTERURL]: " CLUSTERURL
+		CLUSTERURL=${CLUSTERURL:-$DCLUSTERURL}
+	else
+		CLUSTERURL=$DCLUSTERURL
+	fi
+} #get_clusterUrl
+
 get_storageclass() {
 	printf "\nWhich storageclass will be used for volumes?\n"
 	if [ $NUM_NODES -gt 1 ]; then
@@ -231,7 +245,7 @@ prompt_not_empty() {
 prompt() {
 	printf "\n"
 	DVALUE="$2"
-	read -p "${1} [$DVALUE]: " VALUE
+	read -r -p "${1} [$DVALUE]: " VALUE
 	VALUE=${VALUE:-$DVALUE}
 } #prompt
 
@@ -341,7 +355,7 @@ get_port(){
 get_host() {
 	HOST=""
 	printf "\nPlease provide the hostname or IP address of the $1 server.\n"
-	prompt_not_empty "Hostname / IP" "$(get_existing_value $2)" && HOST=$VALUE
+	prompt_not_empty "Hostname / IP" "$(get_existing_value "$2")" && HOST=$VALUE
 } #get_host
 
 get_ssl() {
@@ -420,21 +434,9 @@ get_dbtype() {
 
 get_tablespaces() {
 	printf "\nPlease specify the paths which will hold the tablespaces.\n\n"
-	DDBTBLDATA=$(get_existing_value tablespace.location.data)
-	DDBTBLIDX=$(get_existing_value tablespace.location.indexes)
-	while [ "x$DBTBLDATA" = "x" ]; do
-		read -r -p "Tablespace data path [$DDBTBLDATA]: " DBTBLDATA
-		if [ "x$DBTBLDATA" = "x" ]; then
-			printf "\nThe path cannot be empty.\n\n"
-		fi
-	done
+	prompt_not_empty "Tablespace data path" "$(get_existing_value tablespace.location.data)" && DBTBLDATA=$VALUE
+	prompt_not_empty "Tablespace index path" "$(get_existing_value tablespace.location.indexes)" && DBTBLIDX=$VALUE
 	DBTBLDATA=$(echo "$DBTBLDATA" | sed 's/\\/\\\\/g');
-	while [ "x$DBTBLIDX" = "x" ]; do
-		read -r -p "Tablespace index path [$DDBTBLIDX]: " DBTBLIDX
-		if [ "x$DBTBLIDX" = "x" ]; then
-			printf "\nThe path cannot be empty.\n\n"
-		fi
-	done
 	DBTBLIDX=$(echo "$DBTBLIDX" | sed 's/\\/\\\\/g');
 } #get_tablespaces
 
@@ -694,6 +696,7 @@ do_installation() {
 	printf "\n--> Installation\n"
 	get_namespace
 	get_storageclass
+	get_clusterUrl
 	get_installType
 	get_waitTimeout
 	get_mqPasswords
@@ -986,6 +989,7 @@ version: "24.12"
 general:
   install:
     namespace: $NAMESPACE
+    clusterUrl: $CLUSTERURL
     storageclass: $STORAGECLASS
     installType: $INSTALLTYPE
     licenseType: $LICTYPE

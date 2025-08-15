@@ -49,6 +49,17 @@ if [ "x$1" = "x" ]; then
 	$kubectl -n $NS -c isvgim exec $POD -- /bin/bash -c "rm /work/certs.tgz"
 	(cd ../config; tar zxf $CERTFILE)
 	rm $CERTFILE
+
+	printf "Updating pem files..."
+	cd ../config/certs
+	FILES=$(ls *.pem)
+	for FILE in $FILES; do
+		NAME=$(echo $FILE | cut -d '.' -f 1)
+		cat $NAME.crt $NAME.key > $NAME.pem
+	done
+	printf "Done!\n"
+	cd ../../bin
+
 	printf "Generating ConfigMaps..."
 	for TYPE in setup ldap db isvdi mq; do
 		./createConfigs.sh $TYPE > /dev/null

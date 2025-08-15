@@ -76,6 +76,10 @@ spec:
           value: {{ .Values.services.isvgim.ports.iiops | quote }}
         - name: LIBERTY_HTTPS_PORT
           value: {{ .Values.services.isvgim.ports.https | quote }}
+        - name: LIBERTY_VERIFY_HOSTNAME
+          value: {{ .Values.services.isvgim.config.libertyVerifyHostname | quote }}
+        - name: LIBERTY_TRANSACTION_TIMEOUT
+          value: {{ .Values.services.isvgim.config.libertyTransactionTimeout | quote }}
         - name: IM_LICENSE_TYPE
           valueFrom:
             fieldRef:

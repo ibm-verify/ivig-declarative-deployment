@@ -109,6 +109,16 @@ if [ -d $YMLDIR ]; then
 			# Remove license errata if present
 			$kubectl -n $NS delete --ignore-not-found=true cm ibm-licensing-upload-config
 			$kubectl -n $NS delete --ignore-not-found=true secret ibm-licensing-upload-token
+
+			# If any spark pods still exist, delete them
+			DRIVERPODS=$($kubectl -n $NS get pods | grep spark-csr | grep driver | awk '{ print $1 }')
+			for POD in $DRIVERPODS; do
+				$kubectl -n $NS delete pod $POD
+			done
+			EXECPODS=$($kubectl -n $NS get pods | grep spark-csr | grep executor | awk '{ print $1 }')
+			for POD in $EXECPODS; do
+				$kubectl -n $NS delete pod $POD
+			done
 		fi
 
 		if [ $K8SREMOVED -eq 1 ]; then

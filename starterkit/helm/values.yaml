@@ -10,15 +10,15 @@ clusterUrl: REPLACE_CLUSTER
 
 images:
   busybox: busybox:1.36-musl
-  isvgim: icr.io/isvg/identity-manager:11.0.0.0_IF1
-  isvdi: icr.io/isvdi/verify-directory-integrator-dispatcher:10.0.0.2
-  isvd: icr.io/isvd/verify-directory-server:10.0.3.0
-  isvdproxy: icr.io/isvd/verify-directory-proxy:10.0.3.0_IF3
-  isvdseed: icr.io/isvd/verify-directory-seed:10.0.3.0
+  isvgim: icr.io/isvg/identity-manager:11.0.0.0_IF2
+  isvdi: icr.io/isvdi/verify-directory-integrator-dispatcher:10.0.0.4
+  isvd: icr.io/isvd/verify-directory-server:10.0.3.1_IF2
+  isvdproxy: icr.io/isvd/verify-directory-proxy:10.0.3.1
+  isvdseed: icr.io/isvd/verify-directory-seed:10.0.3.1
   mq: icr.io/isvg/mq:9.4.0.7
   postgres: postgres:15.6-bookworm
   kuberbac: gcr.io/kubebuilder/kube-rbac-proxy:v0.16.0
-  kubegres: icr.io/kubegres:1.19
+  kubegres: icr.io/isvg/kubegres:1.19
   riskengine: icr.io/isvg/ivig-ae:11.0.0.0
 
 storage:
@@ -68,6 +68,8 @@ services:
       replicas: 1
       libertyLogMaxFileSize: 20
       libertyLogMaxFiles: 10
+      libertyVerifyHostname: true
+      libertyTransactionTimeout: 1200s
     ports:
       https: 9443
       iiop: 30809
