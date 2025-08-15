@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: isvgimdata2-rest
+  namespace: {{ .Values.namespace }}
+data:
+{{- range $path, $_ := .Files.Glob "data/rest/*" }}
+  {{ base $path }}: {{ $.Files.Get $path | quote }}
+{{- end }}

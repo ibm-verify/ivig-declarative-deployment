@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: isvgimconfig
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: isvgimconfig
+  template:
+    metadata:
+      labels:
+        app: isvgimconfig
+    spec:
+      imagePullSecrets:
+      - name: regcred
+      containers:
+      - name: isvgimconfig
+        image: {{ .Values.images.isvgim }}
+        command: ["/bin/bash", "-c"]
+        args:
+        - >
+          cp -rLv /tmp/isvgimks/* /tmp/isvgimdata/* /opt/ibm/wlp/usr/servers/defaultServer/config/data/ &&
+          /work/initIMContainer.sh config
+        imagePullPolicy: Always
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        - name: DEBUG_INIT
+          value: {{ .Values.services.isvgim.config.debugInitScripts | quote }}
+        - name: TZ
+          value: ":{{ .Values.timezone }}"
+        volumeMounts:
+        - mountPath: /tmp/isvgimcfg
+          name: config
+        - mountPath: /tmp/isvgimks
+          name: keystore
+        - mountPath: /tmp/isvgimdata
+          name: properties
+        - mountPath: /tmp/isvgimdata/rest
+          name: properties-rest
+      restartPolicy: Always
+      volumes:
+      - name: config
+        configMap:
+          name: isvgimconfig
+      - name: keystore
+        secret:
+          secretName: isvgimks
+          items:
+          - key: encryptionKey.properties
+            path: encryptionKey.properties
+         {{- range $path, $_ := .Files.Glob "data/keystore/**" }}
+          - key: {{ base $path | quote }}
+            path: {{ trimPrefix "data/" $path | quote }}
+         {{- end }}
+      - name: properties
+        configMap:
+          name: isvgimdata2
+      - name: properties-rest
+        configMap:
+          name: isvgimdata2-rest
