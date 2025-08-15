@@ -270,13 +270,13 @@ spec:
         - name: mqconfigtls
           mountPath: /etc/mqm/pki/keys/mykey
       - name: logs-liberty
-        image: {{ .Values.images.busybox }}
+        image: {{ .Values.images.isvgim }}
         args: [ "/bin/sh", "-c", "tail -n+1 -F /logs/console.log" ]
         volumeMounts:
         - name: logs
           mountPath: /logs
       - name: logs-im
-        image: {{ .Values.images.busybox }}
+        image: {{ .Values.images.isvgim }}
         args: [ "/bin/sh", "-c", "tail -n+1 -F /logs/ivig_console.log" ]
         volumeMounts:
         - name: logs

@@ -20,6 +20,10 @@ spec:
       - name: data-volume 
         persistentVolumeClaim: 
           claimName: postgres-pvc
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: {{ .Values.services.postgres.sharedMemory | quote }}
       - name: certs
         configMap:
           name: isvgimdb
@@ -80,3 +84,5 @@ spec:
         - name: init-script
           mountPath: /docker-entrypoint-initdb.d/primary_init_script.sh
           subPath: primary_init_script.sh
+        - name: dshm
+          mountPath: /dev/shm

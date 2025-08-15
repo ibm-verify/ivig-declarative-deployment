@@ -21,9 +21,15 @@ spec:
       configMap:
         name: isvgimdb
         defaultMode: 0640
+    - name: dshm
+      emptyDir:
+        medium: Memory
+        sizeLimit: {{ .Values.services.postgres.sharedMemory | quote }} 
     volumeMounts:
     - name: certs
       mountPath: /tmp/isvgimdb
+    - name: dshm
+      mountPath: /dev/shm
 
   env:
     - name: PG_ISVGIM_PASSWORD

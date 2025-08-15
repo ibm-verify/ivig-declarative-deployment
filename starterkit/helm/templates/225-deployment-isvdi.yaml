@@ -19,6 +19,15 @@ spec:
         configMap:
           name: isvgimsdi
           defaultMode: 0640
+      - name: init-script
+        projected:
+          sources:
+          - configMap:
+              name: isvgimsdi
+              items:
+                - key: setHostname.sh
+                  path: setHostname.sh
+                  mode: 0755
       - name: adapters
         persistentVolumeClaim:
           claimName: isvdi-pvc
@@ -31,6 +40,9 @@ spec:
         - containerPort: {{ .Values.services.isvdi.ports.api }}
           name: api
           protocol: TCP
+        - containerPort: {{ .Values.services.isvdi.ports.object }}
+          name: object
+          protocol: TCP
         env:
         - name: YAML_CONFIG_FILE
           value: /tmp/isvgimsdi/isvdi_config.yaml
@@ -41,3 +53,6 @@ spec:
           mountPath: /tmp/isvgimsdi
         - name: adapters
           mountPath: /opt/IBM/svgadapters
+        - name: init-script
+          mountPath: /home/isvdi/setHostname.sh
+          subPath: setHostname.sh

@@ -12,3 +12,6 @@ spec:
     - name: rmi
       port: {{ .Values.services.isvdi.ports.api }}
       protocol: TCP
+    - name: object
+      port: {{ .Values.services.isvdi.ports.object }}
+      protocol: TCP

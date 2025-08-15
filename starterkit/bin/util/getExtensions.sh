@@ -53,6 +53,7 @@ cp ${EARDIR}/lib/itim_server_api_*.jar ${EXAMPLES}/lib
 cp ${EARDIR}/lib/itim_server_*.jar ${EXAMPLES}/lib
 cp ${EARDIR}/lib/itim_ws_model_*.jar ${EXAMPLES}/lib
 cp ${EARDIR}/com.ibm.security.certmgr.core.rest-*.war/WEB-INF/lib/slf4j-api-*.jar ${EXAMPLES}/lib
+cp ${EARDIR}/lib/com.ibm.isim.util_*.jar ${EXAMPLES}/lib
 
 cp ${SERVERLIBDIR}/jlog-*.jar ${EXAMPLES}/lib
 cp ${SERVERLIBDIR}/commons-logging-*.jar ${EXAMPLES}/lib

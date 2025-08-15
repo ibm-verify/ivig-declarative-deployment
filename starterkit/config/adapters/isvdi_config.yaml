@@ -29,6 +29,7 @@ server:
 init:
   aux-config-programs:
     - command: /home/isvdi/adapterContainerScripts/initAdapterContainer.sh
+    - command: /home/isvdi/setHostname.sh
 
 keyfile:
   keys:
@@ -36,4 +37,3 @@ keyfile:
       label: ivig
   trusted-certificates:
     - "@/tmp/isvgimsdi/isvgimRootCA.crt"
-

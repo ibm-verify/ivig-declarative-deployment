@@ -1,975 +1,400 @@
 {
-  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/example.json",
+  "default": {},
+  "title": "Root Schema",
   "required": [
-    "policyType",
-    "additionalRequiredAttributes",
     "id",
     "name",
-    "parameters",
-    "policyCategory",
+    "description",
     "policyClass",
-    "rules",
-    "policyType",
-    "status",
+    "tntId",
+    "riskLevel",
+    "policyCategory",
+    "aggrInterval",
     "subscribedEvents",
+    "associatedEntities",
+    "rollupEntities",
+    "editable",
+    "countBasedAttributes",
+    "rules",
+    "parameters",
+    "policyType",
+    "lastEnabledTime",
     "decay",
+    "retentionPeriod",
+    "status",
+    "timeoutDuration",
     "type",
     "isDeleted",
-    "lastEnabledTime"
+    "decayParameters"
   ],
-  "oneOf": [
-    {
-      "type": "object",
-      "properties": {
-        "decay": {
-          "type": "boolean",
-          "enum": [
-            true
-          ]
-        },
-        "decayParameters": {
-          "oneOf": [
-            {
-              "$ref": "#/definitions/record:CsrGlobalSchema.data.policy.decayParameters"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "required": [
-        "decayParameters"
-      ]
-    },
-    {
-      "type": "object",
-      "properties": {
-        "decay": {
-          "default": false,
-          "type": "boolean",
-          "enum": [
-            false
-          ]
-        },
-        "decayParameters": {
-          "oneOf": [
-            {
-              "$ref": "#/definitions/record:CsrGlobalSchema.data.policy.decayParameters"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    }
-  ],
-  "policyType": {
-    "type": "string",
-    "enum": [
-      "CountBased",
-      "AttributeBased",
-      "Custom",
-      "Hybrid"
-    ]
-  },
-  "aggrInterval": {
-    "default": "minutes",
-    "oneOf": [
-      {
-        "type": "string"
-      },
-      {
-        "type": "null"
-      }
-    ]
-  },
-  "if": {
-    "properties": {
-      "policyType": {
-        "const": "CountBased"
-      }
-    },
-    "required": [
-      "policyType"
-    ]
-  },
-  "then": {
-    "required": [
-      "timeoutDuration",
-      "aggrInterval"
-    ]
-  },
   "properties": {
-    "additionalRequiredAttributes": {
-      "oneOf": [
-        {
-          "$ref": "#/definitions/record:CsrGlobalSchema.data.policy.additionalRequiredAttributes"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "aggrInterval": {
-      "oneOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "associatedEntities": {
-      "oneOf": [
-        {
-          "type": "array",
-          "items": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "tags": {
-      "oneOf": [
-        {
-          "type": "array",
-          "items": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "countBasedAttributes": {
-      "oneOf": [
-        {
-          "type": "array",
-          "items": {
-            "oneOf": [
-              {
-                "$ref": "#/definitions/record:CsrGlobalSchema.data.policy.countBasedAttributes"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "description": {
-      "oneOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "tntId": {
-      "oneOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "timeoutDuration": {
-      "default": "1 hour",
-      "oneOf": [
-        {
-          "type": "string",
-          "pattern": "^[0-999]+\\ +[hour|minutes|second]"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
     "id": {
-      "oneOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "editable": {
-      "oneOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "isDeleted": {
-      "oneOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "lastEnabledTime": {
-      "oneOf": [
-        {
-          "type": "long"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "metadata": {
-      "oneOf": [
-        {
-          "$ref": "#/definitions/record:CsrGlobalSchema.data.policy.metadata"
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "type": "string",
+      "default": "",
+      "title": "The id Schema"
     },
     "name": {
-      "oneOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "type": "string",
+      "default": "",
+      "title": "The name Schema"
     },
-    "parameters": {
-      "oneOf": [
-        {
-          "type": "array",
-          "items": {
-            "oneOf": [
-              {
-                "$ref": "#/definitions/record:CsrGlobalSchema.data.policy.parameters"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "policyCategory": {
-      "oneOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ]
+    "description": {
+      "type": "string",
+      "default": "",
+      "title": "The description Schema"
     },
     "policyClass": {
-      "oneOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "retentionPeriod": {
-      "default": "60 Days",
-      "oneOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "riskLevel": {
-      "oneOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "rollupEntities": {
-      "oneOf": [
-        {
-          "type": "array",
-          "items": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "rules": {
-      "oneOf": [
-        {
-          "type": "array",
-          "items": {
-            "oneOf": [
-              {
-                "$ref": "#/definitions/record:CsrGlobalSchema.data.policy.rules"
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "status": {
       "type": "string",
       "enum": [
-        "Active",
-        "Inactive"
+        "user",
+        "User",
+        "account",
+        "Account",
+        "application",
+        "Application",
+        "entitlement",
+        "Entitlement",
+        "assignment",
+        "Assignment",
+        "risk",
+        "Risk"
       ]
+    ,
+      "title": "The policyClass Schema"
+    },
+    "tntId": {
+      "type": "string",
+      "default": "",
+      "title": "The tntId Schema"
+    },
+    "riskLevel": {
+      "type": "string",
+      "enum": [
+        "custom",
+        "high",
+        "medium",
+        "low"
+      ],
+      "title": "The riskLevel Schema"
+    },
+    "policyCategory": {
+      "type": "string",
+      "default": "",
+      "title": "The policyCategory Schema"
+    },
+    "aggrInterval": {
+      "type": "string",
+      "default": "",
+      "title": "The aggrInterval Schema"
     },
     "subscribedEvents": {
-      "oneOf": [
-        {
-          "type": "array",
-          "items": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "type": "array",
+      "default": [],
+      "title": "The subscribedEvents Schema",
+      "items": {
+        "type": "string",
+        "title": "A Schema"
+      }
     },
     "type": {
       "type": "string",
       "enum": [
         "POLICY",
         "Policy"
-      ]
-    }
-  },
-  "definitions": {
-    "record:CsrGlobalSchema.data.policy.additionalRequiredAttributes": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "device": {
-          "oneOf": [
-            {
-              "type": "array",
-              "items": {
-                "oneOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "user": {
-          "oneOf": [
-            {
-              "type": "array",
-              "items": {
-                "oneOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "userDevice": {
-          "oneOf": [
-            {
-              "type": "array",
-              "items": {
-                "oneOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "record:CsrGlobalSchema.data.policy.countBasedAttributes": {
-      "type": "object",
-      "required": [
-        "count"
       ],
-      "additionalProperties": false,
-      "properties": {
-        "count": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+      "title": "The type Schema"
+    },
+    "associatedEntities": {
+      "type": "array",
+      "default": [],
+      "title": "The associatedEntities Schema",
+      "items": {
+        "type": "string",
+        "title": "A Schema"
+      }
+    },
+    "rollupEntities": {
+      "type": "array",
+      "default": [],
+      "title": "The rollupEntities Schema",
+      "items": {
+        "type": "string",
+        "default": "",
+        "title": "A Schema"
+      }
+    },
+    "editable": {
+      "type": "boolean",
+      "default": false,
+      "title": "The editable Schema"
+    },
+    "tags": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "string"
+      },
+      "title": "The tags Schema",
+      "default": []
+    },
+    "rules": {
+      "type": "array",
+      "title": "Rules Array",
+      "items": {
+        "type": "object",
+        "required": [
+          "condition",
+          "name",
+          "description",
+          "id",
+          "severityBasedScore",
+          "severityType",
+          "enabled"
+        ],
+        "properties": {
+          "condition": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "severityBasedScore": {
+            "type": "number"
+          },
+          "severityType": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          }
         }
       }
     },
-    "record:CsrGlobalSchema.data.policy.decayParameters": {
-      "type": "object",
-      "required": [
-        "decayFactor",
-        "freq",
-        "fun",
-        "startAfter"
+    "parameters": {
+      "type": [
+        "array",
+        "null"
       ],
-      "additionalProperties": false,
-      "properties": {
-        "decayFactor": {
-          "oneOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
+      "default": [],
+      "title": "The parameters Schema",
+      "items": {
+        "type": "object",
+        "properties": {
+          "defaultValue": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "Integer",
+              "String",
+              "Boolean",
+              "Double"
+            ]
+          },
+          "value": {
+            "type": [
+              "integer",
+              "string",
+              "boolean",
+              "number"
+            ]
+          }
         },
-        "freq": {
-          "oneOf": [
-            {
-              "type": "string",
-              "pattern": "^[0-999]+[HR|hr|Min|min]"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "fun": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "startAfter": {
-          "oneOf": [
-            {
-              "type": "integer",
-              "minimum": -9223372036854776000,
-              "maximum": 9223372036854776000
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
+        "required": [
+          "name",
+          "id",
+          "type",
+          "value",
+          "defaultValue"
+        ]
       }
     },
-    "record:CsrGlobalSchema.data.policy.metadata": {
+    "additionalRequiredAttributes": {
+      "type": ["object", "null"],
+      "default": {},
+      "title": "The additionalRequiredAttributes Schema",
+      "required": [],
+      "properties": {}
+    },
+    "metadata": {
       "type": "object",
+      "default": {},
+      "title": "The metadata Schema",
       "required": [
         "author",
         "createdDate",
         "lastUpdatedDate",
         "version"
       ],
-      "additionalProperties": false,
       "properties": {
         "author": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "type": "string",
+          "default": "",
+          "title": "The author Schema"
         },
         "createdDate": {
-          "oneOf": [
-            {
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "type": "string",
+          "default": "",
+          "title": "The createdDate Schema"
         },
         "lastUpdatedDate": {
-          "oneOf": [
-            {
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "type": "string",
+          "default": "",
+          "title": "The lastUpdatedDate Schema"
         },
         "version": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "type": "string",
+          "default": "",
+          "title": "The version Schema"
         }
       }
     },
-    "record:CsrGlobalSchema.data.policy.parameters": {
-      "type": "object",
-      "required": [
-        "defaultValue",
-        "id",
-        "name",
-        "type",
-        "value"
+    "policyType": {
+      "type": "string",
+      "enum": [
+        "CountBased",
+        "AttributeBased"
       ],
-      "additionalProperties": false,
+      "default": "AttributeBased",
+      "title": "The policyType Schema"
+    },
+    "countBasedAttributes": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "string",
+            "default": null
+          }
+        },
+        "required": [
+          "count"
+        ]
+      },
+      "title": "The countBasedAttributes Schema"
+    },
+    "lastEnabledTime": {
+      "type": "integer",
+      "default": 0,
+      "title": "The lastEnabledTime Schema"
+    },
+    "decay": {
+      "type": "boolean",
+      "default": false,
+      "title": "The decay Schema"
+    },
+    "retentionPeriod": {
+      "type": "string",
+      "default": "",
+      "title": "The retentionPeriod Schema"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Active",
+        "Inactive"
+      ],
+      "title": "The status Schema"
+    },
+    "timeoutDuration": {
+      "type": "string",
+      "default": "",
+      "title": "The timeoutDuration Schema"
+    },
+    "isDeleted": {
+      "type": "boolean",
+      "default": false,
+      "title": "The isDeleted Schema"
+    },
+    "decayParameters": {
+      "type": "object",
+      "default": {},
+      "title": "The decayParameters Schema",
+      "required": [
+        "decayFactor",
+        "freq",
+        "fun",
+        "startAfter"
+      ],
       "properties": {
-        "defaultValue": {
-          "oneOf": [
-            {
-              "type": "string"
-            }
-          ]
+        "decayFactor": {
+          "type": "number",
+          "default": 0,
+          "title": "The decayFactor Schema"
         },
-        "name": {
-          "oneOf": [
-            {
-              "type": "string"
-            }
-          ]
+        "freq": {
+          "type": "string",
+          "default": "",
+          "title": "The freq Schema"
         },
-        "type": {
-          "oneOf": [
-            {
-              "type": "string"
-            }
-          ]
+        "fun": {
+          "type": "string",
+          "default": "",
+          "title": "The fun Schema"
         },
-        "value": {
-          "oneOf": [
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "id": {
-          "oneOf": [
-            {
-              "type": "string"
-            }
-          ]
+        "startAfter": {
+          "type": "integer",
+          "default": 0,
+          "title": "The startAfter Schema"
         }
       }
-    },
-    "record:CsrGlobalSchema.data.policy.rules": {
-      "type": "object",
-      "required": [
-        "id",
-        "description",
-        "severityType",
-        "name",
-        "enabled",
-        "condition",
-        "severityBasedScore"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "id": {
-          "oneOf": [
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "description": {
-          "oneOf": [
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "severityType": {
-          "oneOf": [
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "name": {
-          "oneOf": [
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "condition": {
-          "oneOf": [
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "enabled": {
-          "oneOf": [
-            {
-              "type": "boolean"
-            }
-          ]
-        },
-        "severityBasedScore": {
-          "oneOf": [
-            {
-              "type": "integer",
-              "minimum": -9223372036854776000,
-              "maximum": 9223372036854776000
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
+    }
+  },
+  "additionalProperties": false,
+  "if": {
+    "properties": {
+      "policyType": {
+        "const": "AttributeBased"
       }
-    },
-    "record:CsrGlobalSchema.data.policy.rules.critical": {
-      "type": "object",
-      "required": [
-        "condition",
-        "enabled",
-        "id",
-        "name",
-        "severityBasedScore"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "condition": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "enabled": {
-          "oneOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "id": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "name": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "severityBasedScore": {
-          "oneOf": [
-            {
-              "type": "integer",
-              "minimum": -9223372036854776000,
-              "maximum": 9223372036854776000
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
+    }
+  },
+  "then": {
+    "properties": {
+      "countBasedAttributes": {
+        "type": [
+          "null",
+          "array"
+        ],
+        "default": [],
+        "items": {}
       }
-    },
-    "record:CsrGlobalSchema.data.policy.rules.high": {
-      "type": "object",
-      "required": [
-        "condition",
-        "enabled",
-        "id",
-        "name",
-        "severityBasedScore"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "condition": {
-          "oneOf": [
-            {
+    }
+  },
+  "else": {
+    "properties": {
+      "countBasedAttributes": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "properties": {
+            "count": {
               "type": "string"
-            },
-            {
-              "type": "null"
             }
-          ]
-        },
-        "enabled": {
-          "oneOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "id": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "name": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "severityBasedScore": {
-          "oneOf": [
-            {
-              "type": "integer",
-              "minimum": -9223372036854776000,
-              "maximum": 9223372036854776000
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "record:CsrGlobalSchema.data.policy.rules.low": {
-      "type": "object",
-      "required": [
-        "condition",
-        "enabled",
-        "id",
-        "name",
-        "severityBasedScore"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "condition": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "enabled": {
-          "oneOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "id": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "name": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "severityBasedScore": {
-          "oneOf": [
-            {
-              "type": "integer",
-              "minimum": -9223372036854776000,
-              "maximum": 9223372036854776000
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "record:CsrGlobalSchema.data.policy.rules.medium": {
-      "type": "object",
-      "required": [
-        "condition",
-        "enabled",
-        "id",
-        "name",
-        "severityBasedScore"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "condition": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "enabled": {
-          "oneOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "id": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "name": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "severityBasedScore": {
-          "oneOf": [
-            {
-              "type": "integer",
-              "minimum": -9223372036854776000,
-              "maximum": 9223372036854776000
-            },
-            {
-              "type": "null"
-            }
+          },
+          "required": [
+            "count"
           ]
         }
       }
