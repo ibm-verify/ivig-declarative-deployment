@@ -94,7 +94,6 @@ fi
 POD=$($kubectl -n $NS get pods | grep isvgimconfig | grep Running | awk '{ print $1 }')
 # Collect admin credentials for database
 printf "\nCollecting DB Administrator credentials\n"
-printf "The DB2 Instance owner credentials are required.\n"
 printf "Leave blank to use value from original install.\n\n"
 read -p 'DB Admin: ' ADMUSER
 read -sp 'DB Admin Password: ' ADMPASS

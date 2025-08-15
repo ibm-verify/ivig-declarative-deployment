@@ -1038,6 +1038,13 @@
                         "null",
                         "string"
                       ]
+                    },
+                    {
+                      "name": "isLastActionAutomatic",
+                      "type": [
+                        "null",
+                        "boolean"
+                      ]
                     }
                   ]
                 }

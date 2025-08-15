@@ -731,6 +731,11 @@
                   "name": "creationTime",
                   "type": "string",
                   "nullable": true
+                },
+                {
+                  "name": "isLastActionAutomatic",
+                  "type": "boolean",
+                  "nullable": true
                 }
               ]
             },

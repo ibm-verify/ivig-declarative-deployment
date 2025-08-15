@@ -90,6 +90,14 @@
         "string"
       ],
       "default": null
+    },
+    {
+      "name": "isLastActionAutomatic",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
     }
   ]
 }

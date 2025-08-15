@@ -14,7 +14,7 @@ spec:
         app: isvgimconfig
     spec:
       imagePullSecrets:
-      {{ if hasPrefix "icr.io" .Values.images.isvgim }}- name: ibmcloud{{else}}- name: regcred{{end}}
+      - name: regcred
       containers:
       - name: isvgimconfig
         image: {{ .Values.images.isvgim }}

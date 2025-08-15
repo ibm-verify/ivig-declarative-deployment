@@ -36,7 +36,7 @@ spec:
         productChargedContainers: "All"
     spec:
       imagePullSecrets:
-      {{ if hasPrefix "icr.io" .Values.images.isvgim }}- name: ibmcloud{{else}}- name: regcred{{end}}
+      - name: regcred
       containers:
       - name: isvgim
         image: {{ .Values.images.isvgim }}

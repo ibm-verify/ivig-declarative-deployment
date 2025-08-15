@@ -5,7 +5,7 @@
 # *
 # * OCO Source Materials
 # *
-# * (C) COPYRIGHT IBM Corp.2024
+# * (C) COPYRIGHT IBM Corp.2025
 # *
 # * The source code for this program is not published or otherwise
 # * divested of its trade secrets, irrespective of what has been
@@ -30,7 +30,7 @@
 # inside the ISVDI dispatcher container instance.
 #
 # VERSION       Revision        DATE            CHANGES
-# 10.0.1     	000             03/27/2024      Initial release
+# 10.0.1     	000             03/27/2025      Initial release
 #
 #=================================================================
 
