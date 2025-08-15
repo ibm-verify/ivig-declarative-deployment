@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+spec:
+  volumes:
+    - name: store
+      configMap:
+        name: ivigrisk
+    - name: config
+      configMap:
+        name: isvgimconfig
+  containers:
+    - name: spark-kubernetes-driver # This will be interpreted as driver Spark main container
+      command: [ "/bin/sh", "-c", "tar zxf /tmp/storecfg/risk.tgz -C /tmp; /tmp/store/setup.sh; /opt/entrypoint.sh driver --properties-file /opt/spark/conf/spark.properties --class com.ibm.security.csr.streaming.core.job.CSRStreamingJob spark-internal" ]
+      volumeMounts:
+        - name: store
+          mountPath: /tmp/storecfg
+        - name: config
+          mountPath: /tmp/isvgimcfg

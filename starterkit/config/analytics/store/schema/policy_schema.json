@@ -1,0 +1,978 @@
+{
+  "type": "object",
+  "required": [
+    "policyType",
+    "additionalRequiredAttributes",
+    "id",
+    "name",
+    "parameters",
+    "policyCategory",
+    "policyClass",
+    "rules",
+    "policyType",
+    "status",
+    "subscribedEvents",
+    "decay",
+    "type",
+    "isDeleted",
+    "lastEnabledTime"
+  ],
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "decay": {
+          "type": "boolean",
+          "enum": [
+            true
+          ]
+        },
+        "decayParameters": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/record:CsrGlobalSchema.data.policy.decayParameters"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "decayParameters"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "decay": {
+          "default": false,
+          "type": "boolean",
+          "enum": [
+            false
+          ]
+        },
+        "decayParameters": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/record:CsrGlobalSchema.data.policy.decayParameters"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "policyType": {
+    "type": "string",
+    "enum": [
+      "CountBased",
+      "AttributeBased",
+      "Custom",
+      "Hybrid"
+    ]
+  },
+  "aggrInterval": {
+    "default": "minutes",
+    "oneOf": [
+      {
+        "type": "string"
+      },
+      {
+        "type": "null"
+      }
+    ]
+  },
+  "if": {
+    "properties": {
+      "policyType": {
+        "const": "CountBased"
+      }
+    },
+    "required": [
+      "policyType"
+    ]
+  },
+  "then": {
+    "required": [
+      "timeoutDuration",
+      "aggrInterval"
+    ]
+  },
+  "properties": {
+    "additionalRequiredAttributes": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/record:CsrGlobalSchema.data.policy.additionalRequiredAttributes"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "aggrInterval": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "associatedEntities": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "tags": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "countBasedAttributes": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/record:CsrGlobalSchema.data.policy.countBasedAttributes"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "description": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "tntId": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "timeoutDuration": {
+      "default": "1 hour",
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-999]+\\ +[hour|minutes|second]"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "id": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "editable": {
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "isDeleted": {
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "lastEnabledTime": {
+      "oneOf": [
+        {
+          "type": "long"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "metadata": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/record:CsrGlobalSchema.data.policy.metadata"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "name": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "parameters": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/record:CsrGlobalSchema.data.policy.parameters"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "policyCategory": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "policyClass": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "retentionPeriod": {
+      "default": "60 Days",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "riskLevel": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "rollupEntities": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "rules": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/record:CsrGlobalSchema.data.policy.rules"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Active",
+        "Inactive"
+      ]
+    },
+    "subscribedEvents": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "POLICY",
+        "Policy"
+      ]
+    }
+  },
+  "definitions": {
+    "record:CsrGlobalSchema.data.policy.additionalRequiredAttributes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "device": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "user": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "userDevice": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "record:CsrGlobalSchema.data.policy.countBasedAttributes": {
+      "type": "object",
+      "required": [
+        "count"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "count": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "record:CsrGlobalSchema.data.policy.decayParameters": {
+      "type": "object",
+      "required": [
+        "decayFactor",
+        "freq",
+        "fun",
+        "startAfter"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "decayFactor": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "freq": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-999]+[HR|hr|Min|min]"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fun": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "startAfter": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854776000,
+              "maximum": 9223372036854776000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "record:CsrGlobalSchema.data.policy.metadata": {
+      "type": "object",
+      "required": [
+        "author",
+        "createdDate",
+        "lastUpdatedDate",
+        "version"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "author": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "createdDate": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lastUpdatedDate": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "version": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "record:CsrGlobalSchema.data.policy.parameters": {
+      "type": "object",
+      "required": [
+        "defaultValue",
+        "id",
+        "name",
+        "type",
+        "value"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "defaultValue": {
+          "oneOf": [
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "name": {
+          "oneOf": [
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "type": {
+          "oneOf": [
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "value": {
+          "oneOf": [
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "id": {
+          "oneOf": [
+            {
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    "record:CsrGlobalSchema.data.policy.rules": {
+      "type": "object",
+      "required": [
+        "id",
+        "description",
+        "severityType",
+        "name",
+        "enabled",
+        "condition",
+        "severityBasedScore"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "oneOf": [
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "description": {
+          "oneOf": [
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "severityType": {
+          "oneOf": [
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "name": {
+          "oneOf": [
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "condition": {
+          "oneOf": [
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "enabled": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "severityBasedScore": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854776000,
+              "maximum": 9223372036854776000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "record:CsrGlobalSchema.data.policy.rules.critical": {
+      "type": "object",
+      "required": [
+        "condition",
+        "enabled",
+        "id",
+        "name",
+        "severityBasedScore"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "condition": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "enabled": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "severityBasedScore": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854776000,
+              "maximum": 9223372036854776000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "record:CsrGlobalSchema.data.policy.rules.high": {
+      "type": "object",
+      "required": [
+        "condition",
+        "enabled",
+        "id",
+        "name",
+        "severityBasedScore"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "condition": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "enabled": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "severityBasedScore": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854776000,
+              "maximum": 9223372036854776000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "record:CsrGlobalSchema.data.policy.rules.low": {
+      "type": "object",
+      "required": [
+        "condition",
+        "enabled",
+        "id",
+        "name",
+        "severityBasedScore"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "condition": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "enabled": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "severityBasedScore": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854776000,
+              "maximum": 9223372036854776000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "record:CsrGlobalSchema.data.policy.rules.medium": {
+      "type": "object",
+      "required": [
+        "condition",
+        "enabled",
+        "id",
+        "name",
+        "severityBasedScore"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "condition": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "enabled": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "severityBasedScore": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854776000,
+              "maximum": 9223372036854776000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

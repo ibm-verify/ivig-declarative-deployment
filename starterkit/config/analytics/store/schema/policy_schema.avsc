@@ -1,0 +1,598 @@
+{
+   "type":"record",
+   "name":"policy",
+   "namespace":"com.ibm.security.csr.global.schema.data",
+   "fields":[
+      {
+         "name":"additionalRequiredAttributes",
+         "type":[
+           "null",
+            {
+               "type":"record",
+               "name":"additionalRequiredAttributes",
+               "fields":[
+                  {
+                     "name":"device",
+                     "type":[
+                        "null",
+                        {
+                           "type":"array",
+                           "items":[
+                              "null",
+                              "string"
+                           ],
+                           "default": null
+                        }
+                     ],
+                     "default": null
+                  },
+                  {
+                     "name":"user",
+                     "type":[
+                        "null",
+                        {
+                           "type":"array",
+                           "items":[
+                              "null",
+                              "string"
+                           ],
+                           "default": null
+                        }
+                     ],
+                     "default": null
+                  },
+                  {
+                     "name":"userDevice",
+                     "type":[
+                        "null",
+                        {
+                           "type":"array",
+                           "items":[
+                              "null",
+                              "string"
+                           ],
+                           "default": null
+                        }
+                     ],
+                     "default": null
+                  }
+               ]
+            }
+         ],
+         "default": null
+      },
+      {
+         "name":"aggrInterval",
+         "type":[
+            "null",
+            "string"
+         ],
+         "default": null
+      },
+      {
+         "name":"associatedEntities",
+         "type":[
+            "null",
+            {
+               "type":"array",
+               "items":[
+                  "null",
+                  "string"
+               ],
+               "default": null
+            }
+         ],
+         "default": null
+      },
+      {
+         "name":"countBasedAttributes",
+         "type":[
+            "null",
+            {
+               "type":"array",
+               "items":[
+                  "null",
+                  {
+                     "type":"record",
+                     "name":"countBasedAttributes",
+                     "fields":[
+                        {
+                           "name":"count",
+                           "type":[
+                              "null",
+                              "string"
+                           ],
+                           "default": null
+                        }
+                     ]
+                  }
+               ],
+               "default": null
+            }
+         ],
+         "default": null
+      },
+      {
+         "name":"counterChangePolicyAttribute",
+         "type":[
+            "null",
+            {
+               "type":"record",
+               "name":"counterChangePolicyAttribute",
+               "fields":[
+                  {
+                     "name":"counterKeyField",
+                     "type":[
+                        "null",
+                        "string"
+                     ],
+                     "default": null
+                  },
+                  {
+                     "name":"counterValueField",
+                     "type":[
+                        "null",
+                        "string"
+                     ],
+                     "default": null
+                  },
+                  {
+                     "name":"decrementalValue",
+                     "type":[
+                        "null",
+                        "string"
+                     ],
+                     "default": null
+                  },
+                  {
+                     "name":"incrementalValue",
+                     "type":[
+                        "null",
+                        "string"
+                     ],
+                     "default": null
+                  },
+                  {
+                     "name":"lookupField",
+                     "type":[
+                        "null",
+                        "string"
+                     ],
+                     "default": null
+                  },
+                  {
+                     "name":"resetValue",
+                     "type":[
+                        "null",
+                        "string"
+                     ],
+                     "default": null
+                  }
+               ]
+            }
+         ],
+         "default": null
+      },
+      {
+         "name":"decay",
+         "type":[
+            "null",
+            "boolean"
+         ],
+         "default": null
+      },
+      {
+         "name":"decayParameters",
+         "type":[
+            "null",
+            {
+               "type":"record",
+               "name":"decayParameters",
+               "fields":[
+                    {
+                       "name":"decayFactor",
+                        "type":[
+                            "null",
+                            "double"
+                        ],
+                       "default": null
+                   },
+                   {
+                        "name":"freq",
+                        "type":[
+                           "null",
+                           "string"
+                        ],
+                      "default": null
+                   },
+                   {
+                      "name":"fun",
+                       "type":[
+                          "null",
+                          "string"
+                       ],
+                      "default": null
+                   },
+                   {
+                        "name":"startAfter",
+                        "type":[
+                            "null",
+                            "long"
+                        ],
+                      "default": null
+                   }
+               ]
+            }
+         ],
+         "default": null
+      },
+      {
+         "name":"description",
+         "type":[
+            "null",
+            "string"
+         ],
+         "default": null
+      },
+      {
+         "name":"editable",
+         "type":[
+            "null",
+            "boolean"
+         ],
+         "default": null
+      },
+      {
+         "name":"id",
+         "type":[
+            "null",
+            "string"
+         ],
+         "default": null
+      },
+      {
+         "name":"isDeleted",
+         "type":[
+            "null",
+            "boolean"
+         ],
+         "default": null
+      },
+      {
+         "name":"lastEnabledTime",
+         "type":[
+            "null",
+            "long"
+         ],
+         "default": null
+      },
+      {
+         "name":"metadata",
+         "type":[
+            "null",
+            {
+               "type":"record",
+               "name":"metadata",
+               "fields":[
+                  {
+                     "name":"author",
+                     "type":[
+                        "null",
+                        "string"
+                     ],
+                     "default": null
+                  },
+                  {
+                     "name":"createdDate",
+                     "type":[
+                        "null",
+                        "string"
+                     ],
+                     "default": null
+                  },
+                  {
+                     "name":"lastUpdatedDate",
+                     "type":[
+                        "null",
+                        "string"
+                     ],
+                     "default": null
+                  },
+                  {
+                     "name":"version",
+                     "type":[
+                        "null",
+                        "string"
+                     ],
+                     "default": null
+                  }
+               ]
+            }
+         ],
+         "default": null
+      },
+      {
+         "name":"name",
+         "type":[
+            "null",
+            "string"
+         ],
+         "default": null
+      },
+      {
+         "name":"tntId",
+         "type":[
+            "null",
+            "string"
+         ],
+         "default": null
+      },
+      {
+         "name":"parameters",
+         "type":[
+            "null",
+            {
+               "type":"array",
+               "items":[
+                  "null",
+                  {
+                     "type":"record",
+                     "name":"parameters",
+                     "fields":[
+                        {
+                           "name":"defaultValue",
+                           "type":[
+                              "null",
+                              "string"
+                           ],
+                           "default": null
+                        },
+                        {
+                           "name":"id",
+                           "type":[
+                              "null",
+                              "string"
+                           ],
+                           "default": null
+                        },
+                        {
+                           "name":"name",
+                           "type":[
+                              "null",
+                              "string"
+                           ],
+                           "default": null
+                        },
+                        {
+                           "name":"type",
+                           "type":[
+                              "null",
+                              "string"
+                           ],
+                           "default": null
+                        },
+                        {
+                           "name":"value",
+                           "type":[
+                              "null",
+                              "string"
+                           ],
+                           "default": null
+                        }
+                     ]
+                  }
+               ],
+               "default": null
+            }
+         ],
+         "default": null
+      },
+      {
+         "name":"policyCategory",
+         "type":[
+            "null",
+            "string"
+         ],
+         "default": null
+      },
+      {
+         "name":"policyClass",
+         "type":[
+            "null",
+            "string"
+         ],
+         "default": null
+      },
+      {
+         "name":"policyType",
+         "type":[
+            "null",
+            "string"
+         ],
+         "default": null
+      },
+      {
+         "name":"retentionPeriod",
+         "type":[
+            "null",
+            "string"
+         ],
+         "default": null
+      },
+      {
+         "name":"riskLevel",
+         "type":[
+            "null",
+            "string"
+         ],
+         "default": null
+      },
+      {
+         "name":"rollupEntities",
+         "type":[
+            "null",
+            {
+               "type":"array",
+               "items":[
+                  "null",
+                  "string"
+               ],
+               "default": null
+            }
+         ],
+         "default": null
+      },
+      {
+         "name":"remediationActions",
+         "type":[
+            "null",
+            {
+               "type":"array",
+               "items":[
+                  "null",
+                  "string"
+               ],
+               "default": null
+            }
+         ],
+         "default": null
+      },
+      {
+         "name":"rules",
+         "type":[
+            "null",
+            {
+               "type":"array",
+               "items":[
+                  "null",
+                  {
+                     "type":"record",
+                     "name":"rules",
+                     "fields":[
+                        {
+                           "name":"condition",
+                           "type":[
+                              "null",
+                              "string"
+                           ],
+                           "default": null
+                        },{
+                           "name":"description",
+                           "type":[
+                              "null",
+                              "string"
+                           ],
+                           "default": null
+                        },
+                        {
+                           "name":"enabled",
+                           "type":[
+                              "null",
+                              "boolean"
+                           ],
+                           "default": null
+                        },
+                        {
+                           "name":"id",
+                           "type":[
+                              "null",
+                              "string"
+                           ],
+                           "default": null
+                        },
+                        {
+                           "name":"name",
+                           "type":[
+                              "null",
+                              "string"
+                           ],
+                           "default": null
+                        },
+                        {
+                           "name":"severityBasedScore",
+                           "type":[
+                              "null",
+                              "long"
+                           ],
+                           "default": null
+                        },
+                        {
+                           "name":"severityType",
+                           "type":[
+                              "null",
+                              "string"
+                           ],
+                           "default": null
+                        }
+                     ]
+                  }
+               ],
+               "default": null
+            }
+         ],
+         "default": null
+      },
+      {
+         "name":"status",
+         "type":[
+            "null",
+            "string"
+         ],
+         "default": null
+      },
+      {
+         "name":"subscribedEvents",
+         "type":[
+            "null",
+            {
+               "type":"array",
+               "items":[
+                  "null",
+                  "string"
+               ],
+               "default": null
+            }
+         ],
+         "default": null
+      },
+      {
+         "name":"subscribedEventKey",
+         "type":[
+            "null",
+            "string"
+         ],
+         "default": null
+      },
+      {
+         "name":"timeoutDuration",
+         "type":[
+            "null",
+            "string"
+         ],
+         "default": null
+      },
+      {
+         "name":"tags",
+         "type":[
+            "null",
+            {
+               "type":"array",
+               "items":[
+                  "null",
+                  "string"
+               ],
+               "default": null
+            }
+         ],
+         "default": null
+      },
+      {
+         "name":"type",
+         "type":[
+            "null",
+            "string"
+         ],
+         "default": null
+      }
+   ]
+}

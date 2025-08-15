@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: isvdi
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: isvdi
+  template: 
+    metadata:
+      labels:
+        app: isvdi
+    spec:
+      {{ if not .Values.isOpenShift }}securityContext:
+        fsGroup: 0{{end}}
+      volumes:
+      - name: config
+        configMap:
+          name: isvgimsdi
+          defaultMode: 0640
+      - name: adapters
+        persistentVolumeClaim:
+          claimName: isvdi-pvc
+      imagePullSecrets:
+      - name: regcred
+      containers:
+      - name: isvdi
+        image: {{ .Values.images.isvdi }}
+        ports:
+        - containerPort: {{ .Values.services.isvdi.ports.api }}
+          name: api
+          protocol: TCP
+        env:
+        - name: YAML_CONFIG_FILE
+          value: /tmp/isvgimsdi/isvdi_config.yaml
+        - name: TZ
+          value: ":{{ .Values.timezone }}"
+        volumeMounts:
+        - name: config
+          mountPath: /tmp/isvgimsdi
+        - name: adapters
+          mountPath: /opt/IBM/svgadapters

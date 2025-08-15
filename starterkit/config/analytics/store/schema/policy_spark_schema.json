@@ -1,0 +1,440 @@
+{
+  "type" : "struct",
+  "fields" : [ {
+    "name" : "data",
+    "type" : {
+      "type" : "struct",
+      "fields" : [ {
+        "name" : "entId",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "evtDetails",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "policy",
+        "type" : {
+          "type":"struct",
+          "fields":[
+            {
+              "name":"additionalRequiredAttributes",
+              "type":{
+                "type":"struct",
+                "fields":[
+                  {
+                    "name":"device",
+                    "type":{
+                      "type":"array",
+                      "elementType":"string",
+                      "containsNull":true
+                    },
+                    "nullable":true
+                  },
+                  {
+                    "name":"user",
+                    "type":{
+                      "type":"array",
+                      "elementType":"string",
+                      "containsNull":true
+                    },
+                    "nullable":true
+                  },
+                  {
+                    "name":"userDevice",
+                    "type":{
+                      "type":"array",
+                      "elementType":"string",
+                      "containsNull":true
+                    },
+                    "nullable":true
+                  }
+                ]
+              },
+              "nullable":true
+            },
+            {
+              "name":"aggrInterval",
+              "type":"string",
+              "nullable":true
+            },
+            {
+              "name":"associatedEntities",
+              "type":{
+                "type":"array",
+                "elementType":"string",
+                "containsNull":true
+              },
+              "nullable":true
+            },
+            {
+              "name":"countBasedAttributes",
+              "type":{
+                "type":"array",
+                "elementType":{
+                  "type":"struct",
+                  "fields":[
+                    {
+                      "name":"count",
+                      "type":"string",
+                      "nullable":true
+                    }
+                  ]
+                },
+                "containsNull":true
+              },
+              "nullable":true
+            },
+            {
+              "name":"counterChangePolicyAttribute",
+              "type":{
+                "type":"struct",
+                "fields":[
+                  {
+                    "name":"counterKeyField",
+                    "type":"string",
+                    "nullable":true
+                  },
+                  {
+                    "name":"counterValueField",
+                    "type":"string",
+                    "nullable":true
+                  },
+                  {
+                    "name":"decrementalValue",
+                    "type": "string",
+                    "nullable": true
+                  },
+                  {
+                    "name":"incrementalValue",
+                    "type": "string",
+                    "nullable": true
+                  },
+                  {
+                    "name":"lookupField",
+                    "type": "string",
+                    "nullable": true
+                  },
+                  {
+                    "name":"resetValue",
+                    "type": "string",
+                    "nullable": true
+                  }
+                ]
+              },
+              "nullable":true
+            },
+            {
+              "name":"decay",
+              "type":"boolean",
+              "nullable":true
+            },
+            {
+              "name":"decayParameters",
+              "type":{
+                "type":"struct",
+                "fields":[
+                  {
+                    "name":"decayFactor",
+                    "type":"double",
+                    "nullable":true
+                  },
+                  {
+                    "name":"freq",
+                    "type": "string",
+                    "nullable": true
+                  },
+                  {
+                    "name":"fun",
+                    "type": "string",
+                    "nullable": true
+                  },
+                  {
+                    "name":"startAfter",
+                    "type": "long",
+                    "nullable": true
+                  }
+                ]
+              },
+              "nullable":true
+            },
+            {
+              "name":"description",
+              "type":"string",
+              "nullable":true
+            },
+            {
+              "name":"editable",
+              "type":"boolean",
+              "nullable":true
+            },
+            {
+              "name":"id",
+              "type":"string",
+              "nullable":true
+            },
+            {
+              "name":"isDeleted",
+              "type":"boolean",
+              "nullable":true
+            },
+            {
+              "name":"lastEnabledTime",
+              "type":"long",
+              "nullable":true
+            },
+            {
+              "name":"metadata",
+              "type":{
+                "type":"struct",
+                "fields":[
+                  {
+                    "name":"author",
+                    "type":"string",
+                    "nullable":true
+                  },
+                  {
+                    "name":"createdDate",
+                    "type":"string",
+                    "nullable":true
+                  },
+                  {
+                    "name":"lastUpdatedDate",
+                    "type":"string",
+                    "nullable":true
+                  },
+                  {
+                    "name":"version",
+                    "type":"string",
+                    "nullable":true
+                  }
+                ]
+              },
+              "nullable":true
+            },
+            {
+              "name":"name",
+              "type":"string",
+              "nullable":true
+            },
+            {
+              "name":"parameters",
+              "type":{
+                "type":"array",
+                "elementType":{
+                  "type":"struct",
+                  "fields":[
+                    {
+                      "name":"defaultValue",
+                      "type":"string",
+                      "nullable":true
+                    },
+                    {
+                      "name":"id",
+                      "type":"string",
+                      "nullable":true
+                    },
+                    {
+                      "name":"name",
+                      "type":"string",
+                      "nullable":true
+                    },
+                    {
+                      "name":"type",
+                      "type":"string",
+                      "nullable":true
+                    },
+                    {
+                      "name":"value",
+                      "type":"string",
+                      "nullable":true
+                    }
+                  ]
+                },
+                "containsNull":true
+              },
+              "nullable":true
+            },
+            {
+              "name":"policyCategory",
+              "type":"string",
+              "nullable":true
+            },
+            {
+              "name":"policyClass",
+              "type":"string",
+              "nullable":true
+            },
+            {
+              "name":"policyType",
+              "type":"string",
+              "nullable":true
+            },
+            {
+              "name":"retentionPeriod",
+              "type":"string",
+              "nullable":true
+            },
+            {
+              "name":"riskLevel",
+              "type":"string",
+              "nullable":true
+            },
+            {
+              "name":"rollupEntities",
+              "type":{
+                "type":"array",
+                "elementType":"string",
+                "containsNull":true
+              },
+              "nullable":true
+            },
+            {
+              "name":"rules",
+              "type":{
+                "type":"array",
+                "elementType":{
+                  "type":"struct",
+                  "fields":[
+                    {
+                      "name":"condition",
+                      "type":"string",
+                      "nullable":true
+                    },
+                    {
+                      "name":"description",
+                      "type":"string",
+                      "nullable":true
+                    },
+                    {
+                      "name":"enabled",
+                      "type":"boolean",
+                      "nullable":true
+                    },
+                    {
+                      "name":"id",
+                      "type":"string",
+                      "nullable":true
+                    },
+                    {
+                      "name":"name",
+                      "type":"string",
+                      "nullable":true
+                    },
+                    {
+                      "name":"severityBasedScore",
+                      "type":"long",
+                      "nullable":true
+                    },
+                    {
+                      "name":"severityType",
+                      "type":"string",
+                      "nullable":true
+                    }
+                  ]
+                },
+                "containsNull":true
+              },
+              "nullable":true
+            },
+            {
+              "name":"status",
+              "type":"string",
+              "nullable":true
+            },
+            {
+              "name":"subscribedEvents",
+              "type":{
+                "type":"array",
+                "elementType":"string",
+                "containsNull":true
+              },
+              "nullable":true
+            },
+            {
+              "name":"subscribedEventKey",
+              "type":"string",
+              "nullable":true
+            },
+            {
+              "name":"timeoutDuration",
+              "type":"string",
+              "nullable":true
+            },
+            {
+              "name":"tags",
+              "type":{
+                "type":"array",
+                "elementType":"string",
+                "containsNull":true
+              },
+              "nullable":true
+            },
+            {
+              "name":"type",
+              "type":"string",
+              "nullable":true
+            }
+          ]
+        },
+        "nullable" : true,
+        "metadata" : { }
+      } ]
+    },
+    "nullable" : true,
+    "metadata" : { }
+  }, {
+    "name" : "evtCxt",
+    "type" : {
+      "type" : "struct",
+      "fields" : [ {
+        "name" : "action",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "evtTs",
+        "type" : "long",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "evtType",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "srcEvtId",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "type",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      } ]
+    },
+    "nullable" : true,
+    "metadata" : { }
+  }, {
+    "name" : "glbCxt",
+    "type" : {
+      "type" : "struct",
+      "fields" : [ {
+        "name" : "tntId",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "tntName",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      } ]
+    },
+    "nullable" : true,
+    "metadata" : { }
+  } ]
+}

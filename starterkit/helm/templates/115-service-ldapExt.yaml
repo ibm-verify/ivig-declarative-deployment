@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: isvd-external
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:
+  - port: {{ .Values.services.isvdproxy.ports.ldapsproxy }}
+    name: isvd-proxy-ldaps
+    protocol: TCP
+    nodePort: {{ .Values.services.isvdproxy.ports.node }}
+  selector:
+    app: isvd-proxy
+  type: NodePort
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ldapext-replica-1
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:
+  - port: {{ .Values.services.isvd.ports.ldaps }}
+    name: isvd-replica-1
+    protocol: TCP
+    nodePort: {{ add .Values.services.isvdproxy.ports.node 1 }}
+  selector:
+    app: isvd-replica-1
+  type: NodePort
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ldapext-replica-2
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:
+  - port: {{ .Values.services.isvd.ports.ldaps }}
+    name: isvd-replica-2
+    protocol: TCP
+    nodePort: {{ add .Values.services.isvdproxy.ports.node 2 }}
+  selector:
+    app: isvd-replica-2
+  type: NodePort

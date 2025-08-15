@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: riskengine-pvc
+  namespace: {{ .Values.namespace }}
+spec:
+  accessModes: [ "{{ .Values.storage.mode }}" ]
+  storageClassName: {{ .Values.storage.className }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.volumes.riskengine }}

@@ -1,0 +1,57 @@
+general:
+  id: isvd-replica-1
+  ports:
+    ldap: 0
+    ldaps: {{ .Values.services.isvd.ports.ldaps }}
+  license:
+  admin:
+    dn: "secret:isvdcred/admindn"
+    pwd: "secret:isvdcred/adminpwd"
+  audit:
+    enabled: {{ .Values.services.isvd.auditlog }}
+    log-to-file: false
+    json-format: true
+    group-eval: false
+    failure-only: false
+    groups-control: false
+    performance: false
+    pta-bind-info: false
+    operation:
+      add: true
+      bind: true
+      compare: true
+      delete: true
+      extended-op: true
+      extended-op-event: true
+      modify: true
+      modify-dn: true
+      search: true
+      unbind: true
+  pwd-policy:
+    enabled: false
+  ssl:
+    fips: {{ .Values.fips }}
+    protocols:
+      - "TLS12"
+      - "TLS13"
+    auth: ServerAuth
+    cert-label: isvgim
+  key-stash: B64:GAAAAHM1Q2lqMCtLYVppZUhOemprZi9XSGc9PThOcHIiXmA9RlB0Rji/nsd3MpTYvRzUn5joE804v57HdzKU2L0c1J+Y6BPNnceUEUr3I0I4v57HdzKU2L0c1J+Y6BPNnceUEUr3I0I/+VsYL0fIEQ==
+
+server:
+  replication:
+    admin:
+      pwd: "secret:isvdcred/adminpwd"
+  suffixes:
+    - dn: {{ .Values.services.isvd.rootSuffix }}
+      object-classes:
+        - domain
+      attributes:
+        - {{ .Values.services.isvd.rootSuffix }}
+
+keyfile:
+  keys:
+    - key: "@/var/isvd/config/isvd.pem"
+      label: isvgim
+  trusted-certificates:
+    - "@/var/isvd/config/isvgimRootCA.crt"
