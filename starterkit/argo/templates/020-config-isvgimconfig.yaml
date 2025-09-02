@@ -5,4 +5,7 @@ metadata:
   namespace: {{ .Values.namespace }}
 data:
 {{ tpl (.Files.Glob "config/config.yaml").AsConfig . | indent 2 }}
-{{ (.Files.Glob "config/certs/*").AsConfig | indent 2 }}
+{{- $files := .Files.Glob "{pre-init.sh,config/certs/*}" }}
+{{- if gt (len $files) 0 }}
+{{ $files.AsConfig | indent 2 }}
+{{- end -}}

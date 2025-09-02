@@ -8,6 +8,8 @@ general:
       - "TLS12"
       - "TLS13"
   license:
+    accept: {{ .Values.general.license.accepted }}
+    key: {{ .Values.general.license.isvdiKey }}
 
 advanced:
   - attr: api.on

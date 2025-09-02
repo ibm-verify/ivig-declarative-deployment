@@ -4,7 +4,7 @@ metadata:
   name: isvgimconfig
   namespace: {{ .Values.namespace }}
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: isvgimconfig
@@ -21,9 +21,9 @@ spec:
         command: ["/bin/bash", "-c"]
         args:
         - >
-          cp -rLv /tmp/isvgimks/* /tmp/isvgimdata/* /opt/ibm/wlp/usr/servers/defaultServer/config/data/ &&
+          /work/pre-init.sh &&
           /work/initIMContainer.sh config
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
         - name: POD_IP
           valueFrom:
@@ -34,6 +34,9 @@ spec:
           value: {{ .Values.services.isvgim.config.debugInitScripts | quote }}
         - name: TZ
           value: ":{{ .Values.timezone }}"
+        envFrom:
+        - secretRef:
+            name: extcreds
         volumeMounts:
         - mountPath: /tmp/isvgimcfg
           name: config
@@ -43,6 +46,9 @@ spec:
           name: properties
         - mountPath: /tmp/isvgimdata/rest
           name: properties-rest
+        - mountPath: /work/pre-init.sh
+          name: pre-init-script
+          subPath: pre-init.sh
       restartPolicy: Always
       volumes:
       - name: config
@@ -64,3 +70,12 @@ spec:
       - name: properties-rest
         configMap:
           name: isvgimdata2-rest
+      - name: pre-init-script
+        projected:
+          sources:
+          - configMap:
+              name: isvgimconfig
+              items:
+                - key: pre-init.sh
+                  path: pre-init.sh
+                  mode: 0755

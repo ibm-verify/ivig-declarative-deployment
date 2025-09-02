@@ -1,98 +1,24 @@
-version: "24.03"
+version: '24.12'
 general:
   install:
-    namespace: ivig
-    storageclass:
-    licenseType: PVU
-    licenseExternalObjectclass:
-    licenseExternalAttribute:
-    installType: local
-    waitTimeout: 120
-    useExternalRegistry: false
-    useSMTPMail: false
-    deployLdap: true
-    deployLdapHA: false
-    enableAuditLog: true
-    deployDb: true
-    deployDbHA: false
-    createTablespace: true
-    deployIsvdi: true
-    mqSharePwd:
-    mqAdminPwd:
+    createTablespace: {{ .Values.general.install.createTablespace }}
   license:
-    activationKey:
-    accepted:
-    ldapKey:
-    isvdiKey:
+    activationKey: {{ .Values.general.license.activationKey }}
+    accepted: true
+    riskKey: null
 server:
-  keypass:
-  truststore:
-  keystore:
-  hostname:
   options:
   - name: libertyMetrics
     enabled: false
     data:
-    - name: "userName"
-      value: "default"
-    - name: "password"
-      value: "default"
+    - name: userName
+      value: null
+    - name: password
+      value: null
   flags:
     disableTLSv12: false
     enableFIPS: false
-db:
-  user:
-  password:
-  dbtype:
-  ip:
-  port:
-  name: ivig
-  admin:
-  adminPwd:
-  security.protocol:
-  tablespace.location.data:
-  tablespace.location.indexes:
-ldap:
-  security.principal:
-  security.credentials:
-  defaulttenant.id:
-  organization.name:
-  ldapserver.ip:
-  ldapserver.port:
-  ldapserver.root: dc=ivig
-  security.protocol:
-mail:
-  authentication.type:
-  baseurl:
-  from:
-  host:
-  smtp.port:
-  smtp.starttls.enable:
-  smtp.auth:
-  smtp.auth.user:
-  smtp.auth.password:
-externalRegistry:
-  type:
-  realm:
-  useSSL:
-  ignoreCase:
-  registryHost:
-  registryPort:
-  baseDN:
-  bindDN:
-  bindPassword:
-  isimsystemPassword:
-  filterProperties:
-    groupFilter:
-    groupIdMap:
-    groupMemberIdMap:
-    userFilter:
-    userIdMap:
-  attributeConfiguration:
-    attributes:
-    - defaultValue:
-      entityType:
-      id:
-      name:
-      propertyName:
-      syntax:
+  hostname: null
+  truststore:
+  - '@isvgimRootCA.crt'
+  keystore: null

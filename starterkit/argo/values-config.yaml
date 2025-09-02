@@ -1,0 +1,41 @@
+general:
+  install:
+    createTablespace: true
+license:
+    activationKey:
+    accepted: true
+    ldapKey:
+    isvidKey:
+    riskKey:
+db:
+  user: postgres
+  password:
+  dbtype:
+  ip:
+  port:
+  name: ivig
+  admin: postgres
+  adminPwd:
+  security.protocol:
+  tablespace.location.data: /var/lib/postgresql/data/isvgimdata
+  tablespace.location.indexes: /var/lib/postgresql/data/isvgimindexes
+ldap:
+  security.principal: cn=root
+  security.credentials:
+  defaulttenant.id: demo
+  organization.name: Demo
+  ldapserver.ip:
+  ldapserver.port:
+  ldapserver.root: dc=ivig
+  security.protocol:
+mail:
+  authentication.type: basic
+  baseurl: https://foo.com/
+  from: ivig@foo.com
+  host: mailservice.mailpit.svc.cluster.local
+  smtp.port: 1025
+  smtp.starttls.enable: false
+  smtp.auth: true
+  smtp.auth.user: ivig
+  smtp.auth.password:
+  

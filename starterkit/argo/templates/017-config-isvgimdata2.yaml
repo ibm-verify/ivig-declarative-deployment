@@ -4,6 +4,10 @@ metadata:
   name: isvgimdata2
   namespace: {{ .Values.namespace }}
 data:
+{{- range $path, $_ := .Files.Glob "data-tpl/*.properties" }}
+  {{ base $path }}: |
+{{- tpl ($.Files.Get $path) $ | nindent 4 }}
+{{- end -}}
 {{- range $path, $_ := .Files.Glob "data/*" }}
 {{- if not (hasSuffix "encryptionKey.properties" $path) }}
   {{ base $path }}: {{ $.Files.Get $path | quote }}

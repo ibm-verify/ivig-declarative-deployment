@@ -40,11 +40,11 @@ spec:
       containers:
       - name: isvgim
         image: {{ .Values.images.isvgim }}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         command: ["/bin/bash", "-c"]
         args:
         - >
-          cp -rLv /tmp/isvgimks/* /tmp/isvgimdata/* /opt/ibm/wlp/usr/servers/defaultServer/config/data/ &&
+          /work/pre-init.sh &&
           sed -i 's/Xmx4096m/Xmx16384m/g' /opt/ibm/wlp/usr/servers/defaultServer/jvm.options &&
           sed -i 's/Xmx256m/Xmx8192m/g' /work/DBPurge.sh &&
           /work/initIMContainer.sh
@@ -157,6 +157,9 @@ spec:
               key: restsecret
         - name: TZ
           value: ":{{ .Values.timezone }}"
+        envFrom:
+        - secretRef:
+            name: extcreds
         volumeMounts:
         - mountPath: /tmp/isvgimks
           name: keystore
@@ -164,6 +167,9 @@ spec:
           name: properties
         - mountPath: /tmp/isvgimdata/rest
           name: properties-rest
+        - mountPath: /work/pre-init.sh
+          name: pre-init-script
+          subPath: pre-init.sh
         - mountPath: /tmp/spark
           name: spark
         - mountPath: /tmp/isvgimcfg
@@ -266,7 +272,7 @@ spec:
           timeoutSeconds: {{ .Values.services.mqlocal.probes.timeoutSeconds }}
         volumeMounts:
         - mountPath: /mnt/mqm
-          name: datadir               
+          name: datadir
         - mountPath: /etc/mqm/ISVGContainerQMgr.mqsc
           subPath: ISVGContainerQMgr.mqsc
           name: mqconfig
@@ -317,6 +323,15 @@ spec:
       - name: properties-rest
         configMap:
           name: isvgimdata2-rest
+      - name: pre-init-script
+        projected:
+          sources:
+          - configMap:
+              name: isvgimconfig
+              items:
+                - key: pre-init.sh
+                  path: pre-init.sh
+                  mode: 0755
       - name: spark
         configMap:
           name: ivigrisk
