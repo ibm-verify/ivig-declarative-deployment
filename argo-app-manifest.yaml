@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ivig-argo
+spec:
+  destination:
+    namespace: ivig-argo
+    server: https://kubernetes.default.svc
+  source:
+    path: StarterKit.uat/argo
+    repoURL: https://git.example.com/foobar/myproject.git
+    targetRevision: deployment/uat
+  sources: []
+  project: integrator
