@@ -38,4 +38,19 @@ mail:
   smtp.auth: true
   smtp.auth.user: ivig
   smtp.auth.password:
-  
+server:
+  options:
+  - name: libertyMetrics
+    enabled: false
+    data:
+    - name: userName
+      value: null
+    - name: password
+      value: null
+  flags:
+    disableTLSv12: false
+    enableFIPS: false
+  hostname: null
+  truststore:
+  - '@isvgimRootCA.crt'
+  keystore: null

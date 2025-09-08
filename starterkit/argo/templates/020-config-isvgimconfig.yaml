@@ -4,7 +4,19 @@ metadata:
   name: isvgimconfig
   namespace: {{ .Values.namespace }}
 data:
-{{ tpl (.Files.Glob "config/config.yaml").AsConfig . | indent 2 }}
+  config.yaml: |
+    version: '24.12'
+    general:
+      install:
+        createTablespace: {{ .Values.general.install.createTablespace }}
+      license:
+        activationKey: {{ .Values.general.license.activationKey }}
+        accepted: true
+        riskKey: {{ .Values.general.license.riskKey }}
+    server: {{ .Values.server | toYaml | nindent 6 }}
+    {{- if .Values.oidc}}
+    oidc: {{ .Values.oidc | toYaml | nindent 6 }}
+    {{- end }}
 {{- $files := .Files.Glob "{pre-init.sh,config/certs/*}" }}
 {{- if gt (len $files) 0 }}
 {{ $files.AsConfig | indent 2 }}
