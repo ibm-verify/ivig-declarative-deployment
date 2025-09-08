@@ -18,6 +18,7 @@ fi
 
 cd $(dirname ${BASH_SOURCE[0]})
 CERTFILE="../config/certs.tgz"
+CONTAINER="-c isvgim"
 NS=$(./sys/getNamespace.sh)
 kubectl=$(./sys/preReqCheck.sh)
 RC=$(echo $?)
@@ -26,7 +27,11 @@ if [ $RC -ne 0 ]; then
 	exit $RC
 fi
 
-POD=$($kubectl -n $NS get pods | grep isvgim-0 | awk '{ print $1 }')
+POD=$($kubectl -n $NS get pods | grep isvgim-0 | grep Running | awk '{ print $1 }')
+if [ "x$POD" = "x" ]; then
+	POD=$($kubectl -n $NS get pods | grep isvgimconfig | grep Running | awk '{ print $1 }')
+	CONTAINER=""
+fi
 if [ "x$POD" = "x" ]; then
 	echo "Unable to find name of ISVGIM pod using grep and awk"
 	echo "Try manually running: kubectl -n $NS get pods | grep isvgim-0 | awk '{ print \$1 }'"
@@ -35,9 +40,9 @@ fi
 
 # Collect the certs and upload them to the pod
 (cd ../config; tar zcf certs.tgz certs)
-$kubectl -n $NS -c isvgim cp $CERTFILE $POD:/work/certs.tgz
+$kubectl -n $NS $CONTAINER cp $CERTFILE $POD:/work/certs.tgz
 rm $CERTFILE
-$kubectl -n $NS -c isvgim exec $POD -- /work/renewCerts.sh $1
+$kubectl -n $NS $CONTAINER exec $POD -- /work/renewCerts.sh $1
 if [ $(echo $?) -ne 0 ]; then
 	echo "Unable to exec into pod."
 	exit 19
@@ -45,8 +50,8 @@ fi
 
 # Download the results and store them in ConfigMap
 if [ "x$1" = "x" ]; then
-	$kubectl -n $NS -c isvgim cp $POD:/work/certs.tgz $CERTFILE > /dev/null 2>&1
-	$kubectl -n $NS -c isvgim exec $POD -- /bin/bash -c "rm /work/certs.tgz"
+	$kubectl -n $NS $CONTAINER cp $POD:/work/certs.tgz $CERTFILE > /dev/null 2>&1
+	$kubectl -n $NS $CONTAINER exec $POD -- /bin/bash -c "rm /work/certs.tgz"
 	(cd ../config; tar zxf $CERTFILE)
 	rm $CERTFILE
 

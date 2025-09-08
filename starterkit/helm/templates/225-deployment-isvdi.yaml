@@ -48,6 +48,11 @@ spec:
           value: /tmp/isvgimsdi/isvdi_config.yaml
         - name: TZ
           value: ":{{ .Values.timezone }}"
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
         volumeMounts:
         - name: config
           mountPath: /tmp/isvgimsdi

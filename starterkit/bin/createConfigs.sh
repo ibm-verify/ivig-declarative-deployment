@@ -114,7 +114,7 @@ generate_isvdi() {
 
 generate_db() {
 	FILE=040-config-isvgimdb.yaml
-	$kubectl create configmap isvgimdb --from-file=$CFGDIR/db/pg_hba.conf --from-file=$CFGDIR/db/postgres.conf --from-file=$CFGDIR/certs/pgsql.crt --from-file=$CFGDIR/certs/pgsql.key --from-file=$CFGDIR/db/primary_init_script.sh --dry-run=client -o yaml --namespace=isvg-temp | sed 's/isvg-temp/{{ .Values.namespace }}/g' > "$YAMLDIR/$FILE"
+	$kubectl create configmap isvgimdb --from-file=$CFGDIR/db/pg_hba.conf --from-file=$CFGDIR/db/postgres.conf --from-file=$CFGDIR/certs --from-file=$CFGDIR/db/primary_init_script.sh --dry-run=client -o yaml --namespace=isvg-temp | sed 's/isvg-temp/{{ .Values.namespace }}/g' > "$YAMLDIR/$FILE"
 	if [ $(echo $?) -ne 0 ]; then
 		echo "kubectl failed to generate ConfigMap for db"
 		exit 11

@@ -78,6 +78,8 @@ spec:
           value: {{ .Values.services.isvgim.ports.https | quote }}
         - name: LIBERTY_VERIFY_HOSTNAME
           value: {{ .Values.services.isvgim.config.libertyVerifyHostname | quote }}
+        {{ if .Values.services.isvgim.config.libertyTrustLocalHosts }}- name: LIBERTY_TRUST_SDI
+          value: "*.{{ .Values.namespace }}.pod.cluster.local"{{end}}
         - name: LIBERTY_TRANSACTION_TIMEOUT
           value: {{ .Values.services.isvgim.config.libertyTransactionTimeout | quote }}
         - name: IM_LICENSE_TYPE
