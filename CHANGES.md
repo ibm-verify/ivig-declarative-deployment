@@ -2,7 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
-## 2.1.1 (2025-9-08)
+## 2.1.2 (2025-09-16)
+
+This version introduces following features:
+- Vault integration via External Secrets (optional) 
+- Deployment of ISVDI optional, controlled via the same flag `general.install.deployIsvdi` the original starterkit uses
+
+Interoperability with Vault is achieved via the use of External Secrets. The External Secrets Operator interacts with [HashiCorp Vault](https://www.vaultproject.io/), [IBM Cloud Secrets Manager](https://www.ibm.com/cloud/secrets-manager) or external secret management systems like [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/), [Google Secrets Manager](https://cloud.google.com/secret-manager), [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/), [CyberArk Conjur](https://www.conjur.org/).
+
+The optional Vault integration can be configured via `general.install.externalSecret` selectively for MQ, OIDC and platform credentials, and is disabled by default.
+
+Making the deployment of ISVDI optional demonstrates how the chart's content can be modularized without the additional complexity of using helm subcharts. The flag controlling this option is intentionally kept compatible with the original starterkit.
+
+This version also included minor cosmetic changes to improve readability/user experience.
+
+## 2.1.1 (2025-09-08)
 
 This version includes reworked logic for generating reduced (post-install) `config.yaml` in `isvgimconfig` configmap.
 - deprecates `config/config.yalm` and dynamically created one based on `values-config.yaml`
