@@ -4,7 +4,7 @@
 DEBUG=${DEBUG_INIT:-"false"}
 DEBUG=$(echo $DEBUG | awk '{ print tolower($1) }')
 if [ "$DEBUG" = "true" ]; then
-	set -x
+  set -x
 fi
 
 DATADIR="/opt/ibm/wlp/usr/servers/defaultServer/config/data"
@@ -14,11 +14,11 @@ inject_ext_cred() {
     echo "Skipping injection of empty $1"
     return 3
   fi
-  
+
   PATTERN=$2
   ENCRYPTED=$(/work/encryptionHelper.sh encrypt ${!1})
   FILE=$3
-  
+
   # PATTERN MUST be escaped upfront. ENCRYPTED will never contain ';'
   sed -i "s;\(${PATTERN}\).*\$;\1${ENCRYPTED};" ${DATADIR}/${FILE}
 }

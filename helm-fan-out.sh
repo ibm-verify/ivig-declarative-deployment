@@ -12,7 +12,7 @@ awk -vout="$1" -F": " '
     file=out"/"$2;
     if (!(file in filemap)) {
       filemap[file] = 1
-      print "Creating "file;
+      print "Writing "file;
       system ("mkdir -p $(dirname "file")");
     }
     print "---" >> file;

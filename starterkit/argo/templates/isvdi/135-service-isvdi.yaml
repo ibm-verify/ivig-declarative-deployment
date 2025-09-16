@@ -1,0 +1,16 @@
+{{- if .Values.general.install.deployIsvdi }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: isvdi
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: isvdi
+spec:
+  selector:
+    app: isvdi
+  ports:
+    - name: rmi
+      port: {{ .Values.services.isvdi.ports.api }}
+      protocol: TCP
+{{- end }}

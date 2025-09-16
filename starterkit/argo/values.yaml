@@ -22,7 +22,7 @@ images:
   riskengine: icr.io/isvg/ivig-ae:11.0.0.0
 
 storage:
-  className: vsan-tanzu
+  className: vsan
   mode: ReadWriteOnce
   volumes:
     isvd: 1Gi

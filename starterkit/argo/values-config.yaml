@@ -1,7 +1,12 @@
 general:
   install:
     createTablespace: true
-license:
+    deployIsvdi: true
+    externalSecret:
+      mqcreds: false
+      extcreds: false
+      oidccreds: false
+  license:
     activationKey:
     accepted: true
     ldapKey:

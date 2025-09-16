@@ -10,12 +10,12 @@ data:
       install:
         createTablespace: {{ .Values.general.install.createTablespace }}
       license:
-        activationKey: {{ .Values.general.license.activationKey }}
+        activationKey: {{ .Values.general.license.activationKey | default "null" }}
         accepted: true
-        riskKey: {{ .Values.general.license.riskKey }}
-    server: {{ .Values.server | toYaml | nindent 6 }}
+        riskKey: {{ .Values.general.license.riskKey | default "null" }}
+    server: {{- .Values.server | toYaml | nindent 6 }}
     {{- if .Values.oidc}}
-    oidc: {{ .Values.oidc | toYaml | nindent 6 }}
+    oidc: {{- .Values.oidc | toYaml | nindent 6 }}
     {{- end }}
 {{- $files := .Files.Glob "{pre-init.sh,config/certs/*}" }}
 {{- if gt (len $files) 0 }}
