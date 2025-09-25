@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.1.3 (2025-09-25)
+
+This version moves the credential injection and data folder initialization logic into initcontainers of both the `isvgimconfig` pod and the main application `isvgim`.
+
+Initcontiainers run when the deployment/stateful set is started and terminate once the initialization task is accomplished. The initialized data folder (containing the preconfigured property files with sensitive data encrypted) is copied to an ephemeral (non-persistent) volume shared by the initcontainer and the main container. One the initcontainer terminates, the main container is started, which takes configuration data from the shared ephemeral volume.
+
+This encapsulation of the initialization logic serves two purposes: ease of maintenance and security hardening. Ease of maintenance is realized through simpler, leaner main containers with reduced amount of references to other K8s resources, and the fact that each containers focuses on one particular task. Hardening happens by eliminating the need to expose sensitive data via environment variables within long running containers and thereby decreasing the attack surface (environment variables cannot be deleted within the lifecycle of a given container).
+
 ## 2.1.2 (2025-09-16)
 
 This version introduces following features:

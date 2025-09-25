@@ -15,13 +15,38 @@ spec:
     spec:
       imagePullSecrets:
       - name: regcred
+      initContainers:
+      - name: init-isvgimdata
+        image: {{ .Values.images.isvgim }}
+        command: ["/work/pre-init.sh"]
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: DEBUG_INIT
+          value: {{ .Values.services.isvgim.config.debugInitScripts | quote }}
+        - name: TZ
+          value: ":{{ .Values.timezone }}"
+        envFrom:
+        - secretRef:
+            name: extcreds
+        volumeMounts:
+        - mountPath: /tmp/isvgimks
+          name: keystore
+        - mountPath: /tmp/isvgimdata
+          name: properties
+        - mountPath: /tmp/isvgimdata/rest
+          name: properties-rest
+        - mountPath: /work/pre-init.sh
+          name: pre-init-script
+          subPath: pre-init.sh
+        - mountPath: /tmp/export
+          name: isvgimdatadir
       containers:
       - name: isvgimconfig
         image: {{ .Values.images.isvgim }}
         command: ["/bin/bash", "-c"]
         args:
         - >
-          /work/pre-init.sh &&
+          cp -rLv /tmp/isvgimdata/* /opt/ibm/wlp/usr/servers/defaultServer/config/data/ &&
           /work/initIMContainer.sh config
         imagePullPolicy: IfNotPresent
         env:
@@ -34,21 +59,11 @@ spec:
           value: {{ .Values.services.isvgim.config.debugInitScripts | quote }}
         - name: TZ
           value: ":{{ .Values.timezone }}"
-        envFrom:
-        - secretRef:
-            name: extcreds
         volumeMounts:
         - mountPath: /tmp/isvgimcfg
           name: config
-        - mountPath: /tmp/isvgimks
-          name: keystore
         - mountPath: /tmp/isvgimdata
-          name: properties
-        - mountPath: /tmp/isvgimdata/rest
-          name: properties-rest
-        - mountPath: /work/pre-init.sh
-          name: pre-init-script
-          subPath: pre-init.sh
+          name: isvgimdatadir
       restartPolicy: Always
       volumes:
       - name: config
@@ -79,3 +94,5 @@ spec:
                 - key: pre-init.sh
                   path: pre-init.sh
                   mode: 0755
+      - name: isvgimdatadir
+        emptyDir: {}

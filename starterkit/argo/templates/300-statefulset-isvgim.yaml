@@ -37,6 +37,31 @@ spec:
     spec:
       imagePullSecrets:
       - name: regcred
+      initContainers:
+      - name: init-isvgimdata
+        image: {{ .Values.images.isvgim }}
+        command: ["/work/pre-init.sh"]
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: DEBUG_INIT
+          value: {{ .Values.services.isvgim.config.debugInitScripts | quote }}
+        - name: TZ
+          value: ":{{ .Values.timezone }}"
+        envFrom:
+        - secretRef:
+            name: extcreds
+        volumeMounts:
+        - mountPath: /tmp/isvgimks
+          name: keystore
+        - mountPath: /tmp/isvgimdata
+          name: properties
+        - mountPath: /tmp/isvgimdata/rest
+          name: properties-rest
+        - mountPath: /work/pre-init.sh
+          name: pre-init-script
+          subPath: pre-init.sh
+        - mountPath: /tmp/export
+          name: isvgimdatadir
       containers:
       - name: isvgim
         image: {{ .Values.images.isvgim }}
@@ -44,7 +69,7 @@ spec:
         command: ["/bin/bash", "-c"]
         args:
         - >
-          /work/pre-init.sh &&
+          cp -rLv /tmp/isvgimdata/* /opt/ibm/wlp/usr/servers/defaultServer/config/data/ &&
           sed -i 's/Xmx4096m/Xmx16384m/g' /opt/ibm/wlp/usr/servers/defaultServer/jvm.options &&
           sed -i 's/Xmx256m/Xmx8192m/g' /work/DBPurge.sh &&
           /work/initIMContainer.sh
@@ -159,19 +184,9 @@ spec:
               key: restsecret
         - name: TZ
           value: ":{{ .Values.timezone }}"
-        envFrom:
-        - secretRef:
-            name: extcreds
         volumeMounts:
-        - mountPath: /tmp/isvgimks
-          name: keystore
         - mountPath: /tmp/isvgimdata
-          name: properties
-        - mountPath: /tmp/isvgimdata/rest
-          name: properties-rest
-        - mountPath: /work/pre-init.sh
-          name: pre-init-script
-          subPath: pre-init.sh
+          name: isvgimdatadir
         - mountPath: /tmp/spark
           name: spark
         - mountPath: /tmp/isvgimcfg
@@ -350,6 +365,8 @@ spec:
       - name: mqconfigtls
         configMap:
           name: tlsmqcfg
+      - name: isvgimdatadir
+        emptyDir: {}
   volumeClaimTemplates:
   - metadata:
       name: datadir

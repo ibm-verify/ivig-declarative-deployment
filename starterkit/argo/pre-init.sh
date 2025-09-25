@@ -8,6 +8,7 @@ if [ "$DEBUG" = "true" ]; then
 fi
 
 DATADIR="/opt/ibm/wlp/usr/servers/defaultServer/config/data"
+DESTDIR="/tmp/export"
 
 inject_ext_cred() {
   if [ "x${!1}" = "x" ]; then
@@ -33,5 +34,10 @@ inject_ext_cred EXT_DBADMIN_PASSWORD 'database\.db\.adminPwd=' enRoleDatabase.pr
 inject_ext_cred EXT_DB_PASSWORD 'database\.db\.password=' enRoleDatabase.properties
 inject_ext_cred EXT_LDAP_PASSWORD 'java\.naming\.security\.credentials=' enRoleLDAPConnection.properties
 inject_ext_cred EXT_MAIL_PASSWORD 'mail\.smtp\.auth\.password=' enRoleMail.properties
+
+echo "Exporting KS and DATA"
+
+cp -rLv /tmp/isvgimks/* /tmp/isvgimdata/* ${DESTDIR}/
+cp -rLv ${DATADIR}/enRole{,Database,LDAPConnection,Mail}.properties ${DESTDIR}/
 
 echo "Exiting PRE-INIT script"
