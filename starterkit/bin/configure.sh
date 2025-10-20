@@ -928,7 +928,26 @@ do_smtp_mail() {
             pw_prompt "Mail user Password:" required && MAILPASSWORD=$PWVALUE
         fi
     fi
+    
+    printf "\n--- Email-based Approval Configuration ---\n"    
+    get_truefalse "Do you want to enable Email-based Approval monitoring?" "$(get_existing_value monitoring.enabled)" && EMAIL_APPROVAL_ENABLED=$TFVALUE
+    if [ "x$EMAIL_APPROVAL_ENABLED" == "xtrue" ]; then
+        printf "\nConfiguring Office365 email approval monitoring...\n"
+        printf "You will need Azure AD App Registration details.\n\n"
+        
+        prompt_not_empty "Exchange User Principal Name (mailbox to monitor)" "$(get_existing_value user.id)" && OFFICE365_USER=$VALUE
+        prompt_not_empty "Azure AD Tenant ID" "$(get_existing_value tenant.id)" && OFFICE365_TENANT=$VALUE
+        prompt_not_empty "Azure AD Client ID (Application ID)" "$(get_existing_value client.id)" && OFFICE365_CLIENT_ID=$VALUE
+        prompt_not_empty "Azure AD Client Secret" "$(get_existing_value client.secret)" && OFFICE365_CLIENT_SECRET=$VALUE
+        prompt_not_empty "Email scanning interval configuration in minutes (default: 30)" "$(get_existing_value scan.interval.minutes)" && OFFICE365_SCAN_INTERVAL=$VALUE
+
+    fi
 } #do_smtp_mail
+
+# Ensure EMAIL_APPROVAL_ENABLED is always set to a valid boolean
+if [ "x$MAILREG" != "xtrue" ]; then
+    EMAIL_APPROVAL_ENABLED="false"
+fi
 
 do_ilmt_server() {
 	printf "\nThe IBM License Service is a convenient way to monitor license usage in a\n"
@@ -1047,6 +1066,13 @@ mail:
   smtp.auth: $MAILAUTH
   smtp.auth.user: $MAILUSER
   smtp.auth.password: $MAILPASSWORD
+office365:
+  monitoring.enabled: $EMAIL_APPROVAL_ENABLED
+  user.id: $OFFICE365_USER
+  tenant.id: $OFFICE365_TENANT
+  client.id: $OFFICE365_CLIENT_ID
+  client.secret: $OFFICE365_CLIENT_SECRET
+  scan.interval.minutes: $OFFICE365_SCAN_INTERVAL
 externalRegistry:
   type: $ERTYPE
   realm: $ERREALM

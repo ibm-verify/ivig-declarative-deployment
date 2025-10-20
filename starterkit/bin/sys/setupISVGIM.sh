@@ -1,6 +1,6 @@
 #!/bin/bash
 
-YMLFILES="020-config-isvgimconfig 030-config-mqcfg 060-secret-mqcreds 070-secret-oidccreds 075-pvc-mqshare 100-service-isvgim 120-service-mqlocal 125-service-mqshare 215-deployment-mqshare 300-statefulset-isvgim"
+YMLFILES="007-serviceaccount-hazelcast 020-config-isvgimconfig 030-config-mqcfg 060-secret-mqcreds 070-secret-oidccreds 075-pvc-mqshare 100-service-isvgim 120-service-mqlocal 121-service-hazelcast 125-service-mqshare 215-deployment-mqshare 300-statefulset-isvgim"
 YMLDIR="../yaml"
 CFGDIR="../config"
 CFGFILE="${CFGDIR}/config.yaml"

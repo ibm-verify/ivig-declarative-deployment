@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hazelcast-headless
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: isvgim
+spec:
+  clusterIP: None
+  selector:
+    app: isvgim
+  ports:
+    - name: hazelcast
+      port: {{ .Values.services.isvgim.ports.hazelcast }}
+

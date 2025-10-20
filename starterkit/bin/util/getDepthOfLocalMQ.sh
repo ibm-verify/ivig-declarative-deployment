@@ -41,6 +41,7 @@ DISPLAY QUEUE('itim_adhocSync')         CURDEPTH
 DISPLAY QUEUE('itim_rs_pending')        CURDEPTH
 DISPLAY QUEUE('itim_ps')                CURDEPTH
 DISPLAY QUEUE('itim_import_export')     CURDEPTH
+DISPLAY QUEUE('ivig_events')            CURDEPTH
 DISPLAY QUEUE('DEV.DEAD.LETTER.QUEUE')  CURDEPTH
 EOF
 

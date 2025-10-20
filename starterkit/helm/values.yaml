@@ -9,16 +9,16 @@ licenseType: REPLACE_LICENSE
 clusterUrl: REPLACE_CLUSTER
 
 images:
-  isvgim: icr.io/isvg/identity-manager:11.0.0.1_IF1
-  isvdi: icr.io/isvdi/verify-directory-integrator-dispatcher:10.0.0.4
-  isvd: icr.io/isvd/verify-directory-server:10.0.4.0
-  isvdproxy: icr.io/isvd/verify-directory-proxy:10.0.4.0
-  isvdseed: icr.io/isvd/verify-directory-seed:10.0.4.0
-  mq: icr.io/isvg/mq:9.4.0.7
-  postgres: postgres:15.13-bookworm
+  isvgim: icr.io/isvg/identity-manager:11.0.1.0
+  isvdi: icr.io/isvdi/verify-directory-integrator-dispatcher:10.0.0.6
+  isvd: icr.io/isvd/verify-directory-server:10.0.4.0_IF1
+  isvdproxy: icr.io/isvd/verify-directory-proxy:10.0.4.0_IF1
+  isvdseed: icr.io/isvd/verify-directory-seed:10.0.4.0_IF1
+  mq: icr.io/isvg/mq:9.4.0.12
+  postgres: postgres:15.14-bookworm
   kuberbac: gcr.io/kubebuilder/kube-rbac-proxy:v0.16.0
   kubegres: icr.io/isvg/kubegres:1.19
-  riskengine: icr.io/isvg/ivig-ae:11.0.0.0
+  riskengine: icr.io/isvg/ivig-ae:11.0.0.1_IF1
 
 storage:
   className: REPLACE_STORAGE
@@ -77,6 +77,7 @@ services:
       iiop: 30809
       iiops: 30402
       node: 30943
+      hazelcast: 5701
     probes:
       failureThreshold: 3
       initialDelaySeconds: 60
@@ -121,3 +122,4 @@ services:
   riskengine:
     serviceAccount: ivigrisk
     user: 1001
+
