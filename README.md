@@ -40,7 +40,8 @@ This project targets following IBM Verifiy Identity Governance versions:
 - 11.0.0.0_IF1
 - 11.0.0.0_IF2
 - 11.0.0.1 (as of chart 2.0.2)
-- 11.0.0.1_IF (as of chart 2.1.1)
+- 11.0.0.1_IF1 (as of chart 2.1.1)
+- 11.0.1.0 (as of chart 2.1.4)
 
 There is no intention to backport newer chart version to support older IVIG versions.
 
@@ -48,7 +49,7 @@ Strictly speaking, the only third party dependency is helm, version 3.18 or newe
 
 ### System Requirements
 
-There is no specific system requirements other than those of IVIG, which will be deployed via this project.
+There are no specific system requirements other than those of IVIG, which will be deployed via this project.
 
 ## Versions
 
@@ -73,7 +74,7 @@ Next, adjust `values.yaml` and `values-config.yaml` for your environment and sto
   -  `namespace`, `timezone`, `licenseType`, `storage.className` and `storage.mode` are only read from `starterkit/argo/values.yaml`, define them there!
   -  `clusterUrl` is not used, leave it as-is.
 -  If you decide to use `bin/configure.sh -manual` to generate `config.yaml` then just copy the the content to `values-config.yaml` and adjust as follows:
-  - `general.install`: it is advices to only retain properties which are defined in `values-config.yaml`, others are not used
+  - `general.install`: it is adviced to only retain properties which are defined in `values-config.yaml`, others are not used
   - `general.install.externalSecret`: while it is not supported by the original StarterKit and therefore absent in `config.yaml`, use this to selectively configure Vault integration for MQ, OIDC or platform credentials
   - `externalRegistry`: it is not supported - it will not cause any error but it is recommended to remove this section to avoid confusion
   - `server.truststore`: as `bin/configure.sh -manual` may leave it empty or incomplete, make sure there is at least the list item `  - '@isvgimRootCA.crt'` present
