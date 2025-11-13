@@ -28,6 +28,8 @@ echo "Starting PRE-INIT script"
 
 cp -rLv /tmp/isvgimks/* /tmp/isvgimdata/* ${DATADIR}/
 
+/work/init/setup-keystore.sh || echo "exit 7"
+
 inject_ext_cred EXT_APPSERVER_PASSWORD 'enrole\.appServer\.systemUser\.credentials=' enRole.properties
 inject_ext_cred EXT_ISIMSYSTEM_PASSWORD 'enrole\.appServer\.ejbuser\.credentials=' enRole.properties
 inject_ext_cred EXT_DBADMIN_PASSWORD 'database\.db\.adminPwd=' enRoleDatabase.properties
@@ -37,7 +39,7 @@ inject_ext_cred EXT_MAIL_PASSWORD 'mail\.smtp\.auth\.password=' enRoleMail.prope
 
 echo "Exporting KS and DATA"
 
-cp -rLv /tmp/isvgimks/* /tmp/isvgimdata/* ${DESTDIR}/
+cp -rLv ${DATADIR}/{encryptionKey.properties,keystore} /tmp/isvgimdata/* ${DESTDIR}/
 cp -rLv ${DATADIR}/enRole{,Database,LDAPConnection,Mail}.properties ${DESTDIR}/
 
 echo "Exiting PRE-INIT script"

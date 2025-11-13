@@ -38,31 +38,6 @@ spec:
       serviceAccountName: hazelcast-sa
       imagePullSecrets:
       - name: regcred
-      initContainers:
-      - name: init-isvgimdata
-        image: {{ .Values.images.isvgim }}
-        command: ["/work/pre-init.sh"]
-        imagePullPolicy: IfNotPresent
-        env:
-        - name: DEBUG_INIT
-          value: {{ .Values.services.isvgim.config.debugInitScripts | quote }}
-        - name: TZ
-          value: ":{{ .Values.timezone }}"
-        envFrom:
-        - secretRef:
-            name: extcreds
-        volumeMounts:
-        - mountPath: /tmp/isvgimks
-          name: keystore
-        - mountPath: /tmp/isvgimdata
-          name: properties
-        - mountPath: /tmp/isvgimdata/rest
-          name: properties-rest
-        - mountPath: /work/pre-init.sh
-          name: pre-init-script
-          subPath: pre-init.sh
-        - mountPath: /tmp/export
-          name: isvgimdatadir
       containers:
       - name: isvgim
         image: {{ .Values.images.isvgim }}
@@ -333,6 +308,7 @@ spec:
       - name: keystore
         secret:
           secretName: isvgimks
+          optional: true
           items:
           - key: encryptionKey.properties
             path: encryptionKey.properties
@@ -346,15 +322,10 @@ spec:
       - name: properties-rest
         configMap:
           name: isvgimdata2-rest
-      - name: pre-init-script
-        projected:
-          sources:
-          - configMap:
-              name: isvgimconfig
-              items:
-                - key: pre-init.sh
-                  path: pre-init.sh
-                  mode: 0755
+      - name: pre-init
+        configMap:
+          name: isvgim-init
+          defaultMode: 0755
       - name: spark
         configMap:
           name: ivigrisk
@@ -373,6 +344,30 @@ spec:
           name: tlsmqcfg
       - name: isvgimdatadir
         emptyDir: {}
+      initContainers:
+      - name: isvgim-init
+        image: {{ .Values.images.isvgim }}
+        command: ["/work/init/pre-init.sh"]
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: DEBUG_INIT
+          value: {{ .Values.services.isvgim.config.debugInitScripts | quote }}
+        - name: TZ
+          value: ":{{ .Values.timezone }}"
+        envFrom:
+        - secretRef:
+            name: extcreds
+        volumeMounts:
+        - mountPath: /tmp/isvgimks
+          name: keystore
+        - mountPath: /tmp/isvgimdata
+          name: properties
+        - mountPath: /tmp/isvgimdata/rest
+          name: properties-rest
+        - mountPath: /work/init
+          name: pre-init
+        - mountPath: /tmp/export
+          name: isvgimdatadir
   volumeClaimTemplates:
   - metadata:
       name: datadir

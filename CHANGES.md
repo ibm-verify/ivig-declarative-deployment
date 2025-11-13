@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.2.0 (2025-11-14)
+
+This version implements a more secure but at the same time also more convenient approach to protecting sensitive data.
+
+IVIG encrypts sensitive data in property files and also in LDAP via AES, the key used for data encryption is stored in a JCEKS keystore, which is password protected. (Technically, both the keystore and the key entry within it is protected with the same password.) After initial configuration, this password is stored in obfuscated from in the binary file `encryptionKey.properties`. Version 11 introduces another level of encryption - the data encryption key itself is randomly generated during initial configuration and before being stored to the keystore, another randomly generated AES key is used to encrypt the data encryption key. This key encrypting key (KEK) is stored in an obscurely named subdirectory in a file named `masterKey.key`.
+
+The original starterkit requires all these files and directories to be stored under the `data` directory, which would be typically put under version control...
+
+Key benefits of the alternative approach implemented here:
+- eliminates the need to store `encryptionKey.properties` which contains the obfuscated keystore password
+- does not require KEK (`kek*/masterKey.key`) to be put under version control at all
+- does not even store the JCEKS keystore in git
+- integrates well with an external vault for securely storing the actual data encryption key (DEK)
+- uses a dynamically generated random keystore password (which changes on each restart of the container)
+- encrypts DEK with a random KEK which also changes whenever the container is restarted
+- securely injects the DEK dynamically into the keystore, in a well isolated manner before the main container starts
+- ensures backward compatibility: if a keystore is supplied via a k8s secret, it is used in the traditional way along with the master key and `encryptionKey.properties` stored in the same k8s secret
+
+Further, this version also delivers minor optimizations and enhancements to init containers.
+
 ## 2.1.4 (2025-10-20)
 
 This version ships templates for upstream version 11.0.1.0 and includes minor documentation updates.
