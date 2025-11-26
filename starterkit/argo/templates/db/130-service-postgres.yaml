@@ -1,0 +1,16 @@
+{{- if .Values.general.install.deployDb }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+    - name: postgres-pg
+      port: {{ .Values.services.postgres.ports.pg }}
+      protocol: TCP
+{{- end }}

@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.2.1 (2025-11-26)
+
+This version enables optional deployment of DB and LDAP components.
+
+The flags controlling these options and the configuration of the components are intentionally kept compatible with the original starterkit. These components are intended for non-production use.
+
+Deployment of PostgreSQL DB is optional, controlled in `values-config.yaml` via the same flag `general.install.deployDb` the original starterkit uses, and is disabled by default. When enabled, a single server will be deployed to the target namespace and configured for SSL connections.
+
+Improvements to DB setup logic in `db/primary_init_script.sh`:
+- fix timestamp bug which reused the timestamp captured at start
+- add logic to create data and index directories if these do not exist
+- fix userid case sensitivity bug via proper quoting at the right place
+- replace tabs with spaces display well when in a configmap
+
+Deployment of LDAP is also optional, disabled by default and enabled via the flag `general.install.deployLdap`, respectively. License information has to be provided in `values-config.yaml` via `general.license.ldapKey` and `general.license.accepted`, just like with the original starterkit, and will be dynamically inserted into `ldap_config.yaml` in the appropriate format. A single instance will be deployed to accept SSL connections from IVIG.
+
 ## 2.2.0 (2025-11-14)
 
 This version implements a more secure but at the same time also more convenient approach to protecting sensitive data.

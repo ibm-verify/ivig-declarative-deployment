@@ -1,0 +1,13 @@
+{{- if .Values.general.install.deployDb }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: isvgimdb
+  namespace: {{ .Values.namespace }}
+data:
+{{ (.Files.Glob "config/db/{pg_hba.conf,postgres.conf,primary_init_script.sh}").AsConfig | indent 2 }}
+{{- $files := .Files.Glob "config/certs/pgsql.{key,crt}" }}
+{{- if gt (len $files) 0 }}
+{{ $files.AsConfig | indent 2 }}
+{{- end -}}
+{{- end }}

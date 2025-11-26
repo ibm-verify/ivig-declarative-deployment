@@ -28,7 +28,7 @@ The desired state is stored in git and based on this, declarative deployment (di
 - Ability to deploy any Fixpack or Interim Fix version right away, without installing 11.0.0.0 and then sequentially updating to each FixPack or Interim Fix
 
 ### Out of Scope
-- deployment of data tier (expected to be present as prerequisite)
+- ~deployment of data tier (expected to be present as prerequisite)~(chart 2.2.1 enables optional deployment of DB and LDAP intended for non-production use)
 - configuration of External User Registry
 - configuration of the analytics module
 - issuing x509 certificates (expected to be present as prerequisite)
@@ -62,7 +62,7 @@ The standalone setup is a viable option for both Developers/Integrators and for 
 ### Prerequisites
 - K8s cluster up and running
 - namespace and registry pull secret configured
-- data tier ready and available
+- data tier ready and available if using an external data tier (chart 2.2.1 enables optional deployment of DB and LDAP intended for non-production use)
 
 ### Repo setup
 
@@ -74,7 +74,7 @@ Next, adjust `values.yaml` and `values-config.yaml` for your environment and sto
   -  `namespace`, `timezone`, `licenseType`, `storage.className` and `storage.mode` are only read from `starterkit/argo/values.yaml`, define them there!
   -  `clusterUrl` is not used, leave it as-is.
 -  If you decide to use `bin/configure.sh -manual` to generate `config.yaml` then just copy the the content to `values-config.yaml` and adjust as follows:
-  - `general.install`: it is adviced to only retain properties which are defined in `values-config.yaml`, others are not used
+  - `general.install`: it is adviced to only retain properties which are defined in the bundled `values-config.yaml`, others are not used
   - `general.install.externalSecret`: while it is not supported by the original StarterKit and therefore absent in `config.yaml`, use this to selectively configure Vault integration for MQ, OIDC or platform credentials
   - `externalRegistry`: it is not supported - it will not cause any error but it is recommended to remove this section to avoid confusion
   - `server.truststore`: as `bin/configure.sh -manual` may leave it empty or incomplete, make sure there is at least the list item `  - '@isvgimRootCA.crt'` present
@@ -150,6 +150,7 @@ This section contains near and mid term plans, uncommitted feature candidates an
 - ~config property `general.install.externalSecret` to control if credentials will be managed via helm chart or externally~ DONE
 - ~move pre-init logic to a separate init container~ DONE
 - ~eliminate the need to store `isvgimks` by initializeing one on-the-fly during initialization~ DONE
+- ~optional/modular deployment of postgres DB and LDAP into the same namespace for demo or development~ DONE
 
 ## Further Documentation
 

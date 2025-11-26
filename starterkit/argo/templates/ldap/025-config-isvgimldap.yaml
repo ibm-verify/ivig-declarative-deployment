@@ -1,0 +1,13 @@
+{{- if .Values.general.install.deployLdap }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: isvgimldap
+  namespace: {{ .Values.namespace }}
+data:
+{{ tpl (.Files.Glob "config/ldap/*.yaml").AsConfig . | indent 2 }}
+{{- $files := .Files.Glob "config/certs/{isvd.pem,*.crt}" }}
+{{- if gt (len $files) 0 }}
+{{ $files.AsConfig | indent 2 }}
+{{- end -}}
+{{- end }}

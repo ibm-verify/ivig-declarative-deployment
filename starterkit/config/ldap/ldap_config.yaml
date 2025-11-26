@@ -4,6 +4,8 @@ general:
     ldap: 0
     ldaps: {{ .Values.services.isvd.ports.ldaps }}
   license:
+    accept: {{ .Values.general.license.accepted | ternary "limited" "" }}
+    key: {{ .Values.general.license.ldapKey }}
   admin:
     dn: "secret:isvdcred/admindn"
     pwd: "secret:isvdcred/adminpwd"

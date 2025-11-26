@@ -2,6 +2,8 @@ general:
   install:
     createTablespace: true
     deployIsvdi: true
+    deployDb: false
+    deployLdap: false
     externalSecret:
       mqcreds: false
       extcreds: false
@@ -21,7 +23,7 @@ db:
   name: ivig
   admin: postgres
   adminPwd:
-  security.protocol:
+  security.protocol: ssl
   tablespace.location.data: /var/lib/postgresql/data/isvgimdata
   tablespace.location.indexes: /var/lib/postgresql/data/isvgimindexes
 ldap:
@@ -32,7 +34,7 @@ ldap:
   ldapserver.ip:
   ldapserver.port:
   ldapserver.root: dc=ivig
-  security.protocol:
+  security.protocol: ssl
 mail:
   authentication.type: basic
   baseurl: https://foo.com/
