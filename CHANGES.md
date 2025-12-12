@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.2.2 (2025-12-12)
+
+This version brings the ability to setup x509 certificates.
+
+The `cert-util.sh` script is added to create, renew and list certificates for a configurable set of components. The structure of the certificates is intentionally kept compatible with the original starterkit, but the logic for managing certificates has been externalized, it does not run within the container.
+
+The logic is implemented such that existing cryptographic keys and certificate signing requests are reused when creating or renewing certificates.
+
+Subject alternate names (domain names) are configured according to the requirements of each component, inline with how the original startetkit would create certificates.
+
+This script is intentionally de-couple and self-contained, it does not have dependencies other than `bash` and `openssl`.
+
+Another script, `cert-setup.sh` is included to auto-detects the part of configuration that is relevant for certificates, once `values.yaml` and `values-config.yaml` have already been adjusted. In particular, it will retrieve the k8s namespace from `values.yaml`, collect extra hostnames (which should be added to the certificate of IVIG server) and the list of optional components to be deployed from `values-config.yaml`. This script, after collecting the information required, will invoke `cert-util.sh` to create certificates, and after that, to list the details of the certificates created.
+
+Elliptic Curve prime256v1 keys and certificates are created for the following when `cert-setup.sh` is run:
+- `isvgimRootCA`
+- `isvgim`
+- `mq`
+- `isvdi` if `general.install.deployIsvdi` is enabled
+- `isvd` if `general.install.deployLdap` is enabled
+- `pgsql` if `general.install.deployDb` is enabled
+
+While `cert-setup.sh` is intended to be a convenient "one-click" tool to setup a new environment without specifying any input parameter, it is not as robust and versatile as `cert-util.sh` which comes with a rich set of commandline options that allow finer-grained control of the behavior. Of course, due to project-specific requirements one may have to create and manage certificates via alternative means, in which case these two scripts might serve as reference or inspiration.
+
 ## 2.2.1 (2025-11-26)
 
 This version enables optional deployment of DB and LDAP components.
