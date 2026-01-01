@@ -39,6 +39,8 @@ spec:
           name: config
         - mountPath: /tmp/isvgimdata
           name: isvgimdatadir
+        - mountPath: /work/util
+          name: util
       restartPolicy: Always
       volumes:
       - name: config
@@ -61,9 +63,13 @@ spec:
       - name: properties-rest
         configMap:
           name: isvgimdata2-rest
-      - name: pre-init
+      - name: init
         configMap:
           name: isvgim-init
+          defaultMode: 0755
+      - name: util
+        configMap:
+          name: isvgim-util
           defaultMode: 0755
       - name: isvgimdatadir
         emptyDir: {}
@@ -88,6 +94,6 @@ spec:
         - mountPath: /tmp/isvgimdata/rest
           name: properties-rest
         - mountPath: /work/init
-          name: pre-init
+          name: init
         - mountPath: /tmp/export
           name: isvgimdatadir

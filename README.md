@@ -31,7 +31,7 @@ The desired state is stored in git and based on this, declarative deployment (di
 - ~deployment of data tier (expected to be present as prerequisite)~(chart 2.2.1 enables optional deployment of DB and LDAP intended for non-production use)
 - configuration of External User Registry
 - configuration of the analytics module
-- issuing x509 certificates (expected to be present as prerequisite)
+- ~issuing x509 certificates (expected to be present as prerequisite)~(version 2.2.2 ships setup scripts which automate certificate generation)
 
 ## Components and Dependencies
 
@@ -151,6 +151,7 @@ This section contains near and mid term plans, uncommitted feature candidates an
 - ~move pre-init logic to a separate init container~ DONE
 - ~eliminate the need to store `isvgimks` by initializeing one on-the-fly during initialization~ DONE
 - ~optional/modular deployment of postgres DB and LDAP into the same namespace for demo or development~ DONE
+- ~convenience utility for DB and LDAP upgrade and initial schema and data load~ DONE
 
 ## Further Documentation
 

@@ -4,6 +4,6 @@ metadata:
   name: isvgim-init
   namespace: {{ .Values.namespace }}
 data:
-{{ (.Files.Glob "init/*.sh").AsConfig | indent 2 }}
+{{ (.Files.Glob "config/init/*.sh").AsConfig | indent 2 }}
 binaryData:
-{{ (.Files.Glob "init/*.jar").AsSecrets | indent 2 }}
+{{ (.Files.Glob "config/init/*.jar").AsSecrets | indent 2 }}

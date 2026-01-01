@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.2.3 (2026-01-01)
+
+This version ships several enhancements.
+
+The script `vault-setup.sh` can be used create `secrets.yaml` with random generated passwords and a random 128 bit Data Encryption Key. Generated passwords consist of 16 characters from the base64 alphabet to avoid issues with special characters. Password complexity rules of the middleware components are considered, specifically, the LDAP admin password is randomly generated until it fulfills the following password policies: minLength 8, minAlpha 2, minOther 2, maxRepeated 2. This script is geared towards developers who need to quickly setup a reasonably secure development environment, but may be useful during the initial setup of environments which prefer to manage secrets internally, or where secrets are later moved to an external vault such as HashiCorp Vault.
+
+The utility `extract-config-response.sh` is added to both the main containers of both `isvgimconfig` and `isvgim`. This script can be used either during initial setup of the data tier (once the LDAP and DB is already deployed) or in upgrade scenarios where schema updates and data transformations have to be applied. It recreates silent installer response files for initial data tier setup or upgrade by extracting configuration information from `data/erRole*.properties` files. While the original starterkit requires configuration data - including sensitive data - to be stored in cleartext in `config.yaml` and erased at a specific point of the installation process once the above mentioned property files are generated, our declarative approach ensures the correct property files are available from the beginning, and the input required by `dbConfig.sh` and `ldapConfig.sh` is extracted from these sources.
+
+Minor usability improvements and fixes:
+- fix `database.tablespace.location.indexes` in `enRoleDatabase.properties`
+- remove trailing whitespace at the end of lines in `data-tpl/*.properties`
+- remove trailing whitespace at the end of lines of some other helm templates
+- replace tabs by 4 spaces in `data-tpl/*.properties` so configmap can use block string
+- reorganize config maps storing extra logic for the init container and utility scripts
+
 ## 2.2.2 (2025-12-12)
 
 This version brings the ability to setup x509 certificates.
