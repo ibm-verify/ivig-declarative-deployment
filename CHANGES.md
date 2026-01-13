@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.2.4 (2026-01-14)
+
+This version ships templates for upstream version 11.0.1.1 and includes documentation updates.
+
+Office 365 Email-based Approval is a new upstream feature which can be configured in `values-config.yaml` via the same options the `configure.sh` script of the original startetkit would create when generating `config.yaml`:
+- `monitoring.enabled` (defaults to false)
+- `user.id` which defines the UPN or email address to be used
+- `tenant.id` to define the directory (tenant) ID of the Azure AD organization
+- `client.id` and `client.secret` from the Azure AD app registration
+- `scan.interval.minutes` (defaults to 30)
+
+In addition to what the original starterkit supports, the following extra options allow finer control of the Microsoft Graph API:
+- `graph.token.endpoint` specifies the token endpoint template where %s will be replaced with tenant ID, the value defaults to https://login.microsoftonline.com/%s/oauth2/v2.0/token
+- `graph.messages.endpoint` defines the messages endpoint template where %s will be replaced with user principal name, it defaults to https://graph.microsoft.com/v1.0/users/%s/mailFolders/inbox/messages
+- `graph.user.agent` allows to override the User-Agent header for HTTP requests to Microsoft Graph, defaults to "IVIG-EmailApproval/1.0"
+
 ## 2.2.3 (2026-01-01)
 
 This version ships several enhancements.
