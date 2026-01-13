@@ -45,6 +45,16 @@ mail:
   smtp.auth: true
   smtp.auth.user: ivig
   smtp.auth.password:
+office365:
+  monitoring.enabled: false
+  user.id:
+  tenant.id:
+  client.id:
+  client.secret:
+  scan.interval.minutes:
+  graph.token.endpoint:
+  graph.messages.endpoint:
+  graph.user.agent:
 server:
   options:
   - name: libertyMetrics
