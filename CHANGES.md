@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.2.5 (2026-01-28)
+
+This version enables deployment of the k8s namespace and the image pull secret.
+
+Prior to this version, the k8s namespace resource and the image pull secret `regcred` had to be created manually, upfront.
+
+Helm templates will now deploy (create and sync) the namespace with all annotations required for pod security admission control.
+
+Image pull secret `regcred` is assumed to be present and externally managed when `general.install.externalSecret.regcred` is set to `true` in `values-config.yaml`, in this case, the templates will not create or alter this resource (also see Vault integration via External Secrets introduced in 2.1.2). Altentively and by default, `regcred` is generated via a special helm template:
+- supports multiple repos in the same Secret with separate credentials for each
+- input uses the structure of dockerconfigjson, but without the redundant `auth`
+- `auth` properties will be dynamically injected for all repo entries
+- sample config provided for IBM Container Registry and local repo, see `regcred.yaml`
+- abort with an appropriate error message if no repo entry is configured
+
 ## 2.2.4 (2026-01-14)
 
 This version ships templates for upstream version 11.0.1.1 and includes documentation updates.
@@ -117,7 +132,7 @@ The optional Vault integration can be configured via `general.install.externalSe
 
 Making the deployment of ISVDI optional demonstrates how the chart's content can be modularized without the additional complexity of using helm subcharts. The flag controlling this option is intentionally kept compatible with the original starterkit.
 
-This version also included minor cosmetic changes to improve readability/user experience.
+This version also includes minor cosmetic changes to improve readability/user experience.
 
 ## 2.1.1 (2025-09-08)
 

@@ -1,0 +1,13 @@
+REGCRED: {
+  "auths": {
+    "https://icr.io/": {
+      "username": "dummy",
+      "password": "dummy",
+      "email": "dummy@ibm.com"
+    },
+    "https://registry.local/": {
+      "username": "alice",
+      "password": "sample"
+    }
+  }
+}

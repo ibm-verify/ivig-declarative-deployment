@@ -42,6 +42,7 @@ This project targets following IBM Verifiy Identity Governance versions:
 - 11.0.0.1 (as of chart 2.0.2)
 - 11.0.0.1_IF1 (as of chart 2.1.1)
 - 11.0.1.0 (as of chart 2.1.4)
+- 11.0.1.1 (as of chart 2.2.4)
 
 There is no intention to backport newer chart version to support older IVIG versions.
 
@@ -61,7 +62,7 @@ The standalone setup is a viable option for both Developers/Integrators and for 
 
 ### Prerequisites
 - K8s cluster up and running
-- namespace and registry pull secret configured
+- ~namespace and registry pull secret configured~ (chart 2.2.5 will deploy the namespace and optionally the pull secret as well)
 - data tier ready and available if using an external data tier (chart 2.2.1 enables optional deployment of DB and LDAP intended for non-production use)
 
 ### Repo setup
@@ -129,37 +130,80 @@ While `cert-setup.sh` is intended to be a convenient "one-click" tool to setup a
 
 ### Deploy
 
-As the last step before deployment, sensitive data which should not be put under version control needs to be dealt with. This includes middleware and platform credentials and may also include the cipher key used for encrypting sensitive data in files and LDAP, which can be dynamically injected by version 2.2.0 or later.
+An image pull secret is needed with included connection parameters to the image repository to be used. This required information can be provided via one of the three options:
+- Pass parameters via a yaml file based on which the image pull secret will be generated and deployed (do not store this file in git)
+- Use external secrets for Vault integration (see details below)
+- Set up manually in k8s and configure as externally managed (set `general.install.externalSecret.regcred` to `true` in `values-config.yaml`)
 
-There are two alternative approaches to handling credentials:
-- Provide sensitive data in file `secrets.yaml`, use `secrets.yaml.envsubst` as template
+As the last step before deployment, additional sensitive data which should not be put under version control needs to be dealt with. This includes middleware and platform credentials and may also include the cipher key used for encrypting sensitive data in files and LDAP, which can be dynamically injected by version 2.2.0 or later.
+
+There are four alternative approaches to handling credentials:
+- Provide sensitive data in file `secrets.yaml` manually, use `secrets.yaml.envsubst` as template
+- Use a bundled script to automatically generate `secrets.yaml` with random data
 - Use external secrets for Vault integration
+- Set up manually in k8s and configure as externally managed (set `general.install.externalSecret.*creds` to `true` in `values-config.yaml`)
+
+#### Deploying the image pull secret
+
+Specify the image pull secret to be used for downloading container images, adjust `regcred.yaml`. K8s secret `regcred` is generated via a special helm template unless configured as externally managed:
+- supports multiple repos in the same Secret with separate credentials for each
+- input uses the structure of dockerconfigjson, but without the redundant `auth`
+- `auth` properties will be dynamically injected for all repo entries
+- sample config provided for IBM Container Registry and local repo, see `regcred.yaml`
+- abort with an appropriate error message if no repo entry is configured
+
+#### Autogenerate random passwords and data encryption key
+
+The script `vault-setup.sh` can be used create `secrets.yaml` with random generated passwords and a random 128 bit Data Encryption Key. Generated passwords consist of 16 characters from the base64 alphabet to avoid issues with special characters. Password complexity rules of the middleware components are considered, specifically, the LDAP admin password is randomly generated until it fulfills the following password policies: minLength 8, minAlpha 2, minOther 2, maxRepeated 2. This script is geared towards developers who need to quickly setup a reasonably secure development environment, but may be useful during the initial setup of environments which prefer to manage secrets internally, or where secrets are later moved to an external vault such as HashiCorp Vault.
 
 #### Vault integration via External Secrets (optional) 
 
 Interoperability with Vault is achieved via the use of External Secrets. The External Secrets Operator interacts with [HashiCorp Vault](https://www.vaultproject.io/), [IBM Cloud Secrets Manager](https://www.ibm.com/cloud/secrets-manager) or external secret management systems like [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/), [Google Secrets Manager](https://cloud.google.com/secret-manager), [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/), [CyberArk Conjur](https://www.conjur.org/).
 
-The optional Vault integration can be configured via `general.install.externalSecret` selectively for MQ, OIDC and platform credentials, and is disabled by default.
+The optional Vault integration can be configured via `general.install.externalSecret` selectively for MQ, OIDC, platform credentials and image pull secret, and is disabled by default.
+
+#### Post-deployment steps
+
+When installing from scratch, schema and initial data have to be loaded to both DB and LDAP, with external data tier as well as data tier deployed via the helm chart. This is not seen as a responsibity or an integral step of the helm chart itself, as there are valid scenarios where IVIG has to be deployed or redeployed with an exisitng datatier containing data which must not be erased (migration, disaster recovery, upgrade scenarios). This requires finer grained control over the data initiaization process.
+
+Similarly, version upgrades (fixpacks, but not interim fixes) may include schema extensions and specific logic to convert from the existing to the new data formats. Experience has shown that DB or LDAP schema or data upgrade code shipped with the fixpacks of the product is often defective or incomplete and requires manual actions to successfully complete.
+
+Therefore, verion 2.2.3 and newer provides tooling for automation, but not unconditionally invoke `dbConfig.sh` and `ldapConfig.sh` within the container.
+
+On a fresh install, one could trigger DB and LDAP schmema and data setup as soon as `isvgim` is up and running, then restart:
+```
+kubectl -n $NAMESPACE wait --for=condition=ready sts/isvgim
+kubectl -n $NAMESPACE exec isvgim-0 -- /bin/bash -c "/work/util/extract-config-response.sh && /work/ldapConfig.sh install && /work/dbConfig.sh install"
+kubectl -n $NAMESPACE rollout restart sts/isvgim
+```
+
+For schema & data upgrade between versions one would scale down `isvgim`, then call the upgrade logic from within the config container `isvgimconfig` (which is started for this purpose only and then terminated):
+```
+kubectl -n $NAMESPACE scale deploy/isvgimconfig --replicas 1
+kubectl -n $NAMESPACE scale sts/isvgim --replicas 0
+kubectl -n $NAMESPACE exec deploy/isvgimconfig -- /bin/bash -c "/work/util/extract-config-response.sh && /work/ldapConfig.sh uprade && /work/dbConfig.sh upgrade $OLD_VERSION"
+kubectl -n $NAMESPACE scale deploy/isvgimconfig --replicas 0
+kubectl -n $NAMESPACE scale sts/isvgim --replicas 1
+```
 
 #### Common tasks
 
 When working directly with `helm` rather than via ArgoCD (which is a viable option for both Developers/Integrators and for team who have not adopted a full CI/CD solution for GitOps-driven Kubernetes) see the following list of commands which illustrate various DevOps tasks.
 
 ```
-## Development/integration
+# Development/integration
 
 # inspect the output of a single template (from within the argo directory)
-helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -s templates/201-deployment-isvgimconfig.yaml .
+helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml -s templates/201-deployment-isvgimconfig.yaml .
 # split output into separate files for each template and store to output-dir for inspection/debugging
-helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml . | ../../helm-fan-out.sh output-dir
+helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml . | ../../helm-fan-out.sh output-dir
 
-## Normal operation
+# Normal operation
 
 # compare desired state with currently deployed state
-helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml . | kubectl diff -f -
-
+helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml . | kubectl diff -f -
 # enforce desired state
-helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml . | kubectl apply -f -
+helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml . | kubectl apply -f -
 ```
 
 ### Install Verification Test

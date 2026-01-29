@@ -8,6 +8,7 @@ general:
       mqcreds: false
       extcreds: false
       oidccreds: false
+      regcred: false
   license:
     activationKey:
     accepted: true
