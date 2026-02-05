@@ -52,13 +52,63 @@ Strictly speaking, the only third party dependency is helm, version 3.18 or newe
 
 There are no specific system requirements other than those of IVIG, which will be deployed via this project.
 
+### Optional user convenience scripts
+
+There are optional user convenience scripts which can be used for quickly setting up a demo or development environment. These scripts have been specifically developed with efficiency and minimal dependencies in mind and are known to work with the following versions of standard Linux/Unix utilities:
+- `cert-setup.sh`: GNU bash 5, GNU sed 4.8
+- `cert-util.sh`: GNU bash 5, OpenSSL 3
+- `vault-setup.sh`: GNU bash 5, GNU grep 3.11
+
 ## Versions
 
 A version history including all notable changes is maintained in the [Changelog](CHANGES.md). Keep in mind that there is no intention to backport newer chart version to support older IVIG versions.
 
 ## Setup guide - standalone
 
-The standalone setup is a viable option for both Developers/Integrators and for team who have not adopted a full CI/CD solution for GitOps-driven Kubernetes. This setup requires Git, the user will directly interact with `helm` (rather than indirectly via ArgoCD). The fastest way to get up and running is this minimal standalone setup.
+The standalone setup is a viable option for both Developers/Integrators and for teams who have not adopted a full CI/CD solution for GitOps-driven Kubernetes. This setup requires Git, the user will directly interact with `helm` (rather than indirectly via ArgoCD) and `kubectl`. The fastest way to get up and running is this minimal standalone setup.
+
+### TL;DR
+
+#### Quick demo
+Minimal setup from scratch, assuming your k8s custer has a storage class called 'local-path':
+```
+git clone https://github.com/ibm-verify/ivig-declarative-deployment.git
+cd ivig-declarative-deployment/starterkit/argo && git checkout demo
+./cert-setup.sh
+./vault-setup.sh
+helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml . | kubectl apply -f -
+kubectl -n ivig-argo wait --for=condition=Ready --timeout=5m pod -l app=isvgim
+kubectl -n ivig-argo exec isvgim-0 -- /bin/bash -c "/work/util/extract-config-response.sh --install && /work/ldapConfig.sh install && /work/dbConfig.sh install"
+kubectl -n ivig-argo rollout restart sts/isvgim
+```
+
+#### Recommended standalone setup
+
+Setup your own git repo and adjust config as needed:
+```
+# fork the project on GitHub, then clone it and configure upstream
+git clone https://github.com/${YOUR_USER}/ivig-declarative-deployment.git
+cd ivig-declarative-deployment/starterkit/argo
+git remote add upstream https://github.com/ibm-verify/ivig-declarative-deployment.git
+git checkout demo
+# adjust values.yaml and values-config.yaml as needed, generate certs and commit
+vi values-config.yaml values.yaml
+./cert-setup.sh
+git add values-config.yaml values.yaml config/certs/*
+git commit -m "init quick demo"
+```
+
+Generate secrets (not to be stored in git), then deploy to k8s and initialize data tier:
+```
+# autogenerate random secrets
+./vault-setup.sh
+# deploy desired state
+helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml . | kubectl apply -f -
+# init data tier
+kubectl -n $NAMESPACE wait --for=condition=Ready --timeout=5m pod -l app=isvgim
+kubectl -n $NAMESPACE exec isvgim-0 -- /bin/bash -c "/work/util/extract-config-response.sh --install && /work/ldapConfig.sh install && /work/dbConfig.sh install"
+kubectl -n $NAMESPACE rollout restart sts/isvgim
+```
 
 ### Prerequisites
 - K8s cluster up and running
@@ -68,6 +118,13 @@ The standalone setup is a viable option for both Developers/Integrators and for 
 ### Repo setup
 
 As a first step, check out this project from git or even better, fork it to create your own project specific repo.
+
+```
+# fork the project on GitHub, then clone it and configure upstream
+git clone https://github.com/${YOUR_USER}/ivig-declarative-deployment.git
+cd ivig-declarative-deployment
+git remote add upstream https://github.com/ibm-verify/ivig-declarative-deployment.git
+```
 
 Next, adjust `values.yaml` and `values-config.yaml` for your environment and store them to your git project. Users unfamiliar with the product may run `bin/configure.sh -manual` to generate `config.yaml` which may then be used as a baseline for `values-config.yaml`, as these file follow the same structure with minimal deviations. Keep the following in mind:
 
@@ -172,8 +229,8 @@ Therefore, verion 2.2.3 and newer provides tooling for automation, but not uncon
 
 On a fresh install, one could trigger DB and LDAP schmema and data setup as soon as `isvgim` is up and running, then restart:
 ```
-kubectl -n $NAMESPACE wait --for=condition=ready sts/isvgim
-kubectl -n $NAMESPACE exec isvgim-0 -- /bin/bash -c "/work/util/extract-config-response.sh && /work/ldapConfig.sh install && /work/dbConfig.sh install"
+kubectl -n $NAMESPACE wait --for=condition=Ready --timeout=5m pod -l app=isvgim
+kubectl -n $NAMESPACE exec isvgim-0 -- /bin/bash -c "/work/util/extract-config-response.sh --install && /work/ldapConfig.sh install && /work/dbConfig.sh install"
 kubectl -n $NAMESPACE rollout restart sts/isvgim
 ```
 
@@ -181,7 +238,7 @@ For schema & data upgrade between versions one would scale down `isvgim`, then c
 ```
 kubectl -n $NAMESPACE scale deploy/isvgimconfig --replicas 1
 kubectl -n $NAMESPACE scale sts/isvgim --replicas 0
-kubectl -n $NAMESPACE exec deploy/isvgimconfig -- /bin/bash -c "/work/util/extract-config-response.sh && /work/ldapConfig.sh uprade && /work/dbConfig.sh upgrade $OLD_VERSION"
+kubectl -n $NAMESPACE exec deploy/isvgimconfig -- /bin/bash -c "/work/util/extract-config-response.sh --upgrade && /work/ldapConfig.sh uprade && /work/dbConfig.sh upgrade $OLD_VERSION"
 kubectl -n $NAMESPACE scale deploy/isvgimconfig --replicas 0
 kubectl -n $NAMESPACE scale sts/isvgim --replicas 1
 ```
@@ -214,7 +271,9 @@ Execute smoke tests for your IVIG project as necessary. (Smoke tests are a subse
 
 ### Troubleshooting guide
 
-Review K8s events and IVIG application logs:
+When using the demo setup script `vault-setup.sh`, please note that GNU grep 3.6 (from 2020, shippen with CentOS 9) yields abnormal behavior. Use a more recent version of grep (see section [Components and Dependencies](#components-and-dependencies)).
+
+Should errors occur after deployment, review K8s events and IVIG application logs:
 ```
 kubectl events -n <namespace>
 
