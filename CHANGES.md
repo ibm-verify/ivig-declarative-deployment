@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.3.0 (2026-02-12)
+
+This version adds chart and version control metadata to the k8s namespace and addresses a compatibility issue with symlinks.
+
+Following annotations are generated for the namespace during template rendering:
+- `helm.sh/chart`: chart name and version
+- `app.kubernetes.io/version`: version of the product the helm chart deploys
+- `version-control/revision`: revision deployed (e.g. git commit hash)
+
+These annotations provide extra visibility into the last deployed desired state.
+
+Further, `config` and `data` symlinking is switched, that is, the real folders are now the ones within the `argo` directory and symlinks pointing to these are created under `starterkit`. The purpose of this change is compability with hardened ArgoCD/Helm where symlinks pointing outside the chart directory are not followed by `.Files.Glob` helm function.
+
+Additionally, minor fixes and documentation updates are included.
+
 ## 2.2.5 (2026-01-28)
 
 This version enables deployment of the k8s namespace and the image pull secret.

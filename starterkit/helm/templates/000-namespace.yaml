@@ -2,6 +2,10 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: {{ .Values.namespace }}
+  annotations:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    version-control/revision: {{ default "unknown" .Values.revision | quote }}
   labels:
     kubernetes.io/metadata.name: {{ .Values.namespace }}
     pod-security-kubernetes.io/enforce: baseline

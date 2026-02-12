@@ -103,7 +103,7 @@ Generate secrets (not to be stored in git), then deploy to k8s and initialize da
 # autogenerate random secrets
 ./vault-setup.sh
 # deploy desired state
-helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml . | kubectl apply -f -
+helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml --set revision=$(git log -n 1 --pretty=format:%h) . | kubectl apply -f -
 # init data tier
 kubectl -n $NAMESPACE wait --for=condition=Ready --timeout=5m pod -l app=isvgim
 kubectl -n $NAMESPACE exec isvgim-0 -- /bin/bash -c "/work/util/extract-config-response.sh --install && /work/ldapConfig.sh install && /work/dbConfig.sh install"
@@ -132,7 +132,7 @@ Next, adjust `values.yaml` and `values-config.yaml` for your environment and sto
   -  `namespace`, `timezone`, `licenseType`, `storage.className` and `storage.mode` are only read from `starterkit/argo/values.yaml`, define them there!
   -  `clusterUrl` is not used, leave it as-is.
 -  If you decide to use `bin/configure.sh -manual` to generate `config.yaml` then just copy the content to `values-config.yaml` and adjust as follows:
-  - `general.install`: it is adviced to only retain properties which are defined in the bundled `values-config.yaml`, others are not used
+  - `general.install`: it is advised to only retain properties which are defined in the bundled `values-config.yaml`, others are not used
   - `general.install.externalSecret`: while it is not supported by the original StarterKit and therefore absent in `config.yaml`, use this to selectively configure Vault integration for MQ, OIDC or platform credentials
   - `externalRegistry`: it is not supported - it will not cause any error but it is recommended to remove this section to avoid confusion
   - `server.truststore`: as `bin/configure.sh -manual` may leave it empty or incomplete, make sure there is at least the list item `  - '@isvgimRootCA.crt'` present
@@ -146,7 +146,7 @@ The logic is implemented such that existing cryptographic keys and certificate s
 
 Subject alternate names (domain names) are configured according to the requirements of each component, inline with how the original startetkit would create certificates.
 
-This script is intentionally de-couple and self-contained, it does not have dependencies other than `bash` and `openssl`. 
+This script is intentionally de-coupled and self-contained, it does not have dependencies other than `bash` and `openssl`. 
 
 ```
 $ cd starterkit
@@ -221,11 +221,11 @@ The optional Vault integration can be configured via `general.install.externalSe
 
 #### Post-deployment steps
 
-When installing from scratch, schema and initial data have to be loaded to both DB and LDAP, with external data tier as well as data tier deployed via the helm chart. This is not seen as a responsibity or an integral step of the helm chart itself, as there are valid scenarios where IVIG has to be deployed or redeployed with an exisitng datatier containing data which must not be erased (migration, disaster recovery, upgrade scenarios). This requires finer grained control over the data initiaization process.
+When installing from scratch, schema and initial data have to be loaded to both DB and LDAP, with external data tier as well as data tier deployed via the helm chart. This is not seen as a responsibility or an integral step of the helm chart itself, as there are valid scenarios where IVIG has to be deployed or redeployed with an existing data tier containing data which must not be erased (migration, disaster recovery, upgrade scenarios). This requires finer grained control over the data initialization process.
 
 Similarly, version upgrades (fixpacks, but not interim fixes) may include schema extensions and specific logic to convert from the existing to the new data formats. Experience has shown that DB or LDAP schema or data upgrade code shipped with the fixpacks of the product is often defective or incomplete and requires manual actions to successfully complete.
 
-Therefore, verion 2.2.3 and newer provides tooling for automation, but not unconditionally invoke `dbConfig.sh` and `ldapConfig.sh` within the container.
+Therefore, version 2.2.3 and newer provides tooling for automation, but does not unconditionally invoke `dbConfig.sh` and `ldapConfig.sh` within the container.
 
 On a fresh install, one could trigger DB and LDAP schmema and data setup as soon as `isvgim` is up and running, then restart:
 ```
@@ -258,9 +258,9 @@ helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -f 
 # Normal operation
 
 # compare desired state with currently deployed state
-helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml . | kubectl diff -f -
+helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml --set revision=$(git log -n 1 --pretty=format:%h) . | kubectl diff -f -
 # enforce desired state
-helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml . | kubectl apply -f -
+helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml --set revision=$(git log -n 1 --pretty=format:%h) . | kubectl apply -f -
 ```
 
 ### Install Verification Test
@@ -271,7 +271,7 @@ Execute smoke tests for your IVIG project as necessary. (Smoke tests are a subse
 
 ### Troubleshooting guide
 
-When using the demo setup script `vault-setup.sh`, please note that GNU grep 3.6 (from 2020, shippen with CentOS 9) yields abnormal behavior. Use a more recent version of grep (see section [Components and Dependencies](#components-and-dependencies)).
+When using the demo setup script `vault-setup.sh`, please note that GNU grep 3.6 (from 2020, shipped with CentOS 9) yields abnormal behavior. Use a more recent version of grep (see section [Components and Dependencies](#components-and-dependencies)).
 
 Should errors occur after deployment, review K8s events and IVIG application logs:
 ```
