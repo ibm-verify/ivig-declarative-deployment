@@ -43,6 +43,7 @@ This project targets following IBM Verifiy Identity Governance versions:
 - 11.0.0.1_IF1 (as of chart 2.1.1)
 - 11.0.1.0 (as of chart 2.1.4)
 - 11.0.1.1 (as of chart 2.2.4)
+- 11.0.1.1_IF1 (as of chart 2.3.1)
 
 There is no intention to backport newer chart version to support older IVIG versions.
 

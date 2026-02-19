@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.3.1 (2026-02-19)
+
+This version ships templates which deploy product version 11.0.1.1_IF1.
+
+Additionally, minor fixes and documentation updates are included.
+
 ## 2.3.0 (2026-02-12)
 
 This version adds chart and version control metadata to the k8s namespace and addresses a compatibility issue with symlinks.
