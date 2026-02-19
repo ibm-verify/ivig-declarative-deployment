@@ -9,7 +9,7 @@ licenseType: REPLACE_LICENSE
 clusterUrl: REPLACE_CLUSTER
 
 images:
-  isvgim: icr.io/isvg/identity-manager:11.0.1.1
+  isvgim: icr.io/isvg/identity-manager:11.0.1.1_IF1
   isvdi: icr.io/isvdi/verify-directory-integrator-dispatcher:10.0.0.6
   isvd: icr.io/isvd/verify-directory-server:10.0.4.0_IF1
   isvdproxy: icr.io/isvd/verify-directory-proxy:10.0.4.0_IF1
