@@ -6,7 +6,7 @@ metadata:
   namespace: {{ .Values.namespace }}
 data:
 {{ tpl (.Files.Glob "config/adapters/{*.yaml,*.sh}").AsConfig . | indent 2 }}
-{{- $files := .Files.Glob "config/certs/{isvdi.pem,*.crt}" }}
+{{- $files := include "certs" (list . "{isvdi.pem,*.crt}") | .Files.Glob }}
 {{- if gt (len $files) 0 }}
 {{ $files.AsConfig | indent 2 }}
 {{- end -}}

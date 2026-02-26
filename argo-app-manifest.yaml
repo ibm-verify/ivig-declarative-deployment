@@ -7,8 +7,15 @@ spec:
     namespace: ivig-argo
     server: https://kubernetes.default.svc
   source:
-    path: StarterKit.uat/argo
+    path: starter/argo
     repoURL: https://git.example.com/foobar/myproject.git
-    targetRevision: deployment/uat
-  sources: []
+    targetRevision: develop
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-config.yaml
+      valuesObject: # insert the content of secrets.yaml for a dummy/DEV setup
+      paramters:
+        - name: revision
+          value: $ARGO_APP_REVISION_SHORT
   project: integrator

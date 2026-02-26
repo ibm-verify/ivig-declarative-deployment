@@ -4,4 +4,4 @@ metadata:
   name: tlsmqcfg
   namespace: {{ .Values.namespace }}
 data:
-{{ (.Files.Glob "config/certs/{mq.key,mq.crt,isvgimRootCA.crt}").AsConfig | indent 2 }}
+{{ ( include "certs" (list . "{mq.key,mq.crt,isvgimRootCA.crt}") | .Files.Glob ).AsConfig | indent 2 }}

@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.3.2 (2026-02-26)
+
+This version adds enhancements geared towards the ability to deploy multiple environments (such as DEV, TEST or PROD) from a single directory structure rather than having to use separate directories for each environment. Similarly, the divergence between environment specific git branches is also reduced.
+
+Reworked logic for retrieving x509 certificates:
+- use optional setting `general.install.certDir` in `values-config.yaml` to override the certificate directory
+- default to `config/certs` if explicit setting is absent
+- consistently use a named template to create glob pattern for matching files within the certificate directory
+
+The ArgoCD application manifest sample has been updated to demonstrate how git commit hash can be injected by ArgoCD, in the same format `--set revision=$(git log -n 1 --pretty=format:%h)` would do when using `helm` from the command line (which is already documented in README). 
+
+Minor fixes and documentation updates are also included.
+
 ## 2.3.1 (2026-02-19)
 
 This version ships templates which deploy product version 11.0.1.1_IF1.
@@ -184,7 +197,7 @@ Platform credentials are not stored to any template under data-tpl. (And should 
 
 License keys are preferably also not hardcoded in files, but at the same time it is expected that IVIG can be deployed automatically. License keys and other project-specific configuration can be passed via `values-config.yaml` in a format which is a subset of the format used by `config.yaml`.
 
-The file `config.yaml` a needs to exist in its reduced form (post-installation form) for declarative deployment and is preferred not to contain any sensitive data in the form it is stored in Git. Therefore, activation key is dynamically substituted by the templating engine. Any configuration option currently not covered by `values-config.yaml` can be manually added to `config.yaml`.
+The file `config.yaml` needs to exist in its reduced form (post-installation form) for declarative deployment and is preferred not to contain any sensitive data in the form it is stored in Git. Therefore, activation key is dynamically substituted by the templating engine. Any configuration option currently not covered by `values-config.yaml` can be manually added to `config.yaml`.
 
 ## 2.0.2 (2025-08-15)
 

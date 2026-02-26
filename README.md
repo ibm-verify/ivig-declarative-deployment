@@ -71,7 +71,7 @@ The standalone setup is a viable option for both Developers/Integrators and for 
 ### TL;DR
 
 #### Quick demo
-Minimal setup from scratch, assuming your k8s custer has a storage class called 'local-path':
+Minimal setup from scratch, assuming your k8s cluster has a storage class called 'local-path':
 ```
 git clone https://github.com/ibm-verify/ivig-declarative-deployment.git
 cd ivig-declarative-deployment/starterkit/argo && git checkout demo
