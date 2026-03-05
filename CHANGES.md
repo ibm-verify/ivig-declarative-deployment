@@ -2,6 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.3.3 (2026-03-05)
+
+This version changes the approach how x509 certificates are passed to containers.
+
+Cryptographic keys clearly qualify as sensitive data. Certificates, Certificate Signing Requests and similar files are inherently environment specific, while application configuration is predominantly stage agnostic within the same project. Although certificates (public keys) could be stored within git without a security concern, it may be more manageable to handle private keys and certificates together, via Vault or a similar secret store. The same vehicle that can store private keys outside of git and inject these at runtime can also be used to store and inject certificates.
+
+The following concept is implemented for all files related to x509 certificates:
+- remove all certificates, key, CSRs etc. from configmaps
+- store certificates and related files to dedicated k8s secrets (opaque cert-secrets)
+- define projected volumes to merge the contents of cert-secrets and configmaps
+- mount projected volumes to existing directories to maintain compatibility
+- apply conditional template rendering to selectively enable external secrets for such cert-secrets
+
+This clean sepration enables vault integration for the following secrets which can be individually toggled via `general.install.externalSecret.*`:
+- `mqcreds`, `oidccreds` and `extcreds`: MQ, OIDC and platform credentials, support external secrets since 2.1.2
+- `regcred`: image pull secret, supports external secrets since 2.1.2, can be actively managed since 2.2.5
+- `isvdcerts`: new, enables externalization of LDAP key and certificate along with trusted certificates
+- `isvdcred`: stores LDAP admin credentials, can now be configured as external secret
+- `isvdicerts`: new, enables externalization of ISVDI key and certificate along with trusted certificates
+- `isvgimcerts`: new, includes all files under the cert directory, which can now be sourced from vault
+- `mqcerts`: new, allows the use of external secrets for MQ key and certficate plus trusted CA certs
+- `pgcerts`: new, allows the use of external secrets for Postgres key and certificate
+- `pgcreds`: new, enables externalisation of DB and DB Admin credentials
+
+Note:
+- configuring `isvdcerts` and `isvdcred` as external secrets only makes sense if `general.install.deployLdap` is enabled
+- similarly, enabling an external secret for `isvdicerts` is only effective if ISVDI is deployed by the helm chart (`general.install.deployIsvdi`)
+- setting `pgcerts` and `pgcreds` to `true` will not have no effect unless `general.install.deployDb` is alse enabled
+
+The following fixes and improvements are also included:
+- `vault-setup.sh`: compatibility with very old version of `grep`, such as GNU 3.6
+- `extract-config-response.sh`: fix dbUpgrade for postgres (`generate dbConfigResponse.tablespace.location.*` on upgrade)
+
 ## 2.3.2 (2026-02-26)
 
 This version adds enhancements geared towards the ability to deploy multiple environments (such as DEV, TEST or PROD) from a single directory structure rather than having to use separate directories for each environment. Similarly, the divergence between environment specific git branches is also reduced.

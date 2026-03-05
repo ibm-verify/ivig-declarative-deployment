@@ -6,8 +6,4 @@ metadata:
   namespace: {{ .Values.namespace }}
 data:
 {{ (.Files.Glob "config/db/{pg_hba.conf,postgres.conf,primary_init_script.sh}").AsConfig | indent 2 }}
-{{- $files := include "certs" (list . "pgsql.{key,crt}") | .Files.Glob }}
-{{- if gt (len $files) 0 }}
-{{ $files.AsConfig | indent 2 }}
-{{- end -}}
 {{- end }}

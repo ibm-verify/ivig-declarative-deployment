@@ -17,9 +17,13 @@ spec:
         fsGroup: 0{{end}}
       volumes:
       - name: config
-        configMap:
-          name: isvgimsdi
+        projected:
           defaultMode: 0640
+          sources:
+          - configMap:
+              name: isvgimsdi
+          - secret:
+              name: isvdicerts
       - name: init-script
         projected:
           sources:

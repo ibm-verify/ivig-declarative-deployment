@@ -5,9 +5,16 @@ general:
     deployDb: false
     deployLdap: false
     externalSecret:
-      mqcreds: false
       extcreds: false
+      isvdcerts: false
+      isvdcred: false
+      isvdicerts: false
+      isvgimcerts: false
+      mqcerts: false
+      mqcreds: false
       oidccreds: false
+      pgcerts: false
+      pgcreds: false
       regcred: false
   license:
     activationKey:

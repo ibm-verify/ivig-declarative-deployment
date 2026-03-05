@@ -46,7 +46,7 @@ swap_enc_cred() {
 }
 
 if [ "x$OP" = "xupgrade" ]; then # only create minimal DB response for upgrade
-  sed -n -e 's/^\(database\.db\.admin.*\)=\(.*\)$/dbConfigResponse.\1=\2/p' $INPUT3 > $OUTPUT2
+  sed -n -e 's/^\(database\.db\.admin.*\)=\(.*\)$/dbConfigResponse.\1=\2/p' -e 's/^database\.\(tablespace.*\)=\(.*\)$/dbConfigResponse.\1=\2/p' $INPUT3 > $OUTPUT2
   swap_enc_cred adminPwd $OUTPUT2 && exit 0
 fi # else, recreate full response files for both DB and LDAP
 

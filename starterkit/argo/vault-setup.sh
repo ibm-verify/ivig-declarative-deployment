@@ -14,7 +14,7 @@ echo "Generating random secrets..."
 # LDAP password policy: minLength 8, minAlpha 2, minOther 2, maxRepeated 2
 while true; do
     LDAPPW=$(rnd_b64)
-    grep -qE -e '^[^a-zA-Z]*[a-zA-Z]?[^a-zA-Z]*$' -e '^[a-zA-Z]*[^a-zA-Z]?[a-zA-Z]*$' -e '(.)\1{2}' <<< $LDAPPW || break
+    grep -qE '^[^a-zA-Z]*[a-zA-Z]?[^a-zA-Z]*$|^[a-zA-Z]*[^a-zA-Z]?[a-zA-Z]*$|(.)\1{2}' <<< $LDAPPW || break
 done
 
 DBPW=$(rnd_b64)

@@ -44,8 +44,13 @@ spec:
       restartPolicy: Always
       volumes:
       - name: config
-        configMap:
-          name: isvgimconfig
+        projected:
+          defaultMode: 0640
+          sources:
+          - configMap:
+              name: isvgimconfig
+          - secret:
+              name: isvgimcerts
       - name: keystore
         secret:
           secretName: isvgimks

@@ -30,8 +30,13 @@ spec:
           medium: Memory
           sizeLimit: {{ .Values.services.isvd.pgSharedMemory | quote }}
       - name: config-volume
-        configMap:
-          name: isvgimldap
+        projected:
+          defaultMode: 0640
+          sources:
+          - configMap:
+              name: isvgimldap
+          - secret:
+              name: isvdcerts
       - name: data-volume 
         persistentVolumeClaim: 
           claimName: replica-1-pvc

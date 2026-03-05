@@ -337,8 +337,13 @@ spec:
           name: ivigrisk
           optional: true
       - name: config
-        configMap:
-          name: isvgimconfig
+        projected:
+          defaultMode: 0640
+          sources:
+          - configMap:
+              name: isvgimconfig
+          - secret:
+              name: isvgimcerts
       - name: ilmtcert
         configMap:
           name: ibm-licensing-upload-config
@@ -346,8 +351,8 @@ spec:
       - name: logs
         emptyDir: {}
       - name: mqconfigtls
-        configMap:
-          name: tlsmqcfg
+        secret:
+          secretName: mqcerts
       - name: isvgimdatadir
         emptyDir: {}
       initContainers:

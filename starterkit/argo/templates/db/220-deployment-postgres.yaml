@@ -25,10 +25,14 @@ spec:
         emptyDir:
           medium: Memory
           sizeLimit: {{ .Values.services.postgres.sharedMemory | quote }}
-      - name: certs
-        configMap:
-          name: isvgimdb
+      - name: conf-and-certs
+        projected:
           defaultMode: 0640
+          sources:
+          - configMap:
+              name: isvgimdb
+          - secret:
+              name: pgcerts
       - name: init-script
         projected:
           sources:
@@ -80,7 +84,7 @@ spec:
         volumeMounts:
         - name: data-volume
           mountPath: /var/lib/postgresql/data
-        - name: certs
+        - name: conf-and-certs
           mountPath: /tmp/isvgimdb
         - name: init-script
           mountPath: /docker-entrypoint-initdb.d/primary_init_script.sh
