@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.3.4 (2026-03-12)
+
+This version delivers compatibility improvements of non-essential convenience scripts which can be run locally to quickly bootstrap an environment. Although GNU/Linux is the primary target platform, MacOS support has been requested. The current version of MacOS still ships with an extremely outdated bash version (3.2.57 from 2007) due to GPLv3 licensing issues. Convenience scripts are compatible with this old bash version as well as BSD sed and grep.
+- make `cert-util.sh` work with bash-3.2
+- make `cert-setup.sh` work with BSD sed
+- update documentation of dependencies and compatibility
+
+Further, a bug inherited from the original starterkit is corrected. Platform credentials (specifically LDAP, DB, DBADMIN, APPSERVER, ISIMSYSTEM and MAIL) consisting of 48 or more characters would yield errors. This issue is addressed in this project.
+
+Minor documentation updates are also included, along with a section documenting advanced use of `cert-util.sh`.
+
 ## 2.3.3 (2026-03-05)
 
 This version changes the approach how x509 certificates are passed to containers.

@@ -17,7 +17,7 @@ inject_ext_cred() {
   fi
 
   PATTERN=$2
-  ENCRYPTED=$(/work/encryptionHelper.sh encrypt ${!1})
+  ENCRYPTED=$(/work/encryptionHelper.sh encrypt ${!1} | tr -d "\n")
   FILE=$3
 
   # PATTERN MUST be escaped upfront. ENCRYPTED will never contain ';'

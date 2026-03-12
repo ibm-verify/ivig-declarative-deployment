@@ -79,7 +79,7 @@ issue_cert() {
 }
 
 req_cert() {
-  ALTNAME=${1@U}_ALTNAME
+  ALTNAME=$(tr a-z A-Z <<< $1)_ALTNAME # bash-3.2 compatible alternative to ALTNAME=${1@U}_ALTNAME
   openssl req -config <(cert_cnf) -addext "subjectAltName = ${!ALTNAME}" -new -nodes -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -keyout ${1}.key -out ${1}.csr -subj "/CN=${T}/O=isvgim/DC=isvgim"
 }
 

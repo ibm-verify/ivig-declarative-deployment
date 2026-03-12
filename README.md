@@ -56,9 +56,11 @@ There are no specific system requirements other than those of IVIG, which will b
 ### Optional user convenience scripts
 
 There are optional user convenience scripts which can be used for quickly setting up a demo or development environment. These scripts have been specifically developed with efficiency and minimal dependencies in mind and are known to work with the following versions of standard Linux/Unix utilities:
-- `cert-setup.sh`: GNU bash 5, GNU sed 4.8
-- `cert-util.sh`: GNU bash 5, OpenSSL 3
-- `vault-setup.sh`: GNU bash 5, GNU grep 3.6 or BSD grep 2.6
+- `cert-setup.sh`: bash 3.2, sed (GNU 4.2, BSD)
+- `cert-util.sh`: bash 3.2, OpenSSL 3
+- `vault-setup.sh`: bash 3.2, grep (GNU 3.6, BSD 2.6), OpenSSL 3
+
+Note: Although GNU/Linux is the primary target platform, there is at least one user of this project who runs MacOS. The current version of MacOS still ships with an extremely outdated bash version (3.2.57 from 2007) due to GPLv3 licensing issues. Convenience scripts of version 2.3.4 are compatible with this old bash version as well as BSD sed and grep.
 
 ## Versions
 
@@ -77,7 +79,7 @@ git clone https://github.com/ibm-verify/ivig-declarative-deployment.git
 cd ivig-declarative-deployment/starterkit/argo && git checkout demo
 ./cert-setup.sh
 ./vault-setup.sh
-helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml . | kubectl apply -f -
+helm template --dry-run=client -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml . | kubectl apply -f -
 kubectl -n ivig-argo wait --for=condition=Ready --timeout=5m pod -l app=isvgim
 kubectl -n ivig-argo exec isvgim-0 -- /bin/bash -c "/work/util/extract-config-response.sh --install && /work/ldapConfig.sh install && /work/dbConfig.sh install"
 kubectl -n ivig-argo rollout restart sts/isvgim
@@ -104,7 +106,7 @@ Generate secrets (not to be stored in git), then deploy to k8s and initialize da
 # autogenerate random secrets
 ./vault-setup.sh
 # deploy desired state
-helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml --set revision=$(git log -n 1 --pretty=format:%h) . | kubectl apply -f -
+helm template --dry-run=client -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml --set revision=$(git log -n 1 --pretty=format:%h) . | kubectl apply -f -
 # init data tier
 kubectl -n $NAMESPACE wait --for=condition=Ready --timeout=5m pod -l app=isvgim
 kubectl -n $NAMESPACE exec isvgim-0 -- /bin/bash -c "/work/util/extract-config-response.sh --install && /work/ldapConfig.sh install && /work/dbConfig.sh install"
@@ -185,6 +187,45 @@ Elliptic Curve prime256v1 keys and certificates are created for the following wh
 - `pgsql` if `general.install.deployDb` is enabled
 
 While `cert-setup.sh` is intended to be a convenient "one-click" tool to setup a new environment without specifying any input parameter, it is not as robust and versatile as `cert-util.sh` which comes with a rich set of commandline options that allow finer-grained control of the behavior. Of course, due to project-specific requirements one may have to create and manage certificates via alternative means, in which case these two scripts might serve as reference or inspiration.
+
+#### Tips and tricks for certificate creation
+
+One can use `cert-util.sh` to conveniently create additional certificates with arbitrary subject alternate names, signed by `isvgimRootCA`. This is useful when additional certificates need to be created for external data tier components or other components of the target environment, where typically finer grained control over subjectAltNames is also required. The example below demonstrated, how to create a certificate for `foo` and control subject alternative names via the environment variable `FOO_ALTNAME`.
+
+```
+$ export FOO_ALTNAME="DNS: foo.com, DNS:*.foo.com"
+$ ./cert-util.sh --create --include foo
+-----
+Certificate request self-signature ok
+subject=CN=isvgim, O=isvgim, DC=isvgim
+-----
+Certificate request self-signature ok
+subject=CN=mq, O=isvgim, DC=isvgim
+-----
+Certificate request self-signature ok
+subject=CN=foo, O=isvgim, DC=isvgim
+$ ./cert-util.sh --list
+Listing subjectAltName and expiration date of certificates:
+
+[foo.crt]
+X509v3 Subject Alternative Name: 
+    DNS:foo.com, DNS:*.foo.com
+notAfter=Mar 10 18:39:28 2031 GMT
+
+[isvgim.crt]
+X509v3 Subject Alternative Name: 
+    DNS:idm.demo.com, DNS:isvgim
+notAfter=Mar 10 18:39:28 2031 GMT
+
+[isvgimRootCA.crt]
+No extensions in certificate
+notAfter=Mar  8 18:39:28 2036 GMT
+
+[mq.crt]
+X509v3 Subject Alternative Name: 
+    DNS:mqshare, DNS:mq-headless, DNS:localhost
+notAfter=Mar 10 18:39:28 2031 GMT
+```
 
 #### Storing certificates and related files
 
@@ -284,16 +325,16 @@ When working directly with `helm` rather than via ArgoCD (which is a viable opti
 # Development/integration
 
 # inspect the output of a single template (from within the argo directory)
-helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml -s templates/201-deployment-isvgimconfig.yaml .
+helm template --dry-run=client -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml -s templates/201-deployment-isvgimconfig.yaml .
 # split output into separate files for each template and store to output-dir for inspection/debugging
-helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml . | ../../helm-fan-out.sh output-dir
+helm template --dry-run=client -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml . | ../../helm-fan-out.sh output-dir
 
 # Normal operation
 
 # compare desired state with currently deployed state
-helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml --set revision=$(git log -n 1 --pretty=format:%h) . | kubectl diff -f -
+helm template --dry-run=client -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml --set revision=$(git log -n 1 --pretty=format:%h) . | kubectl diff -f -
 # enforce desired state
-helm template --dry-run -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml --set revision=$(git log -n 1 --pretty=format:%h) . | kubectl apply -f -
+helm template --dry-run=client -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml --set revision=$(git log -n 1 --pretty=format:%h) . | kubectl apply -f -
 ```
 
 ### Install Verification Test
@@ -314,6 +355,8 @@ kubectl logs -n <namespace> isvgim-0 -c logs-im
 ```
 Check the avalability and configuration of your database and LDAP instance.
 
+Note that there should not be any additional files under the certificate directory (`starterkit/argo/config/certs` by default), the presence of binary files is known to yield abnormal helm template rendering.
+
 ## Setup guide - ArgoCD
 
 - Check out this project, adjust `values.yaml` and `values-config.yaml` for your environment and check into your git
@@ -332,6 +375,9 @@ This section contains near and mid term plans, uncommitted feature candidates an
 - ~eliminate the need to store `isvgimks` by initializeing one on-the-fly during initialization~ DONE
 - ~optional/modular deployment of postgres DB and LDAP into the same namespace for demo or development~ DONE
 - ~convenience utility for DB and LDAP upgrade and initial schema and data load~ DONE
+- ~credentials from extenral secrets (optional, selectively configurable)~ DONE
+- ~x509 certificates and key from extenral secrets (optional, selectively configurable)~ DONE
+- HashiCorp Vault integration walkthrough
 
 ## Further Documentation
 
