@@ -8,7 +8,7 @@ spec:
   selector:
     matchLabels:
       app: isvdi
-  template: 
+  template:
     metadata:
       labels:
         app: isvdi

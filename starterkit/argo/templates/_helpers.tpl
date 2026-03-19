@@ -1,9 +1,9 @@
 {{/*
-Shortcut to construct a glob pattern within the certificate directory
+Dictionary entries of files matching a pattern within the certificate directory
 Usage: include "certs" (list . "{mq.key,mq.crt,isvgimRootCA.crt}")
 */}}
 {{- define "certs" }}
   {{- $ := index . 0 }}
   {{- $glob := index . 1 }}
-  {{- print (default "config/certs" $.Values.general.install.certDir) "/" $glob }}
+  {{- ($.Files.Glob (print (default "config/certs" $.Values.general.install.certDir) "/" $glob) ).AsConfig | indent 2 }}
 {{- end }}

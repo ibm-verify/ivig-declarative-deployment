@@ -7,7 +7,7 @@ spec:
   selector:
     matchLabels:
       app: mqshare
-  template: 
+  template:
     metadata:
       labels:
         app: mqshare
@@ -97,7 +97,7 @@ spec:
           timeoutSeconds: {{ .Values.services.mqshare.probes.timeoutSeconds }}
         volumeMounts:
         - name: datadir
-          mountPath: /mnt/mqm               
+          mountPath: /mnt/mqm
         - name: mqconfig
           mountPath: /etc/mqm/ISVGContainerQMgr-shared.mqsc
           subPath: ISVGContainerQMgr-shared.mqsc

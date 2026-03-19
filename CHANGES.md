@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.3.5 (2026-03-19)
+
+This version improves flexibiity of certificate creation and introduces minor improvements
+
+The script `cert-util.sh` is enhanced to allow subjectAltName override for all auto-deployed components:
+- IVIG itself via `ISVGIM_ALTNAME`
+- MQ via `MQ_ALTNAME`
+- Directory Server via `ISVD_ALTNAME`
+- Directory Integrator via `ISVDI_ALTNAME`
+- Postgres DB via `PGSQL_ALTNAME`
+
+Note: Before this version, specifying subjectAltNames via environment variables was available for any additional component, but not for auto-deployed core components.
+
+Further, a more compact, optimised mechanism is used to include certificates in ConfigMaps or Secrets, this change yields more intuitive, easier to read templates.
+
+Cosmetic changes:
+- trailing whitespace removal on the few files taken over from the original starterkit
+- clearly indicate that the chart is not limited to deployments with external data tier
+
 ## 2.3.4 (2026-03-12)
 
 This version delivers compatibility improvements of non-essential convenience scripts which can be run locally to quickly bootstrap an environment. Although GNU/Linux is the primary target platform, MacOS support has been requested. The current version of MacOS still ships with an extremely outdated bash version (3.2.57 from 2007) due to GPLv3 licensing issues. Convenience scripts are compatible with this old bash version as well as BSD sed and grep.

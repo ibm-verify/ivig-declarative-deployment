@@ -8,7 +8,7 @@ spec:
   selector:
     matchLabels:
       app: isvd-replica-1
-  template: 
+  template:
     metadata:
       labels:
         app: isvd-replica-1
@@ -22,7 +22,7 @@ spec:
         runAsUser: {{ .Values.services.isvd.user }}
         fsGroup: {{ .Values.services.isvd.group }}{{end}}
 
-      # We use a volume to store the configuration for the 
+      # We use a volume to store the configuration for the
       # environment.
       volumes:
       - name: dshm
@@ -37,8 +37,8 @@ spec:
               name: isvgimldap
           - secret:
               name: isvdcerts
-      - name: data-volume 
-        persistentVolumeClaim: 
+      - name: data-volume
+        persistentVolumeClaim:
           claimName: replica-1-pvc
 
       imagePullSecrets:
@@ -46,7 +46,7 @@ spec:
 
       containers:
       - name: isvd-replica
-        
+
         # The fully qualified name of the image.
         image: {{ .Values.images.isvd }}
 
@@ -60,7 +60,7 @@ spec:
           value: /var/isvd/config/ldap_config.yaml
         - name: TZ
           value: ":{{ .Values.timezone }}"
-          
+
         # The configuration volume.
         volumeMounts:
         - name: config-volume
@@ -71,13 +71,13 @@ spec:
           mountPath: /dev/shm
 
         # The liveness, readiness and startup probes are used by
-        # Kubernetes to monitor the health of the container.  Our 
+        # Kubernetes to monitor the health of the container.  Our
         # health is governed by the health_check.sh script which is
         # provided by the container.
         livenessProbe:
           exec:
             command:
-            - /sbin/health_check.sh 
+            - /sbin/health_check.sh
             - livenessProbe
           initialDelaySeconds: {{ .Values.services.isvd.probes.initialDelaySeconds }}
           periodSeconds: {{ .Values.services.isvd.probes.periodSeconds }}
@@ -92,7 +92,7 @@ spec:
         startupProbe:
           exec:
             command:
-            - /sbin/health_check.sh 
+            - /sbin/health_check.sh
             - startupProbe
           initialDelaySeconds: {{ .Values.services.isvd.probes.initialDelaySeconds }}
           periodSeconds: {{ .Values.services.isvd.probes.periodSeconds }}

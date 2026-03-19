@@ -67,11 +67,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-ISVGIM_ALTNAME="DNS:${FQDN//,/, DNS:}, DNS:isvgim"
-MQ_ALTNAME="DNS:mqshare, DNS:mq-headless, DNS:localhost"
-ISVDI_ALTNAME="DNS:isvdi, DNS:*.${NAMESPACE}.pod.cluster.local"
-ISVD_ALTNAME="DNS:isvd-replica-1"
-PGSQL_ALTNAME="DNS:postgres"
+: ${ISVGIM_ALTNAME:="DNS:${FQDN//,/, DNS:}, DNS:isvgim"}
+: ${MQ_ALTNAME:="DNS:mqshare, DNS:mq-headless, DNS:localhost"}
+: ${ISVDI_ALTNAME:="DNS:isvdi, DNS:*.${NAMESPACE}.pod.cluster.local"}
+: ${ISVD_ALTNAME:="DNS:isvd-replica-1"}
+: ${PGSQL_ALTNAME:="DNS:postgres"}
 
 issue_cert() {
   openssl x509 -req -in ${1}.csr -out ${1}.crt -extfile <(cert_cnf) -extensions server_cert -copy_extensions copy -CA isvgimRootCA.crt -CAkey isvgimRootCA.key -CAserial isvgimRootCA.srl -CAcreateserial -days 1825 -sha256

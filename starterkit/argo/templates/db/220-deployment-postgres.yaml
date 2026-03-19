@@ -8,7 +8,7 @@ spec:
   selector:
     matchLabels:
       app: postgres
-  template: 
+  template:
     metadata:
       labels:
         app: postgres
@@ -18,8 +18,8 @@ spec:
         runAsUser: {{ .Values.services.postgres.user }}
         fsGroup: {{ .Values.services.postgres.group }}{{end}}
       volumes:
-      - name: data-volume 
-        persistentVolumeClaim: 
+      - name: data-volume
+        persistentVolumeClaim:
           claimName: postgres-pvc
       - name: dshm
         emptyDir:
