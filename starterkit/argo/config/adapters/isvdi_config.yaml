@@ -32,6 +32,7 @@ init:
   aux-config-programs:
     - command: /home/isvdi/adapterContainerScripts/initAdapterContainer.sh
     - command: /home/isvdi/setHostname.sh
+    - command: /home/isvdi/call-adapter-init-scripts.sh
 
 keyfile:
   keys:

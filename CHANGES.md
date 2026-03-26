@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.3.6 (2026-03-26)
+
+This version delivers improved truststore creation for IVIG and additional flexibiity for ISVDI.
+
+During container initialization, certficates are read from PEM files and added to truststores and keystores. Due to a bug in IVIG, only the first entry from a PEM file is processed, causing certificate validation errors when PEM files consisting of multiple entries are used. This version fixes this bug by overriding `parseYaml.sh` in the IVIG container with a tweaked version that properly imports all certificates from PEM files when builing the truststores.
+
+ISVDI allows additional configuration scripts to be specified via yaml configuration, but the absence of such scripts causes a crash loop. For the ISVA adapter to function properly, additional initialization logic is needed, which is typically implemented via scripts in the solution directory, on a PVC. The original initialization consists of multiple steps:
+1. Start ISVDI without config scripts required by the adapter
+2. Use the bundled `adapterUtils` scripts to copy required files to PVC (which requires a running ISVDI container)
+3. Amend yaml configuration to reference the custom init script on the PVC
+4. Restart the container for the updated init logic to take effect
+
+This creates a chicken and egg problem which does not play well with declarative deployment, as initialization requires a phased approach and deploying the final desired state right away would not yield a correctly functioning environemnt. This flaw is fixed by adding logic that finds and calls adapter initialization scripts on startup and avoids crash loops caused by missing scripts.
+
+Additionally, a reasonable default value is used for non-existing or empty `encryptionKey.properties` with the intention to avoid false positives during comparison of the desired state with the actual state (cosmetic improvement for ArgoCD diff).
+
 ## 2.3.5 (2026-03-19)
 
 This version improves flexibiity of certificate creation and introduces minor improvements

@@ -48,6 +48,7 @@ spec:
           cp -rLv /tmp/isvgimdata/* /opt/ibm/wlp/usr/servers/defaultServer/config/data/ &&
           sed -i 's/Xmx4096m/Xmx16384m/g' /opt/ibm/wlp/usr/servers/defaultServer/jvm.options &&
           sed -i 's/Xmx256m/Xmx8192m/g' /work/DBPurge.sh &&
+          cp -v /work/util/tweaked-parseYaml.sh /work/parseYaml.sh &&
           /work/initIMContainer.sh
         ports:
         - containerPort: {{ .Values.services.isvgim.ports.https }}

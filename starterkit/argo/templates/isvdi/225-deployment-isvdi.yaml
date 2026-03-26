@@ -26,13 +26,15 @@ spec:
               name: isvdicerts
       - name: init-script
         projected:
+          defaultMode: 0755
           sources:
           - configMap:
               name: isvgimsdi
               items:
                 - key: setHostname.sh
                   path: setHostname.sh
-                  mode: 0755
+                - key: call-adapter-init-scripts.sh
+                  path: call-adapter-init-scripts.sh
       - name: adapters
         persistentVolumeClaim:
           claimName: isvdi-pvc
@@ -66,4 +68,7 @@ spec:
         - name: init-script
           mountPath: /home/isvdi/setHostname.sh
           subPath: setHostname.sh
+        - name: init-script
+          mountPath: /home/isvdi/call-adapter-init-scripts.sh
+          subPath: call-adapter-init-scripts.sh
 {{- end }}
