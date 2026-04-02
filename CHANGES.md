@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.3.7 (2026-04-02)
+
+This version improves ISVDI autodiscovery and liberty metrics configuration.
+
+ISVDI init script autodiscovery is run right after `initAdapterContainer.sh` so `setHostname.sh` would be executed after autodiscovered init scripts are run. This improvement avoids a pontential issue where changes made by `setHostname.sh` could be overwritten by autodiscovered scripts on some setups, specifically by an ISVA adapter init script which replaces the original `ibmdisrv` script with an adjusted version, where the original at that point would have already been modified by `setHostname.sh`.
+
+A more secure way is implemented for handing over liberty metrics credentials, which does not require storing sensitive data in git (not even in encrypted form). Both username and password can be left blank (empty or null) in `values-config.yaml` in which case missing data will be read from a k8s secret. This secret by default will be populated based on username in `values-config.yaml` and password specified in `secrets.yaml`, however, the secret can be marked as externally managed in which case it will be assumed to pre-exist (e.g. created and updated by vault, see feature added in 2.1.2).
+
 ## 2.3.6 (2026-03-26)
 
 This version delivers improved truststore creation for IVIG and additional flexibiity for ISVDI.

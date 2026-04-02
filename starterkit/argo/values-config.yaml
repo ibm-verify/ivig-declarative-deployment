@@ -10,6 +10,7 @@ general:
       isvdcred: false
       isvdicerts: false
       isvgimcerts: false
+      metricscreds: false
       mqcerts: false
       mqcreds: false
       oidccreds: false

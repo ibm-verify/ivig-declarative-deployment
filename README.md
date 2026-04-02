@@ -287,6 +287,7 @@ The following secrets can be individually toggled via `general.install.externalS
 - `mqcerts`: since 2.3.3, allows the use of external secrets for MQ key and certficate plus trusted CA certs
 - `pgcerts`: allows the use of external secrets for Postgres key and certificate, available since 2.3.3
 - `pgcreds`: enables externalisation of DB and DB Admin credentials since 2.3.3
+- `metricscreds`: enables liberty metrics credentials to be provided externally since 2.3.7
 
 Note:
 - configuring `isvdcerts` and `isvdcred` as external secrets only makes sense if `general.install.deployLdap` is enabled

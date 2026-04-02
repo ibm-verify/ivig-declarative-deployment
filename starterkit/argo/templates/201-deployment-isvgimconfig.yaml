@@ -23,6 +23,7 @@ spec:
         - >
           cp -rLv /tmp/isvgimdata/* /opt/ibm/wlp/usr/servers/defaultServer/config/data/ &&
           cp -v /work/util/tweaked-parseYaml.sh /work/parseYaml.sh &&
+          cp -v /work/util/tweaked-processOptions.sh /work/processOptions.sh &&
           /work/initIMContainer.sh config
         imagePullPolicy: IfNotPresent
         env:
@@ -35,6 +36,9 @@ spec:
           value: {{ .Values.services.isvgim.config.debugInitScripts | quote }}
         - name: TZ
           value: ":{{ .Values.timezone }}"
+        envFrom:
+        - secretRef:
+            name: metricscreds
         volumeMounts:
         - mountPath: /tmp/isvgimcfg
           name: config
