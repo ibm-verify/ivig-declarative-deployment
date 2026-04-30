@@ -76,6 +76,9 @@ server:
   flags:
     disableTLSv12: false
     enableFIPS: false
+    secureSessionCookies: true
+    globalHSTS: true
+    hideServerVersion: false
   hostname: null
   truststore:
   - '@isvgimRootCA.crt'

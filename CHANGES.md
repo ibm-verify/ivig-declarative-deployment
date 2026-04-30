@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.3.8 (2026-04-30)
+
+This version delivers 3 hardening measures which can be selectively applied.
+
+These measures can be enabled via custom flags not included in the original product. Flags can be activated by setting `server.flags.*` to `true` in `values-config.yaml`. Specifying an unkown flag on a vanilla (non-enhanced) container will yield the error message `./work/parseYaml.sh: line 57: handle_*: command not found` but not cause further errors.
+
+A secure session cookie informs the browser to send the session cookie back only over an HTTPS connection. When this feature is enabled, session cookies over an HTTP connection no longer work. Further, session cookies should instruct the user agent to not expose cookie content to client-side scripts in order to mitigate cross-site scripting (XSS) attacks.
+
+To activate the security measures above, set `server.flags.secureSessionCookies` to `true` in `values-config.yaml`.
+
+HTTP Strict Transport Security (HSTS) is a security policy mechanism that forces web browsers to interact with websites exclusively through secure HTTPS connections. It prevents attackers from downgrading connections to insecure HTTP, protecting against man-in-the-middle attacks and cookie hijacking by ensuring all traffic is encrypted. The server sends a Strict-Transport-Security header to the browser, instructing it to only use HTTPS for a specified time (via max-age).
+
+By default, HSTS header is set for any URL under `/itim`, but endpoints outside of this context (such as `openapi`, `enrole` or `metrics`) are not protected. To globally active this security measure, set `server.flags.globalHSTS` to `true` in `values-config.yaml`.
+
+Server version disclosure enables the attacker to find vulnerabilities easier, potentially leading to targeted attacks with version specific exploits. Therefore, production systems should take measures to avoid sending detailed server version information.
+
+To make the identification of the exact Application Server version harder, set `server.flags.hideServerVersion` to `true` in `values-config.yaml` which yields the following:
+- disable Liberty welcome page: the welcome page is enabled by default, so accessing the root context displays the Open Liberty welcome page with version information
+- remove server header: these headers are enabled by default, so server version/implementation information is returned to the caller in certain situations
+- disable `X-Powered-By` header: in servlet-4.0 and earlier, the `X-Powered-By` header is set by default
+
 ## 2.3.7 (2026-04-02)
 
 This version improves ISVDI autodiscovery and liberty metrics configuration.

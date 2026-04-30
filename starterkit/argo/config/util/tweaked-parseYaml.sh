@@ -50,6 +50,29 @@ handle_enableFIPS() {
 	fi
 } #handle_enableFIPS
 
+handle_secureSessionCookies() {
+	if [ "x$1" = "xtrue" ]; then
+		sed -i '/<\/server>/i\
+		<httpSession cookieSecure="true" cookieHttpOnly="true" />' "${CONFDIR}/endpoint.xml"
+	fi
+} #handle_secureSessionCookies
+
+handle_globalHSTS() {
+	if [ "x$1" = "xtrue" ]; then
+		sed -i '/<\/server>/i\
+		<webContainer addstricttransportsecurityheader="max-age=31536000;includeSubDomains" />' "${CONFDIR}/endpoint.xml"
+	fi
+} #handle_globalHSTS()
+
+handle_hideServerVersion() {
+	if [ "x$1" = "xtrue" ]; then
+		sed -i '/<\/server>/i\
+		<httpDispatcher enableWelcomePage="false" />\
+		<httpOptions removeServerHeader="true" />\
+		<webContainer disableXPoweredBy="true" />' "${CONFDIR}/endpoint.xml"
+	fi
+} #handle_hideServerVersion()
+
 process_flags() {
 	while IFS= read -r line; do
 		flagName=$(echo $line | cut -d '=' -f 1)

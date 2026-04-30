@@ -271,7 +271,7 @@ Specify the image pull secret to be used for downloading container images, adjus
 
 The script `vault-setup.sh` can be used create `secrets.yaml` with random generated passwords and a random 128 bit Data Encryption Key. Generated passwords consist of 16 characters from the base64 alphabet to avoid issues with special characters. Password complexity rules of the middleware components are considered, specifically, the LDAP admin password is randomly generated until it fulfills the following password policies: minLength 8, minAlpha 2, minOther 2, maxRepeated 2. This script is geared towards developers who need to quickly setup a reasonably secure development environment, but may be useful during the initial setup of environments which prefer to manage secrets internally, or where secrets are later moved to an external vault such as HashiCorp Vault.
 
-#### Vault integration via External Secrets (optional) 
+#### Vault integration via External Secrets (optional)
 
 Interoperability with Vault is achieved via the use of External Secrets. The External Secrets Operator interacts with [HashiCorp Vault](https://www.vaultproject.io/), [IBM Cloud Secrets Manager](https://www.ibm.com/cloud/secrets-manager) or external secret management systems like [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/), [Google Secrets Manager](https://cloud.google.com/secret-manager), [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/), [CyberArk Conjur](https://www.conjur.org/).
 
@@ -357,6 +357,17 @@ kubectl logs -n <namespace> isvgim-0 -c logs-im
 Check the avalability and configuration of your database and LDAP instance.
 
 Note that there should not be any additional files under the certificate directory (`starterkit/argo/config/certs` by default), the presence of binary files is known to yield abnormal helm template rendering.
+
+### Hardening
+
+This project delivers many [extras not included in the original product](docs/EXTRAS.md) which are mostly geared towards enhancing security:
+- Redesigned, more secure approach to working with sensitive data
+  - Proper separation of sensitive and non-sensitive data
+  - Dynamic credential injection
+  - Improved protection of data encyption keys
+  - Interoperability with external secret management systems such as HashiCorp Vault
+- Custom flags for selectively enabling general hardening measures
+- Fixes of bugs which impact security but have not been addressed in the original product yet
 
 ## Setup guide - ArgoCD
 
