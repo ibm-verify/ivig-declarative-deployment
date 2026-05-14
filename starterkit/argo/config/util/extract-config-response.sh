@@ -60,7 +60,9 @@ ldapConfigResponse.javax.net.ssl.trustStorePassword=
 EOM
 
 sed -n -e 's/^\(database\.db.*\)=\(.*\)$/dbConfigResponse.\1=\2/p' -e 's/^database\.\(tablespace.*\)=\(.*\)$/dbConfigResponse.\1=\2/p' $INPUT3 > $OUTPUT2
-sed -n 's/^database\.jdbc\.driverUrl=.*\/\/\(.*\):\(.*\)\/\([^:?]*\).*/ip=\1\nport=\2\nname=\3/p' $INPUT3 | sed 's/^/dbConfigResponse.database.db./' >> $OUTPUT2
+sed -n -e 's/^database\.jdbc\.driverUrl=.*\(@\|\/\/\)\(.*\):\([^:\/]*\)[:/]\([^:?]*\).*/ip=\2\nport=\3\nname=\4/p' \
+       -e 's/^database\.jdbc\.driverUrl=.*@(DESCRIPTION=.*(HOST=\([^)]*\)).*(PORT=\([^)]*\)).*(\(SID\|SERVICE_NAME\)=\([^)]*\)).*$/ip=\1\nport=\2\nname=\4/p' $INPUT3 \
+    | sed 's/^/dbConfigResponse.database.db./' >> $OUTPUT2
 sed -i -e 's/^dbConfigResponse\.database\.db\.type=/dbtype=/' -e 's/^dbtype=POSTGRESQL/dbtype=POSTGRES/' $OUTPUT2
 
 swap_enc_cred credentials $OUTPUT1

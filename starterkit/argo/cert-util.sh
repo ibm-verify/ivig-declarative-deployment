@@ -13,7 +13,7 @@ Options for create:
    -f|--fqdn        comma separated list of DNS subjectAltNames of the app cert
    -n|--namespace   K8s namespace, to be used in isvdi subjectAltName only
    -i|--include     comma separated list of optional components to issue
-                    certificates for, defaults to "isvd,isvdi,pgsql"
+                    certificates for, defaults to "isvd,isvdi,pgsql,isvart"
 Additional options:
    -d|--directory   local directory for certificates, defaults to "config/certs"
 EOM
@@ -48,7 +48,7 @@ EOM
 CERT_DIR=$(dirname "${BASH_SOURCE[0]}" )/config/certs
 NAMESPACE="isvgim"
 FQDN="idm.demo.com"
-INCLUDE="isvd,isvdi,pgsql"
+INCLUDE="isvd,isvdi,pgsql,isvart"
 
 if [[ $# -lt 1 ]]; then
  usage
@@ -72,6 +72,7 @@ done
 : ${ISVDI_ALTNAME:="DNS:isvdi, DNS:*.${NAMESPACE}.pod.cluster.local"}
 : ${ISVD_ALTNAME:="DNS:isvd-replica-1"}
 : ${PGSQL_ALTNAME:="DNS:postgres"}
+: ${ISVART_ALTNAME:="DNS:${FQDN//,/, DNS:}, DNS:isvart"}
 
 issue_cert() {
   openssl x509 -req -in ${1}.csr -out ${1}.crt -extfile <(cert_cnf) -extensions server_cert -copy_extensions copy -CA isvgimRootCA.crt -CAkey isvgimRootCA.key -CAserial isvgimRootCA.srl -CAcreateserial -days 1825 -sha256

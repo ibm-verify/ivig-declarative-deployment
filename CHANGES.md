@@ -2,6 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.4.0 (2026-05-21)
+
+This version bases on upstream version 11.0.2.0 and delivers extra flexibility.
+
+The upstream version adds support for Oracle DB 19c. Declarative deployment increases flexibility and robustness of JDBC configuration beyond what the original product supports. It reads and writes the JDBC URL formats the core product supports with a compatible logic, and additionally offers a new configuration parameter `db.forcedJdbcUrl` in `values-config.yaml` to explicitly set a JDBC connection string rather then providing hostname, port and database name. This allows automated deployment with advanced database configuration (such as load balancing and failover) from scratch, which is not offered by the original product.
+
+New JDBC options one might use with this release:
+- Oracle Thin Driver (basic SID style)
+- Oracle Thin-Style Service Name (preferred modern syntax)
+- Oracle Net Connection Descriptor - Full explicit descriptor
+  - with SID or Service Name
+  - explicit SSL configuration
+  - multiple addresses, RAC, load balancing and failover
+  - timeouts and other advances parameters
+- DB2 Type4 Driver extra parameters
+  - TLS versiona and cipher suite selection
+  - high availability (HADR), failover and client reroute (ACR)
+  - performance optimisation
+  - many more advanced parameters
+- Postgres Driver extra parameters
+  - multiple hosts, failover and load balancing, read scaling
+  - many more advanced parameters
+
+This version proactively supports configuration properties and certificate generation for `isvart`, the Node-based adapter component. The original starterkit currently does not.
+
+Further, minor improvements to the original k8s templates and scripts are cascaded to the enhanced counterparts in this project as well.
+
+With this version, the repository structure is also updated. The `config` and `data` directories are no longer shared between starterkit and declarative deployment. The `config` folder under starterkit, hosts the original content and is not a symlink to `config` under `argo` any longer. Similarly, the `data` symlink is also deleted.
+
+WARNING! Known issues of the original product during upgrade to 11.0.2.0:
+1. The LDAP version deployed by the original product was changed and the current upgrade process may result in data loss. Therefore, this project sticks to the previous LDAP version by default to shield the common upgrade scenario from potential data loss. It is advised to manually upgrade the LDAP instance and change LDAP server image versions in `values.yaml` once data has been prepared.
+2. `dbUpgrade.sh` is known to abort due to NPE in the ARCUpgrade module and leave the database in an inconsistent state. This potential defect is under investigation by the vendor. It does not impact new deployments but may occur when upgrading from a previous version. Taking a database backup is strongly recommended.
+
 ## 2.3.8 (2026-04-30)
 
 This version delivers 3 hardening measures which can be selectively applied.
