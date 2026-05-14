@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "x$1" = "x--help" ]; then
+if [[ "$1" = "--help" ]]; then
 	echo "Name: getIP.sh"
 	echo "When to run: Never, called automatically by the installer"
 	echo "Description:"
@@ -13,19 +13,21 @@ if [ "x$1" = "x--help" ]; then
 fi
 
 CDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-TDIR=$(basename $CDIR)
-if [ "x$TDIR"  = "xsys" ]; then
-	cd $CDIR/..
+TDIR=$(basename "$CDIR")
+if [[ "$TDIR"  = "sys" ]]; then
+	cd "$CDIR/.." || exit 1
 fi
+source ./lib/common.sh
 
-NS=$(./sys/getNamespace.sh)
+get_namespace || die "Unable to determine namespace" $?
+NS=$REPLY
 
 kubectl=$(./sys/preReqCheck.sh)
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	echo $kubectl
-	exit $RC
+RC=$?
+if [[ "$RC" -ne 0 ]]; then
+	echo "$kubectl"
+	exit "$RC"
 fi
-NODE=$($kubectl -n $NS get pod isvgim-0 -o custom-columns=:.spec.nodeName --no-headers)
-IP=$($kubectl get nodes -o wide --no-headers=true | grep $NODE | awk '{ print $6 }')
-echo $IP
+NODE=$($kubectl -n "$NS" get pod isvgim-0 -o custom-columns=:.spec.nodeName --no-headers)
+IP=$($kubectl get nodes -o wide --no-headers=true | grep "$NODE" | awk '{ print $6 }')
+echo "$IP"

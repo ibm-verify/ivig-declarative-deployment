@@ -34,7 +34,9 @@
 #
 #=================================================================
 
-cd $(dirname ${BASH_SOURCE[0]})
+RUNDIR=$(dirname "${BASH_SOURCE[0]}")
+cd "$RUNDIR" || exit 1
+source ./lib/common.sh
 
 # Variable Defaults
 declare ADAPTER_PV=/opt/IBM/svgadapters
@@ -183,7 +185,7 @@ function displayVersion() {
 } #displayVersion
 
 function optionsArrayContains() {
-	if [ "x$1" = "x" ]; then
+	if [[ -z "$1" ]]; then
 		echo "Specify option to be found in OPTIONS_ARRAY."
 		exit 7
 	fi
@@ -193,7 +195,7 @@ function optionsArrayContains() {
 
 	for OPTION in "${OPTIONS_ARRAY[@]}"
 	do
-		if [ "x${OPTION}" = "x${ITEM}" ]; then
+		if [[ "${OPTION}" = "${ITEM}" ]]; then
 			OPTIONS_ARRAY_CONTAINS_ITEM="true"
 		fi
 	done
@@ -204,24 +206,25 @@ function optionsArrayContains() {
 function setup() {
 
 	kubectl=$(./sys/preReqCheck.sh)
-	RC=$(echo $?)
-	if [ $RC -ne 0 ]; then
-		echo $kubectl
-		exit $RC
+	RC=$?
+	if [[ "$RC" -ne 0 ]]; then
+		echo "$kubectl"
+		exit "$RC"
 	fi
-	NS=$(./sys/getNamespace.sh)
+	get_namespace || die "Unable to get namespace" $?
+	NS=$REPLY
 
-	PODNAME=$(${kubectl} -n ${NS} get pods | grep "${DEPLOYMENT}-" | grep Running | head -n 1 | awk '{ print $1 }')
-	if [ "x${PODNAME}" = "x" ]; then
+	PODNAME=$(${kubectl} -n "${NS}" get pods | grep "${DEPLOYMENT}-" | grep Running | head -n 1 | awk '{ print $1 }')
+	if [[ -z "${PODNAME}" ]]; then
 		printf "\nUnable to find name of adapters pod using grep and awk\n"
-		printf "Try manually running: kubectl -n $NS get pods | grep \"${DEPLOYMENT}-\" | grep Running | awk '{ print \$1 }'"
+		printf "Try manually running: kubectl -n %s get pods | grep \"%s-\" | grep Running | awk '{ print \$1 }'" "$NS" "$DEPLOYMENT"
 		exit 10
 	fi
 } #setup
 
 function checkIfFileExists() {
-	if [ ! -f "$1" ]; then
-		printf "\nUnable to read file: $1. Please ensure to provide complete path to the file.\n\n"
+	if [[ ! -f "$1" ]]; then
+		printf "\nUnable to read file: %s. Please ensure to provide complete path to the file.\n\n" "$1"
 		exit 11
 	fi
 } #checkIfFileExists
@@ -266,57 +269,54 @@ function getPersistentVolumeDirectoryPath() {
 } #getPersistentVolumeDirectoryPath
 
 function loadFile() {
-	if [ ${PROCESS_ITEM} = "ADAPTER" ]; then
-		if [ "x${PARAMS[1]}" != "xaccept" ]; then
+	if [[ ${PROCESS_ITEM} = "ADAPTER" ]]; then
+		if [[ "${PARAMS[1]}" != "accept" ]]; then
 			printf "\nYou must indicate acceptance of the included license before you can install the adapter."
 			printf "\ne.g. $ ./adapterUtil.sh -loadAdapter \"/path/to/Adapter.zip\" accept\n\n"
 			exit 13
 		fi
 	fi
 
-	printf "\nLoading file ${PARAMS[0]} ...\n\n"
+	printf "\nLoading file %s ...\n\n" "${PARAMS[0]}"
 
 	copyFile "${PARAMS[0]}" "/tmp"
-	${kubectl} -n ${NS} exec ${PODNAME} -- /bin/bash -c "/home/isvdi/adapterContainerScripts/loadAdapter.sh $(basename ${PARAMS[0]})"
+	${kubectl} -n "${NS}" exec "${PODNAME}" -- /bin/bash -c "/home/isvdi/adapterContainerScripts/loadAdapter.sh $(basename "${PARAMS[0]}")"
 
-	RESULT=$(echo $?)
-	if [ ${RESULT} -ne 0 ]; then
+	if [[ $? -ne 0 ]]; then
 		echo "Failed to load file ${PARAMS[0]}.  See messages above for details."
 		exit 14
 	else
-		printf "File ${PARAMS[0]} loaded successfully!\n\n"
+		printf "File %s loaded successfully!\n\n" "${PARAMS[0]}"
 	fi
 } #loadFile
 
 function displayInfo() {
-	printf "\nDispaying info for ${PARAMS[0]} ...\n\n"
+	printf "\nDispaying info for %s ...\n\n" "${PARAMS[0]}"
 
-	${kubectl} -n ${NS} exec ${PODNAME} -- /bin/bash -c "/home/isvdi/adapterContainerScripts/adapterInfo.sh \"${PARAMS[0]}\""
+	${kubectl} -n "${NS}" exec "${PODNAME}" -- /bin/bash -c "/home/isvdi/adapterContainerScripts/adapterInfo.sh \"${PARAMS[0]}\""
 
-	RESULT=$(echo $?)
-	if [ ${RESULT} -ne 0 ]; then
+	if [[ $? -ne 0 ]]; then
 		echo "Failed to display info for ${PARAMS[0]}.  See messages above for details."
 		exit 15
 	else
-		printf "Info for ${PARAMS[0]} displayed successfully!\n\n"
+		printf "Info for %s displayed successfully!\n\n" "${PARAMS[0]}"
 	fi
 } #displayInfo
 
 function listFiles() {
 	printf "\nDisplaying list ...\n\n"
 
-	if [ ${PROCESS_ITEM} = "ADAPTER" ]; then
-		${kubectl} -n ${NS} exec ${PODNAME} -- /bin/bash -c "/home/isvdi/adapterContainerScripts/listAdapters.sh"
-	elif [ ${PROCESS_ITEM} = "SDI_KEYS" ] || [ ${PROCESS_ITEM} = "SDI_TRUSTED_CERTS" ]; then
-		${kubectl} -n ${NS} exec ${PODNAME} -- /bin/bash -c "/home/isvdi/adapterContainerScripts/listCerts.sh \"${PROCESS_ITEM}\""
-	elif [ ${PROCESS_ITEM} = "CUSTOM_FILE" ]; then
-		${kubectl} -n ${NS} exec ${PODNAME} -- /bin/bash -c "ls -ltr \"${PARAMS[0]}\""
+	if [[ ${PROCESS_ITEM} = "ADAPTER" ]]; then
+		${kubectl} -n "${NS}" exec "${PODNAME}" -- /bin/bash -c "/home/isvdi/adapterContainerScripts/listAdapters.sh"
+	elif [[ ${PROCESS_ITEM} = "SDI_KEYS" ]] || [[ ${PROCESS_ITEM} = "SDI_TRUSTED_CERTS" ]]; then
+		${kubectl} -n "${NS}" exec "${PODNAME}" -- /bin/bash -c "/home/isvdi/adapterContainerScripts/listCerts.sh \"${PROCESS_ITEM}\""
+	elif [[ ${PROCESS_ITEM} = "CUSTOM_FILE" ]]; then
+		${kubectl} -n "${NS}" exec "${PODNAME}" -- /bin/bash -c "ls -ltr \"${PARAMS[0]}\""
 	else
-		${kubectl} -n ${NS} exec ${PODNAME} -- /bin/bash -c "ls -ltr \"$(getPersistentVolumeDirectoryPath "${PROCESS_ITEM}")\""
+		${kubectl} -n "${NS}" exec "${PODNAME}" -- /bin/bash -c "ls -ltr \"$(getPersistentVolumeDirectoryPath "${PROCESS_ITEM}")\""
 	fi
 
-	RESULT=$(echo $?)
-	if [ ${RESULT} -ne 0 ]; then
+	if [[ $? -ne 0 ]]; then
 		echo "Failed to display list.  See messages above for details."
 		exit 16
 	else
@@ -327,9 +327,9 @@ function listFiles() {
 function copyFile() {
 	local fileToCopy
 	local fileToCopyTo
-	if [ "x$1" = "x" ]; then
+	if [[ -z "$1" ]]; then
 		fileToCopy="${PARAMS[0]}"
-		if [ "${PROCESS_ITEM}" = "CUSTOM_FILE" ]; then
+		if [[ "${PROCESS_ITEM}" = "CUSTOM_FILE" ]]; then
 				fileToCopyTo="${PARAMS[1]}"
 		else
 				fileToCopyTo=$(getPersistentVolumeDirectoryPath "${PROCESS_ITEM}")
@@ -339,15 +339,14 @@ function copyFile() {
 		fileToCopyTo="$2"
 	fi
 
-	printf "\nCopying file $(basename ${fileToCopy}) to ISVDI pod ... "
+	printf "\nCopying file %s to ISVDI pod ... " "$(basename "${fileToCopy}")"
 	checkIfFileExists "${fileToCopy}"
 
-	${kubectl} -n ${NS} exec ${PODNAME} -- /bin/bash -c "mkdir -p ${fileToCopyTo}"
+	${kubectl} -n "${NS}" exec "${PODNAME}" -- /bin/bash -c "mkdir -p ${fileToCopyTo}"
 
-	RESULT=$(${kubectl} -n ${NS} cp ${fileToCopy} ${PODNAME}:${fileToCopyTo})
+	RESULT=$(${kubectl} -n "${NS}" cp "${fileToCopy}" "${PODNAME}":"${fileToCopyTo}")
 
-	RESULT=$(echo $?)
-	if [ ${RESULT} -ne 0 ]; then
+	if [[ $? -ne 0 ]]; then
 		echo "Failed to copy file ${fileToCopy} to ISVDI pod.  See messages above for details."
 		exit 17
 	fi
@@ -355,36 +354,34 @@ function copyFile() {
 } #copyFile
 
 function viewFile() {
-	printf "\nViewing file ${PARAMS[0]}...\n\n"
+	printf "\nViewing file %s...\n\n" "${PARAMS[0]}"
 
-	${kubectl} -n ${NS} exec ${PODNAME} -- /bin/bash -c "/home/isvdi/adapterContainerScripts/viewFile.sh \"${PROCESS_ITEM}\" \"${PARAMS[0]}\""
+	${kubectl} -n "${NS}" exec "${PODNAME}" -- /bin/bash -c "/home/isvdi/adapterContainerScripts/viewFile.sh \"${PROCESS_ITEM}\" \"${PARAMS[0]}\""
 
-	RESULT=$(echo $?)
-	if [ ${RESULT} -ne 0 ]; then
+	if [[ $? -ne 0 ]]; then
 		echo "Failed to view file ${PARAMS[0]}.  See messages above for details."
 		exit 18
 	else
-		printf "File ${PARAMS[0]} viewed successfully!\n\n"
+		printf "File %s viewed successfully!\n\n" "${PARAMS[0]}"
 	fi
 } #viewFile
 
 function removeFile() {
-	printf "\nRemoving file ${PARAMS[0]}...\n\n"
+	printf "\nRemoving file %s...\n\n" "${PARAMS[0]}"
 
-	if [ ${PROCESS_ITEM} = "ADAPTER" ]; then
-		${kubectl} -n ${NS} exec ${PODNAME} -- /bin/bash -c "/home/isvdi/adapterContainerScripts/removeAdapter.sh \"${PARAMS[0]}\""
-	elif [ ${PROCESS_ITEM} = "CUSTOM_FILE" ]; then
-		${kubectl} -n ${NS} exec ${PODNAME} -- /bin/bash -c "rm \"${PARAMS[0]}\""
+	if [[ ${PROCESS_ITEM} = "ADAPTER" ]]; then
+		${kubectl} -n "${NS}" exec "${PODNAME}" -- /bin/bash -c "/home/isvdi/adapterContainerScripts/removeAdapter.sh \"${PARAMS[0]}\""
+	elif [[ ${PROCESS_ITEM} = "CUSTOM_FILE" ]]; then
+		${kubectl} -n "${NS}" exec "${PODNAME}" -- /bin/bash -c "rm \"${PARAMS[0]}\""
 	else
-		${kubectl} -n ${NS} exec ${PODNAME} -- /bin/bash -c "rm \"$(getPersistentVolumeDirectoryPath "${PROCESS_ITEM}")/${PARAMS[0]}\""
+		${kubectl} -n "${NS}" exec "${PODNAME}" -- /bin/bash -c "rm \"$(getPersistentVolumeDirectoryPath "${PROCESS_ITEM}")/${PARAMS[0]}\""
 	fi
 
-	RESULT=$(echo $?)
-	if [ ${RESULT} -ne 0 ]; then
+	if [[ $? -ne 0 ]]; then
 		echo "Failed to remove file ${PARAMS[0]}.  See messages above for details."
 		exit 20
 	fi
-	printf "\nFile ${PARAMS[0]} removed successfully!\n\n"
+	printf "\nFile %s removed successfully!\n\n" "${PARAMS[0]}"
 } #removeFile
 
 for ARGS in "$@"; do
@@ -521,22 +518,22 @@ for ARGS in "$@"; do
 				exit 1
 			fi
 			COUNT_OF_OPTIONS=$((COUNT_OF_OPTIONS - 1))
-			if [ "x${OPTIONS_ARRAY[-1]}" = "xDEPLOYMENT" ]; then
+			if [[ "${OPTIONS_ARRAY[-1]}" = "DEPLOYMENT" ]]; then
 				DEPLOYMENT="${ARGS}"
-				DEPLOYMENTPARAMS+=(${ARGS})
+				DEPLOYMENTPARAMS+=("${ARGS[@]}")
 			else
-				PARAMS+=(${ARGS})
+				PARAMS+=("${ARGS[@]}")
 			fi
 			;;
 	esac
 
-	if [ "x${PROCESS_ITEM}" != "x" ]; then
-		if [ "$(optionsArrayContains "${PROCESS_ITEM}")" = "false" ]; then
+	if [[ -n "${PROCESS_ITEM}" ]]; then
+		if [[ "$(optionsArrayContains "${PROCESS_ITEM}")" = "false" ]]; then
 			OPTIONS_ARRAY+=("${PROCESS_ITEM}")
 		fi
 	fi
 
-	if [ ${COUNT_OF_OPTIONS} -gt 1 ]; then
+	if [[ "${COUNT_OF_OPTIONS}" -gt 1 ]]; then
 		printf "\nOnly 1 option apart from -deploymentName option can be used with this utility. Aborting!\n\n"
 		printf "Run below command to see all options and parameter details:\n\n"
 		printf "./adapterUtil.sh --help\n\n"
@@ -544,22 +541,22 @@ for ARGS in "$@"; do
 	fi
 done
 
-if [ ${#DEPLOYMENTPARAMS[@]} -ne 1 ] && [ "$(optionsArrayContains "DEPLOYMENT")" = "true" ]; then
-	printf "\nThe -deploymentName expects 1 parameter, found ${#DEPLOYMENTPARAMS[@]}. Aborting!\n\n"
+if [[ ${#DEPLOYMENTPARAMS[@]} -ne 1 ]] && [[ "$(optionsArrayContains "DEPLOYMENT")" = "true" ]]; then
+	printf "\nThe -deploymentName expects 1 parameter, found %s. Aborting!\n\n" "${#DEPLOYMENTPARAMS[@]}"
 	printf "Run below command to see all options and parameter details:\n\n"
 	printf "./adapterUtil.sh --help\n\n"
 	exit 3
 fi
 
-if [ "x${PROCESS_ITEM}" = "x" ]; then
+if [[ -z "${PROCESS_ITEM}" ]]; then
 	printf "\nNo options specified!\n\n"
 	printf "Run below command to see all options and parameter details:\n\n"
 	printf "./adapterUtil.sh --help\n\n"
 	exit 5
 fi
 
-if [ ${#PARAMS[@]} -ne ${NUMBER_OF_PARAMS_REQUIRED} ]; then
-	printf "\nParameters for given option doesn't match. Expected count of parameters is ${NUMBER_OF_PARAMS_REQUIRED}, found ${#PARAMS[@]}. Aborting!\n\n"
+if [[ ${#PARAMS[@]} -ne "${NUMBER_OF_PARAMS_REQUIRED}" ]]; then
+	printf "\nParameters for given option doesn't match. Expected count of parameters is %s, found %s. Aborting!\n\n" "${NUMBER_OF_PARAMS_REQUIRED}" "${#PARAMS[@]}"
 	printf "Run below command to see all options and parameter details:\n\n"
 	printf "./adapterUtil.sh --help\n\n"
 	exit 6

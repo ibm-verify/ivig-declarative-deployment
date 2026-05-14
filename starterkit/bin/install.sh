@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "x$1" = "x--help" ]; then
+if [[ "$1" = "--help" ]]; then
 	echo "Name: install.sh"
 	echo "When to run: When initially installing IVIG."
 	echo "Description:"
@@ -23,14 +23,17 @@ if [ "x$1" = "x--help" ]; then
 	exit 0
 fi
 
-if [ "x$1" = "x-manual" ]; then
+if [[ "$1" = "-manual" ]]; then
 	OFFLINE=1
 else
 	OFFLINE=0
 fi
 BACKUPDIR="../backup"
 CFGFILE="../config/config.yaml"
-cd $(dirname ${BASH_SOURCE[0]})
+PWDLENGTH=16
+RUNDIR=$(dirname "${BASH_SOURCE[0]}")
+cd "$RUNDIR"
+source "./lib/common.sh"
 
 trap user_abort INT
 
@@ -144,59 +147,40 @@ user_abort() {
 	exit 1
 } #user_abort
 
-# Create pseudorandom password with default size of 32 chars
-randomPassword() {
-        SIZE=32
-        if [ ! "x$1" = "x" ]; then
-                if [[ $1 =~ ^[0-9]+$ ]]; then
-                        if [ $1 -lt 256 ]; then
-                                SIZE=$1
-                        fi
-                fi
-        fi
-        LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom | head -c $SIZE ; echo ''
-	if [ $(echo $?) -ne 0 ]; then
-		echo "Error generating random password"
-		report_error 35
-		exit 35
-	fi
-} #randomPassword
-
-
 parseInstall() {
-	TYPEFLAG=$(grep "installType:" $CFGFILE | awk '{ print $2 }')
-	if [ "x$TYPEFLAG" = "x" ]; then
+	TYPEFLAG=$(grep "installType:" "$CFGFILE" | awk '{ print $2 }')
+	if [[ -z "$TYPEFLAG" ]]; then
 		report_error 25
 		exit 25
 	else
-		if [ ! "$TYPEFLAG" = "cloud" ] && [ ! "$TYPEFLAG" = "local" ]; then
+		if [[ ! "$TYPEFLAG" = "cloud" ]] && [[ ! "$TYPEFLAG" = "local" ]]; then
 			report_error 39
 			exit 39
 		fi
 	fi
 
-	TIMEOUTVAL=$(grep waitTimeout $CFGFILE | awk '{ print $2 }' | sed 's/[^0-9]*//g')
-	if [ "x$TIMEOUTVAL" = "x" ]; then
+	TIMEOUTVAL=$(grep waitTimeout "$CFGFILE" | awk '{ print $2 }' | sed 's/[^0-9]*//g')
+	if [[ -z "$TIMEOUTVAL" ]]; then
 		TIMEOUTVAL=120
 	fi
 
 	# Verify keypass is set
-	KP=$(grep keypass $CFGFILE)
-	if [ $(echo $?) -ne 0 ]; then
+	KP=$(grep keypass "$CFGFILE")
+	if [[ $? -ne 0 ]]; then
 		report_error 17
 		exit 17
 	fi
 	RESULT=$(echo "$KP" | awk '{ print $2 }')
-	if [ "x$RESULT" = "x" ]; then
+	if [[ -z "$RESULT" ]]; then
 		report_error 18
 		exit 18
 	fi
 
 	# Confirm security.protocol is blank or ssl
-	LINES=$(grep security.protocol $CFGFILE)
+	LINES=$(grep security.protocol "$CFGFILE")
 	while IFS= read -r LINE; do
-		SSLVAL=$(echo $LINE | awk '{ print tolower($2) }')
-		if [ "x$SSLVAL" != x ] && [ "x$SSLVAL" != "xssl" ]; then
+		SSLVAL=$(echo "$LINE" | awk '{ print tolower($2) }')
+		if [[ -n "$SSLVAL" ]] && [[ "$SSLVAL" != "ssl" ]]; then
 			report_error 23
 			exit 23
 		fi
@@ -204,11 +188,11 @@ parseInstall() {
 
 
 	# Unless settings exist and are set to true, they will be treated as false
-	DBFLAG=$(grep "deployDb:" $CFGFILE | awk '{ print tolower($2) }')
-	if [ "x$DBFLAG" = "xtrue" ]; then
+	DBFLAG=$(grep "deployDb:" "$CFGFILE" | awk '{ print tolower($2) }')
+	if [[ "$DBFLAG" = "true" ]]; then
 		DBFLAG=1
-		DBHAFLAG=$(grep "deployDbHA:" $CFGFILE | awk '{ print tolower($2) }')
-		if [ "x$DBHAFLAG" = "xtrue" ]; then
+		DBHAFLAG=$(grep "deployDbHA:" "$CFGFILE" | awk '{ print tolower($2) }')
+		if [[ "$DBHAFLAG" = "true" ]]; then
 			DBHAFLAG=1
 		else
 			DBHAFLAG=0
@@ -218,11 +202,11 @@ parseInstall() {
 		DBHAFLAG=0
 	fi
 
-	LDAPFLAG=$(grep "deployLdap:" $CFGFILE | awk '{ print tolower($2) }')
-	if [ "x$LDAPFLAG" = "xtrue" ]; then
+	LDAPFLAG=$(grep "deployLdap:" "$CFGFILE" | awk '{ print tolower($2) }')
+	if [[ "$LDAPFLAG" = "true" ]]; then
 		LDAPFLAG=1
-		LDAPHAFLAG=$(grep "deployLdapHA:" $CFGFILE | awk '{ print tolower($2) }')
-		if [ "x$LDAPHAFLAG" = "xtrue" ]; then
+		LDAPHAFLAG=$(grep "deployLdapHA:" "$CFGFILE" | awk '{ print tolower($2) }')
+		if [[ "$LDAPHAFLAG" = "true" ]]; then
 			LDAPHAFLAG=1
 		else
 			LDAPHAFLAG=0
@@ -232,120 +216,124 @@ parseInstall() {
 		LDAPHAFLAG=0
 	fi
 
-	ISVDIFLAG=$(grep "deployIsvdi:" $CFGFILE | awk '{ print tolower($2) }')
-	if [ "x$ISVDIFLAG" = "xtrue" ]; then
+	ISVDIFLAG=$(grep "deployIsvdi:" "$CFGFILE" | awk '{ print tolower($2) }')
+	if [[ "$ISVDIFLAG" = "true" ]]; then
 		ISVDIFLAG=1
 	else
 		ISVDIFLAG=0
 	fi
 
-	MAILFLAG=$(grep "useSMTPMail:" $CFGFILE | awk '{ print tolower($2) }')
-	if [ "x$MAILFLAG" = "xtrue" ]; then
+	MAILFLAG=$(grep "useSMTPMail:" "$CFGFILE" | awk '{ print tolower($2) }')
+	if [[ "$MAILFLAG" = "true" ]]; then
 		MAILFLAG=1
-		$SED '/mail/a \ \ enabled: true' $CFGFILE
+		$SED '/mail/a \ \ enabled: true' "$CFGFILE"
 	else
-		$SED '/mail/a \ \ enabled: false' $CFGFILE
+		$SED '/mail/a \ \ enabled: false' "$CFGFILE"
 		MAILFLAG=0
 	fi
 
-	REGFLAG=$(grep "useExternalRegistry:" $CFGFILE | awk '{ print tolower($2) }')
-	if [ "x$REGFLAG" = "xtrue" ]; then
+	REGFLAG=$(grep "useExternalRegistry:" "$CFGFILE" | awk '{ print tolower($2) }')
+	if [[ "$REGFLAG" = "true" ]]; then
 		REGFLAG=1
-		$SED '/externalRegistry/a \ \ enabled: true' $CFGFILE
+		$SED '/externalRegistry/a \ \ enabled: true' "$CFGFILE"
 	else
-		$SED '/externalRegistry/a \ \ enabled: false' $CFGFILE
+		$SED '/externalRegistry/a \ \ enabled: false' "$CFGFILE"
 		REGFLAG=0
 	fi
 	
-	FIPSFLAG=$(grep "enableFIPS:" $CFGFILE | awk '{ print tolower($2) }')
-	if [ "x$FIPSFLAG" != "xtrue" ]; then
+	FIPSFLAG=$(grep "enableFIPS:" "$CFGFILE" | awk '{ print tolower($2) }')
+	if [[ "$FIPSFLAG" != "true" ]]; then
 		FIPSFLAG=false
 	fi
 
-	LICOBJC=$(grep "licenseExternalObjectclass" $CFGFILE | awk '{ print tolower($2) }')
-	LICATTR=$(grep "licenseExternalAttribute" $CFGFILE | awk '{ print $2 }')
+	LICOBJC=$(grep "licenseExternalObjectclass" "$CFGFILE" | awk '{ print tolower($2) }')
+	LICATTR=$(grep "licenseExternalAttribute" "$CFGFILE" | awk '{ print $2 }')
 
 	# Check for MQ passwords.  Local is always auto-generated.
-	MQLPWD=$(randomPassword 16)
-	MQSPWD=$(grep mqSharePwd $CFGFILE | awk '{ print $2 }')
-	if [ "x$MQSPWD" = "x" ]; then
-		MQSPWD=$(randomPassword 16)
+	generate_alphanumeric_password "$PWDLENGTH"
+	MQLPWD=$REPLY
+	MQSPWD=$(grep mqSharePwd "$CFGFILE" | awk '{ print $2 }')
+	if [[ -z "$MQSPWD" ]]; then
+		generate_alphanumeric_password "$PWDLENGTH"
+		MQSPWD=$REPLY
 	fi
-	MQAPWD=$(grep mqAdminPwd $CFGFILE | awk '{ print $2 }')
-	if [ "x$MQAPWD" = "x" ]; then
-		MQAPWD=$(randomPassword 16)
+	MQAPWD=$(grep mqAdminPwd "$CFGFILE" | awk '{ print $2 }')
+	if [[ -z "$MQAPWD" ]]; then
+		generate_alphanumeric_password "$PWDLENGTH"
+		MQAPWD=$REPLY
 	fi
 
 	# Check for Postgres admin credentails
-	ADMUSER=$(grep "admin:" $CFGFILE | awk '{ print $2 }')
-	if [ "x$ADMUSER" = "x" ]; then
+	ADMUSER=$(grep "admin:" "$CFGFILE" | awk '{ print $2 }')
+	if [[ -z "$ADMUSER" ]]; then
 		ADMUSER="postgres"
 	fi
 
-	ADMPASS=$(grep "adminPwd:" $CFGFILE | awk '{ print $2 }')
-	if [ "x$ADMPASS" = "x" ]; then
-		PGUSER=$(grep "user:" $CFGFILE | awk '{ print $2 }')
-		if [ "x$PGUSER" = "x$ADMUSER" ]; then
-			PGPASS=$(grep "password:" $CFGFILE | awk '{ print $2 }')
-			if [ "x$PGPASS" != "x" ]; then
+	ADMPASS=$(grep "adminPwd:" "$CFGFILE" | awk '{ print $2 }')
+	if [[ -z "$ADMPASS" ]]; then
+		PGUSER=$(grep "user:" "$CFGFILE" | awk '{ print $2 }')
+		if [[ "$PGUSER" = "$ADMUSER" ]]; then
+			PGPASS=$(grep "password:" "$CFGFILE" | awk '{ print $2 }')
+			if [[ -n "$PGPASS" ]]; then
 				ADMPASS=$PGPASS
 			else
 				report_error 21
 				exit 21
 			fi
 		else
-			ADMPASS=$(randomPassword 16)
+			generate_alphanumeric_password "$PWDLENGTH"
+			ADMPASS=$REPLY
 		fi
 	fi
 
 	# Check for Enterprise Analytics Key
-	RISK_KEY=$(grep "riskKey:" $CFGFILE | awk '{ print $2 }')
+	RISK_KEY=$(grep "riskKey:" "$CFGFILE" | awk '{ print $2 }')
 
 	# Collect DB Info
-	DBTYPE=$(grep "dbtype:" $CFGFILE | awk '{ print $2 }')
-	if [ "x$DBTYPE" = "x" ]; then
+	DBTYPE=$(grep "dbtype:" "$CFGFILE" | awk '{ print $2 }')
+	if [[ -z "$DBTYPE" ]]; then
 		DBTYPE=postgres
 	fi
-	DBHOST=$(grep "  ip:" $CFGFILE | awk '{ print $2 }')
-	if [ "x$DBHOST" = "x" ]; then
+	DBHOST=$(grep "  ip:" "$CFGFILE" | awk '{ print $2 }')
+	if [[ -z "$DBHOST" ]]; then
 		DBHOST=postgres
 	fi
-	DBPORT=$(grep "  port:" $CFGFILE | awk '{ print $2 }')
-	if [ "x$DBPORT" = "x" ]; then
+	DBPORT=$(grep "  port:" "$CFGFILE" | awk '{ print $2 }')
+	if [[ -z "$DBPORT" ]]; then
 		DBPORT=5432
 	fi
-	DBUSER=$(grep "  user:" $CFGFILE | awk '{ print $2 }')
-	DBPASS=$(grep "  password:" $CFGFILE | awk '{ print $2 }')
+	DBUSER=$(grep "  user:" "$CFGFILE" | awk '{ print $2 }')
+	DBPASS=$(grep "  password:" "$CFGFILE" | awk '{ print $2 }')
 
 	CUSTOMREPO_LOGIN=0
-	CUSTOMREPOUSER=$(grep customRepoUser $CFGFILE | awk '{ print $2 }')
-	CUSTOMREPOPWD=$(grep customRepoPwd $CFGFILE | awk '{ print $2 }')
-	CUSTOMREPOURL=$(grep customRepoUrl $CFGFILE | awk '{ print $2 }')
-	if [ ! "x$CUSTOMREPOUSER" = x ] && [ ! "x$CUSTOMREPOPWD" = x ] && [ ! "x$CUSTOMREPOURL" = x ]; then
+	CUSTOMREPOUSER=$(grep customRepoUser "$CFGFILE" | awk '{ print $2 }')
+	CUSTOMREPOPWD=$(grep customRepoPwd "$CFGFILE" | awk '{ print $2 }')
+	CUSTOMREPOURL=$(grep customRepoUrl "$CFGFILE" | awk '{ print $2 }')
+	if [[ -n "$CUSTOMREPOUSER" ]] && [[ -n "$CUSTOMREPOPWD" ]] && [[ -n "$CUSTOMREPOURL" ]]; then
 		CUSTOMREPO_LOGIN=1
 	fi
 
 	JFROG_LOGIN=0
-	JFROGUSER=$(grep artifactoryUser $CFGFILE | awk '{ print $2 }')
-	JFROGPWD=$(grep artifactoryPwd $CFGFILE | awk '{ print $2 }')
-	JFROGBLD=$(grep artifactoryBuild $CFGFILE | awk '{ print $2 }')
-	if [ ! "x$JFROGUSER" = x ] && [ ! "x$JFROGPWD" = x ]; then
+	JFROGUSER=$(grep artifactoryUser "$CFGFILE" | awk '{ print $2 }')
+	JFROGPWD=$(grep artifactoryPwd "$CFGFILE" | awk '{ print $2 }')
+	JFROGBLD=$(grep artifactoryBuild "$CFGFILE" | awk '{ print $2 }')
+	if [[ -n "$JFROGUSER" ]] && [[ -n "$JFROGPWD" ]]; then
 		JFROG_LOGIN=1
 	fi
 
 	# Remove this section
-	$SED '/    installType:/d' $CFGFILE
-	$SED '/    waitTimeout:/d' $CFGFILE
-	$SED '/    useExternalRegistry/d' $CFGFILE
-	$SED '/    useSMTPMail/d' $CFGFILE
-	$SED '/    deployLdap/d' $CFGFILE
-	$SED '/    deployDb/d' $CFGFILE
-	$SED '/    deployIsvdi/d' $CFGFILE
-	$SED '/    mqSharePwd/d' $CFGFILE
-	$SED '/    mqAdminPwd/d' $CFGFILE
-	$SED '/    artifactory/d' $CFGFILE
-	$SED '/    customRepo/d' $CFGFILE
-	$SED '/    license/d' $CFGFILE
+	$SED '/    installType:/d' "$CFGFILE"
+	$SED '/    waitTimeout:/d' "$CFGFILE"
+	$SED '/    useExternalRegistry/d' "$CFGFILE"
+	$SED '/    useSMTPMail/d' "$CFGFILE"
+	$SED '/    deployLdap/d' "$CFGFILE"
+	$SED '/    deployDb/d' "$CFGFILE"
+	$SED '/    deployIsvdi/d' "$CFGFILE"
+	$SED '/    mqSharePwd/d' "$CFGFILE"
+	$SED '/    mqAdminPwd/d' "$CFGFILE"
+	$SED '/    artifactory/d' "$CFGFILE"
+	$SED '/    customRepo/d' "$CFGFILE"
+	$SED '/    license/d' "$CFGFILE"
 
 	# Store the values
 	export INSTALL_TYPE=$TYPEFLAG
@@ -395,21 +383,22 @@ cp ../config/mq/isvgqm.ini ../config/mq/isvgqm.ini.bak
 
 # Checking for helm and kubectl
 kubectl=$(./sys/preReqCheck.sh)
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	report_error $RC
-	exit $RC
+RC=$?
+if [[ "$RC" -ne 0 ]]; then
+	report_error "$RC"
+	exit "$RC"
 fi
 
 # Check for sed version
-SED=$(./sys/sedCheck.sh)
+get_sed_cmd
+SED=$REPLY
 
 # Parse install settings
 ./sys/updateValues.sh
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	report_error $RC
-	exit $RC
+RC=$?
+if [[ "$RC" -ne 0 ]]; then
+	report_error "$RC"
+	exit "$RC"
 fi
 parseInstall
 
@@ -417,44 +406,32 @@ parseInstall
 printf "\n##### Deploying configuration pod #####\n"
 sleep 1
 ./sys/startConfigContainer.sh install
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	report_error $RC
-	exit $RC
+RC=$?
+if [[ "$RC" -ne 0 ]]; then
+	report_error "$RC"
+	exit "$RC"
 fi
 
 # Deploy LDAP if desired
-if [ $INSTALL_LDAP -eq 1 ]; then
+if [[ "$INSTALL_LDAP" -eq 1 ]]; then
 	printf "\n##### Installing Verify Directory LDAP Server #####\n"
 	sleep 1
 	./sys/setupLDAP.sh install
-	RC=$(echo $?)
-	if [ $RC -ne 0 ]; then
-		report_error $RC
-		exit $RC
+	RC=$?
+	if [[ "$RC" -ne 0 ]]; then
+		report_error "$RC"
+		exit "$RC"
 	fi
 fi
 
-if [ $INSTALL_DB -eq 1 ]; then
+if [[ "$INSTALL_DB" -eq 1 ]]; then
 	printf "\n##### Installing Postgresql Database Server #####\n"
 	sleep 1
 	./sys/setupDB.sh install
-	RC=$(echo $?)
-	if [ $RC -ne 0 ]; then
-		report_error $RC
-		exit $RC
-	fi
-fi
-
-# Restart config pod with correct LDAP and/or DB info
-if [ $INSTALL_LDAP -eq 1 ] || [ $INSTALL_DB -eq 1 ]; then
-	printf "\n##### Updating Configuration Settings #####\n"
-	sleep 1
-	./sys/restartConfigContainer.sh install
-	RC=$(echo $?)
-	if [ $RC -ne 0 ]; then
-		report_error $RC
-		exit $RC
+	RC=$?
+	if [[ "$RC" -ne 0 ]]; then
+		report_error "$RC"
+		exit "$RC"
 	fi
 fi
 
@@ -462,64 +439,73 @@ fi
 printf "\n##### Generating Keystore #####\n"
 sleep 1
 ./sys/createKeystore.sh install
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	report_error $RC
-	exit $RC
+RC=$?
+if [[ "$RC" -ne 0 ]]; then
+	report_error "$RC"
+	exit "$RC"
+fi
+
+# Restart config pod with keystore in place
+printf "\n##### Updating Configuration Settings #####\n"
+sleep 1
+./sys/restartConfigContainer.sh install
+RC=$?
+if [[ "$RC" -ne 0 ]]; then
+	report_error "$RC"
+	exit "$RC"
 fi
 
 # Configure LDAP
 printf "\n##### Configuring LDAP #####\n"
 sleep 1
 ./sys/ldapConfig.sh install
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	report_error $RC
-	exit $RC
+RC=$?
+if [[ "$RC" -ne 0 ]]; then
+	report_error "$RC"
+	exit "$RC"
 fi
 
 # Configure DB
 printf "\n##### Configuring DB #####\n"
 sleep 1
 ./sys/dbConfig.sh install
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	report_error $RC
-	exit $RC
+RC=$?
+if [[ "$RC" -ne 0 ]]; then
+	report_error "$RC"
+	exit "$RC"
 fi
 
 # Configure MAIL
-if [ $MAIL -eq 1 ]; then
+if [[ "$MAIL" -eq 1 ]]; then
 	printf "\n##### Configuring MAIL #####\n"
 	sleep 1
 	./sys/mailConfig.sh install
-	RC=$(echo $?)
-	if [ $RC -ne 0 ]; then
-		report_error $RC
-		exit $RC
+	RC=$?
+	if [[ "$RC" -ne 0 ]]; then
+		report_error "$RC"
+		exit "$RC"
 	fi
 fi
 
 # Deploying Adapter Dispatcher
-if [ $INSTALL_ISVDI -eq 1 ]; then
+if [[ "$INSTALL_ISVDI" -eq 1 ]]; then
 	printf "\n##### Deploying ISVDI Adapter Dispatcher #####\n"
 	sleep 1
 	./sys/setupISVDI.sh --install
-	RC=$(echo $?)
-	if [ $RC -ne 0 ]; then
-		report_error $RC
-		exit $RC
+	RC=$?
+	if [[ "$RC" -ne 0 ]]; then
+		report_error "$RC"
+		exit "$RC"
 	fi
 fi
 
-
-if [ $EXTERNAL_REG -eq 1 ]; then
+if [[ "$EXTERNAL_REG" -eq 1 ]]; then
 printf "\n##### Configuring External Registry #####\n"
 	./sys/externalRegistryConfig.sh
-	RC=$(echo $?)
-	if [ $RC -ne 0 ]; then
-		report_error $RC
-		exit $RC
+	RC=$?
+	if [[ "$RC" -ne 0 ]]; then
+		report_error "$RC"
+		exit "$RC"
 	fi
 fi
 
@@ -528,40 +514,35 @@ touch ../.installed
 printf "\n##### Deploying application #####\n"
 sleep 1
 ./sys/setupISVGIM.sh install
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	report_error $RC
-	exit $RC
+RC=$?
+if [[ "$RC" -ne 0 ]]; then
+	report_error "$RC"
+	exit "$RC"
 fi
 
-if [ "x$RISK_KEY" != "x" ]; then
+if [[ -n "$RISK_KEY" ]]; then
 printf "\n##### Configuring Analytics Engine #####\n"
-	./sys/setupAnalytics.sh $RISK_KEY
-	RC=$(echo $?)
-	if [ $RC -ne 0 ]; then
-		report_error $RC
-		exit $RC
+	./sys/setupAnalytics.sh "$RISK_KEY"
+	RC=$?
+	if [[ "$RC" -ne 0 ]]; then
+		report_error "$RC"
+		exit "$RC"
 	fi
 fi
 
 # Restarting pods to enable MQ SSL and apply analytics changes
 # To restart the queue managers for applying some configuration changes to qm.ini file
-NS=$(./sys/getNamespace.sh)
-if [ $(echo $?) -ne 0 ]; then
-	if [ "x$1" = "x" ]; then
-		echo "Unable to determine namespace in use from values.yaml file"
-	fi
-	exit 7
-fi
+get_namespace || die "Unable to determine namespace" $?
+NS=$REPLY
 
-ISVG_POD_STATUS=$($kubectl -n $NS get pod isvgim-0 -o jsonpath='{.status.phase}')
-MQSHARE_POD=$($kubectl -n $NS get pods -o name | grep "mqshare-" | head -n 1 | cut -d'/' -f2)
-MQSHARE_POD_STATUS=$($kubectl -n $NS get pod $MQSHARE_POD -o jsonpath='{.status.phase}')
+ISVG_POD_STATUS=$($kubectl -n "$NS" get pod isvgim-0 -o jsonpath='{.status.phase}')
+MQSHARE_POD=$($kubectl -n "$NS" get pods -o name | grep "mqshare-" | head -n 1 | cut -d'/' -f2)
+MQSHARE_POD_STATUS=$($kubectl -n "$NS" get pod "$MQSHARE_POD" -o jsonpath='{.status.phase}')
 
-if [ "$ISVG_POD_STATUS" = "Running" ] && [ "$MQSHARE_POD_STATUS" = "Running" ]; then
+if [[ "$ISVG_POD_STATUS" = "Running" ]] && [[ "$MQSHARE_POD_STATUS" = "Running" ]]; then
 	./sys/restartMQ.sh ISVGQMgrShared >/dev/null 2>&1
 	./sys/restartMQ.sh ISVGQueueMgr >/dev/null 2>&1
-	$kubectl -n $NS rollout restart sts isvgim
+	$kubectl -n "$NS" rollout restart sts isvgim
 	sleep 50
 else
 	echo "Either isvgim-0 pod or mqshare pod is not in the Running state"
@@ -569,10 +550,10 @@ fi
 
 # Waiting for pod to be ready for FIPS
 ./sys/waitFor.sh isvgim-0 application
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
+RC=$?
+if [[ "$RC" -ne 0 ]]; then
 	./getLogs.sh
-	exit $RC
+	exit "$RC"
 fi
 
 
@@ -584,21 +565,21 @@ rm ../config/mq/ISVGContainerQMgr.mqsc.bak
 rm ../config/mq/ISVGContainerQMgr-shared.mqsc.bak
 rm ../config/mq/isvgqm.ini.bak
 IP=$(./sys/getIP.sh)
-PORT=$($kubectl -n $NS get svc isvgim --no-headers 2>&1)
+PORT=$($kubectl -n "$NS" get svc isvgim --no-headers 2>&1)
 if [[ "$PORT" == Error* ]]; then
 	PORT="30943"
 else
-	PORT=$(echo $PORT | awk '{ print $5 }' | tr '/' '\n' | grep 9443 | cut -d ':' -f 2)
+	PORT=$(echo "$PORT" | awk '{ print $5 }' | tr '/' '\n' | grep 9443 | cut -d ':' -f 2)
 fi
 echo "You can now login at https://${IP}:${PORT}/itim/console"
 
 # Backup the installation
-if [ ! -d $BACKUPDIR ]; then
-	mkdir $BACKUPDIR
+if [[ ! -d "$BACKUPDIR" ]]; then
+	mkdir "$BACKUPDIR"
 fi
 FILE=$(date +"%Y%m%d_%H%M%S")
 DIRS="data config helm yaml"
 cd ..
-tar czf backup/${FILE}-installed.tgz $DIRS
+tar czf "backup/${FILE}-installed.tgz" $DIRS
 cd bin
 

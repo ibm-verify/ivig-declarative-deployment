@@ -1,0 +1,109 @@
+version: "25.12"
+general:
+  install:
+    namespace: ivig
+    storageclass:
+    licenseType: PVU
+    licenseExternalObjectclass:
+    licenseExternalAttribute:
+    installType: local
+    waitTimeout: 120
+    useExternalRegistry: false
+    useSMTPMail: false
+    deployLdap: true
+    deployLdapHA: false
+    enableAuditLog: true
+    deployDb: true
+    deployDbHA: false
+    createTablespace: true
+    deployIsvdi: true
+    deployIsvart: true
+    mqSharePwd:
+    mqAdminPwd:
+  license:
+    activationKey:
+    accepted:
+    ldapKey:
+    isvdiKey:
+    isvartKey:
+    riskKey:
+server:
+  keypass:
+  truststore:
+  keystore:
+  hostname:
+  options:
+  - name: libertyMetrics
+    enabled: false
+    data:
+    - name: "userName"
+      value: "default"
+    - name: "password"
+      value: "default"
+  flags:
+    disableTLSv12: false
+    enableFIPS: false
+db:
+  user:
+  password:
+  dbtype:
+  ip:
+  port:
+  name: ivig
+  admin:
+  adminPwd:
+  isOracleServiceName: true
+  security.protocol:
+  tablespace.location.data:
+  tablespace.location.indexes:
+ldap:
+  security.principal:
+  security.credentials:
+  defaulttenant.id:
+  organization.name:
+  ldapserver.ip:
+  ldapserver.port:
+  ldapserver.root: dc=ivig
+  security.protocol:
+mail:
+  authentication.type:
+  baseurl:
+  from:
+  host:
+  smtp.port:
+  smtp.starttls.enable:
+  smtp.auth:
+  smtp.auth.user:
+  smtp.auth.password:
+office365:
+  monitoring.enabled: false
+  user.id:
+  tenant.id:
+  client.id:
+  client.secret:
+  scan.interval.minutes:
+externalRegistry:
+  type:
+  realm:
+  useSSL:
+  ignoreCase:
+  registryHost:
+  registryPort:
+  baseDN:
+  bindDN:
+  bindPassword:
+  isimsystemPassword:
+  filterProperties:
+    groupFilter:
+    groupIdMap:
+    groupMemberIdMap:
+    userFilter:
+    userIdMap:
+  attributeConfiguration:
+    attributes:
+    - defaultValue:
+      entityType:
+      id:
+      name:
+      propertyName:
+      syntax:

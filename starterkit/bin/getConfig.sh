@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "x$1" = "x--help" ]; then
+if [[ "$1" = "--help" ]]; then
 	echo "Name: getConfig.sh"
 	echo "When to run: When updating configuration files in data directory"
 	echo "Description:"
@@ -14,12 +14,16 @@ if [ "x$1" = "x--help" ]; then
 	exit 0
 fi
 
-cd $(dirname ${BASH_SOURCE[0]})
+RUNDIR=$(dirname "${BASH_SOURCE[0]}")
+cd "$RUNDIR" || exit 1
+source ./lib/common.sh
+
 IM_HOME="/opt/ibm/wlp/usr/servers/defaultServer/config/data"
-NS=$(./sys/getNamespace.sh)
+get_namespace || die "Unable to get namespace" $?
+NS=$REPLY
 NEWDIR=0
 
-if [ "x$1" = "x" ]; then
+if [[ -z "$1" ]]; then
 	echo "Usage: $0 <properties file name>"
 	echo "e.g. $0 enRoleMail.properties"
 	echo "or $0 workflow_systemprocess/addpolicy.xml"
@@ -27,42 +31,42 @@ if [ "x$1" = "x" ]; then
 fi
 
 kubectl=$(./sys/preReqCheck.sh)
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	echo $kubectl
-	exit $RC
+RC=$?
+if [[ "$RC" -ne 0 ]]; then
+	echo "$kubectl"
+	exit "$RC"
 fi
 
-POD=$($kubectl -n $NS get pods | grep isvgim-0 | awk '{ print $1 }')
-if [ "x$POD" = "x" ]; then
+get_pod_name "$NS" isvgim-0 && POD=$REPLY
+if [[ -z "$POD" ]]; then
 	echo "Unable to find name of ISVGIM pod using grep and awk"
 	echo "Try manually running: kubectl -n $NS get pods | grep isvgim-0 | awk '{ print \$1 }'"
 	exit 8
 fi
 
-$(grep -q "/" <<< "$1")
-if [ $(echo $?) -eq 0 ]; then
+grep -q "/" <<< "$1"
+if [[ $? -eq 0 ]]; then
 	DIR=${1%/*}
-	if [ ! -d ../data/$DIR ]; then
-		mkdir -p ../data/$DIR
+	if [[ ! -d "../data/$DIR" ]]; then
+		mkdir -p "../data/$DIR"
 		NEWDIR=1
 	fi
 fi
 
-RESULT=$($kubectl -n $NS cp ${POD}:${IM_HOME}/$1 ../data/$1)
-if [ $(echo $?) -ne 0 ]; then
+RESULT=$($kubectl -n "$NS" cp "${POD}":"${IM_HOME}/$1" "../data/$1")
+if [[ $? -ne 0 ]]; then
 	echo "Unable to copy from container."
 	echo "$RESULT"
 	exit 9
 fi
 
 # Check if the file exists
-ls ../data/$1 > /dev/null 2>&1
-if [ $(echo $?) -eq 2 ]; then
+ls "../data/$1" > /dev/null 2>&1
+if [[ $? -eq 2 ]]; then
 	echo "Configuration file $1 not found."
-	if [ $NEWDIR -eq 1 ]; then
-		cd ../data
-		rmdir -p $DIR
+	if [[ $NEWDIR -eq 1 ]]; then
+		cd ../data || exit 1
+		rmdir -p "$DIR"
 	fi
 	exit 2
 else

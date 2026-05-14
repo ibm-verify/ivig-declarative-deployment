@@ -4,7 +4,7 @@ DB_PROPS="../data/enRoleDatabase.properties"
 TSTAMP=$(date +"%Y%m%d_%H%M%S")
 BKUPFILE="pgbackup-$TSTAMP.tgz"
 
-if [ "x$1" = "x--help" ]; then
+if [[ "$1" = "--help" ]]; then
 	echo "Name: pgBackup.sh"
 	echo "When to run: Periodically to generate a backup of the DB."
 	echo "Description:"
@@ -18,33 +18,31 @@ if [ "x$1" = "x--help" ]; then
 fi
 
 CDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-TDIR=$(basename $CDIR)
-if [ "x$TDIR"  = "xutil" ]; then
-	cd $CDIR/..
+TDIR=$(basename "$CDIR")
+if [[ "$TDIR"  = "util" ]]; then
+	cd "$CDIR/.." || exit 1
 fi
+source ./lib/common.sh
 
 kubectl=$(./sys/preReqCheck.sh)
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	echo $kubectl
-	exit $RC
+RC=$?
+if [[ $RC -ne 0 ]]; then
+	echo "$kubectl"
+	exit "$RC"
 fi
 
-NS=$(./sys/getNamespace.sh)
-if [ $(echo $?) -ne 0 ]; then
-	echo "Unable to determine namespace from values.yaml file"
-	exit 7
-fi
+get_namespace || die "Unable to get namespace" $?
+NS=$REPLY
 
-if [ ! -f "$DB_PROPS" ]; then
+if [[ ! -f "$DB_PROPS" ]]; then
 	echo "Unable to find enRoleDatabase.properties.  Is ISVG-IM installed?"
 	exit 8
 fi
 
 # Check that the postgres pod is running
 printf "Looking for primary PostgreSQL pod..."
-POD=$($kubectl -n $NS get pods -l replicationRole=primary --no-headers -o custom-columns=":metadata.name")
-if [ "x$POD" = "x" ]; then
+POD=$($kubectl -n "$NS" get pods -l replicationRole=primary --no-headers -o custom-columns=":metadata.name")
+if [[ -z "$POD" ]]; then
 	printf "\n\n"
 	echo "No primary PostgreSQL pod found running. Cannot continue."
 	exit 1
@@ -53,23 +51,23 @@ printf "Done!\n"
 
 
 # Collect DB info
-DBNAME=$(grep driverUrl $DB_PROPS | cut -d '/' -f 4 | cut -d '?' -f 1)
+DBNAME=$(grep driverUrl "$DB_PROPS" | cut -d '/' -f 4 | cut -d '?' -f 1)
 
-printf "Dumping database ${DBNAME}..."
-$kubectl -n $NS exec $POD -- pg_dump -f /tmp/pgbackup.sql -cC --if-exists $DBNAME
-if [ $(echo $?) -ne 0 ]; then
+printf "Dumping database %s..." "${DBNAME}"
+$kubectl -n "$NS" exec "$POD" -- pg_dump -f /tmp/pgbackup.sql -cC --if-exists "$DBNAME"
+if [[ $? -ne 0 ]]; then
 	printf "\n\n"
 	echo "Failed to export the DB. Try it manually with:"
 	echo "$kubectl -n $NS exec -it $POD -- bash"
 	echo "pg_dump -f /tmp/pgbackup.sql -cC --if-exists $DNBAME"
-	echo "sed -i 's/\(DROP DATABASE IF EXISTS .*\);$/\1 with (FORCE);/' /tmp/pgbackup.sql"
+	printf "sed -i 's/\(DROP DATABASE IF EXISTS .*\);$/\1 with (FORCE);/' /tmp/pgbackup.sql\n"
 	exit 2
 fi
-$kubectl -n $NS exec $POD -- sed -i 's/\(DROP DATABASE IF EXISTS .*\);$/\1 with (FORCE);/' /tmp/pgbackup.sql
+$kubectl -n "$NS" exec "$POD" -- sed -i 's/\(DROP DATABASE IF EXISTS .*\);$/\1 with (FORCE);/' /tmp/pgbackup.sql
 printf "Done!\nCompressing database output..."
 
-$kubectl -n $NS exec $POD -- bash -c "cd /tmp; tar czf $BKUPFILE pgbackup.sql"
-if [ $(echo $?) -ne 0 ]; then
+$kubectl -n "$NS" exec "$POD" -- bash -c "cd /tmp; tar czf $BKUPFILE pgbackup.sql"
+if [[ $? -ne 0 ]]; then
 	printf "\n\n"
 	echo "Failed to compress the backup. Try it manually with:"
 	echo "$kubectl -n $NS exec -it $POD -- bash"
@@ -79,8 +77,8 @@ if [ $(echo $?) -ne 0 ]; then
 fi
 printf "Done!\nDownloading backup..."
 
-$kubectl -n $NS cp $POD:/tmp/$BKUPFILE ../backup/$BKUPFILE > /dev/null 2>&1
-if [ $(echo $?) -ne 0 ]; then
+$kubectl -n "$NS" cp "$POD":"/tmp/$BKUPFILE" "../backup/$BKUPFILE" > /dev/null 2>&1
+if [[ $? -ne 0 ]]; then
 	printf "\n\n"
 	echo "Failed to download the backup. Try it manually with:"
 	echo "$kubectl -n $NS cp $POD:/tmp/$BKUPFILE ../../backup/$BKUPFILE"
@@ -88,8 +86,8 @@ if [ $(echo $?) -ne 0 ]; then
 fi
 printf "Done!\nRemoving backup from pod..."
 
-$kubectl -n $NS exec $POD -- bash -c 'rm /tmp/pgbackup*.*'
-if [ $(echo $?) -ne 0 ]; then
+$kubectl -n "$NS" exec "$POD" -- bash -c 'rm /tmp/pgbackup*.*'
+if [[ $? -ne 0 ]]; then
 	printf "\n\n"
 	echo "Failed to remove the backup from pod. Try it manually with:"
 	echo "$kubectl -n $NS exec -it $POD -- bash"

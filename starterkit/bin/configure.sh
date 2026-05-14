@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "x$1" = "x--help" ]; then
+if [[ "$1" = "--help" ]]; then
 	echo "Name: configure.sh"
 	echo "When to run: Before running install.sh."
 	echo "Description:"
@@ -15,20 +15,22 @@ if [ "x$1" = "x--help" ]; then
 	exit 0
 fi
 
-if [ "x$1" = "x-manual" ]; then
+if [[ "$1" = "-manual" ]]; then
 	OFFLINE=1
 else
 	OFFLINE=0
 fi
 
-cd $(dirname ${BASH_SOURCE[0]})
-SED=$(./sys/sedCheck.sh)
-if [ $OFFLINE -eq 0 ]; then
+RUNDIR=$(dirname "${BASH_SOURCE[0]}")
+cd "$RUNDIR" || exit 1
+source ./lib/common.sh
+get_sed_cmd && SED=$REPLY
+if [[ "$OFFLINE" -eq 0 ]]; then
 	kubectl=$(./sys/preReqCheck.sh)
-	RC=$(echo $?)
-	if [ $RC -ne 0 ]; then
-		echo $kubectl
-		exit $RC
+	RC=$?
+	if [[ "$RC" -ne 0 ]]; then
+		echo "$kubectl"
+		exit "$RC"
 	fi
 fi
 
@@ -40,14 +42,17 @@ LICENSE_SCRIPT_NAME=ibm_licensing_operator_install.sh
 # As default flow of execution must have the tablespaces
 CREATETABLESPACE=true
 
+# Default value for Oracle connection type
+ISORACLESERVICENAME=true
+
 # Check if we're already installed or not
-grep -q storageclass $CFGFILE
-if [ $(echo $?) -eq 1 ]; then
+grep -q storageclass "$CFGFILE"
+if [[ $? -eq 1 ]]; then
 	printf "\nThe current config.yaml indicates IVIG is already installed.\n"
 	exit 1
 fi
 
-if [ $OFFLINE -eq 0 ]; then
+if [[ "$OFFLINE" -eq 0 ]]; then
 	# Collect the installed storage classes
 	KUBE_SC=$($kubectl get sc | tail -n +2 | awk '{ print $1 }')
 	NUM_NODES=$($kubectl get nodes --no-headers | wc -l)
@@ -57,20 +62,20 @@ else
 fi
 
 get_existing_value() {
-	echo $(grep "${1}:" $CFGFILE | cut -d ':' -f 2- | xargs)
+	grep "${1}:" "$CFGFILE" | cut -d ':' -f 2- | xargs
 } #get_existing_value
 
 check_k8s_naming() {
 	LENGTH=${#1}
-	if [ $LENGTH -gt 63 ]; then
+	if [[ "$LENGTH" -gt 63 ]]; then
 		printf "Identifiers are limited to 63 characters.\n\n"
 		return 1
 	fi
-	if [[ ! $1 =~ ^[a-zA-Z0-9][-a-zA-Z0-9]{0,61}[a-zA-Z0-9]$ ]]; then
+	if [[ ! "$1" =~ ^[a-zA-Z0-9][-a-zA-Z0-9]{0,61}[a-zA-Z0-9]$ ]]; then
 		printf "Identifiers must be alphanumeric or hyphen, and start and end with alphanumeric.\n\n"
 		return 2
 	fi
-	if [[ $1 =~ ^kube- ]]; then
+	if [[ "$1" =~ ^kube- ]]; then
 		printf "Starting an identifier with \"kube-\" is reserved for kubernetes\n"
 		printf "system objects.\n\n"
 		return 3
@@ -78,7 +83,7 @@ check_k8s_naming() {
 } #check_k8s_naming
 
 check_ldapuser_naming() {
-	if [[ ! $1 =~ ^.+[=].+$ ]]; then
+	if [[ ! "$1" =~ ^.+[=].+$ ]]; then
 		printf "LDAP admin DN must be in the format attribute=value.\n\n"
 		return 1
 	fi
@@ -86,7 +91,7 @@ check_ldapuser_naming() {
 
 check_sc() {
 	for SC in $KUBE_SC; do
-		if [ "x$SC" = "x$1" ]; then
+		if [[ "$SC" = "$1" ]]; then
 			return 0
 		fi
 	done
@@ -94,19 +99,19 @@ check_sc() {
 } #check_sc
 
 check_truefalse() {
-	if [[ ! $1 =~ ^(true|false)$ ]]; then
+	if [[ ! "$1" =~ ^(true|false)$ ]]; then
 		return 1
 	fi
 } #check_truefalse
 
 check_digits() {
-	if [[ ! $1 =~ ^[0-9]+$ ]] || [ $1 -gt $2 ]; then
+	if [[ ! "$1" =~ ^[0-9]+$ ]] || [[ "$1" -gt "$2" ]]; then
 		return 1
 	fi
 } #check_digits
 
 check_cert_format() {
-	if [[ ! $1 =~ ^(@|B64:) ]]; then
+	if [[ ! "$1" =~ ^(@|B64:) ]]; then
 		printf "\nIncorrect format. Must start with \"@\" or \"B64:\"\n\n"
 		return 1
 	fi
@@ -114,18 +119,18 @@ check_cert_format() {
 
 # Used to make sure the correct security.protocol line in config.yaml is updated
 find_ssl_line() {
-	DBLINE=$(grep -n "db:" $CFGFILE | cut -d ':' -f 1)
-	LDAPLINE=$(grep -n "ldap:" $CFGFILE | cut -d ':' -f 1)
-	LINEA=$(grep -n "security.protocol" $CFGFILE | head -n 1 | cut -d ':' -f 1)
-	LINEB=$(grep -n "security.protocol" $CFGFILE | tail -n 1 | cut -d ':' -f 1)
-	if [ $DBLINE -gt $LDAPLINE ]; then
-		if [ "$1" = "ldap" ]; then
+	DBLINE=$(grep -n "db:" "$CFGFILE" | cut -d ':' -f 1)
+	LDAPLINE=$(grep -n "ldap:" "$CFGFILE" | cut -d ':' -f 1)
+	LINEA=$(grep -n "security.protocol" "$CFGFILE" | head -n 1 | cut -d ':' -f 1)
+	LINEB=$(grep -n "security.protocol" "$CFGFILE" | tail -n 1 | cut -d ':' -f 1)
+	if [[ "$DBLINE" -gt "$LDAPLINE" ]]; then
+		if [[ "$1" = "ldap" ]]; then
 			LINE=$LINEA
 		else
 			LINE=$LINEB
 		fi
 	else
-		if [ "$1" = "ldap" ]; then
+		if [[ "$1" = "ldap" ]]; then
 			LINE=$LINEB
 		else
 			LINE=$LINEA
@@ -137,11 +142,11 @@ get_namespace() {
 	printf "\nWhich namespace would you like to install into?\n"
 	printf "Rules: Max 63 chars, alphanumeric and hyphen allowed.\n\n"
 	DNAMESPACE=$(get_existing_value namespace)
-	while [ "x$NAMESPACE" = "x" ]; do
-		read -p "Namespace [$DNAMESPACE]: " NAMESPACE
+	while [[ -z $NAMESPACE ]]; do
+		read -r -p "Namespace [$DNAMESPACE]: " NAMESPACE
 		NAMESPACE=${NAMESPACE:-$DNAMESPACE}
-		check_k8s_naming $NAMESPACE
-		if [ $(echo $?) -ne 0 ]; then
+		check_k8s_naming "$NAMESPACE"
+		if [[ $? -ne 0 ]]; then
 			NAMESPACE=""
 		fi
 	done
@@ -149,12 +154,12 @@ get_namespace() {
 
 get_clusterUrl() {
 	DCLUSTERURL=$($kubectl cluster-info | grep -i "control plane" | awk '{ print $NF }' | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g")
-	LOOPCHECK=$(echo $DCLUSTERURL | cut -d '/' -f 3 | cut -d '.' -f 1)
-	if [ "x$LOOPCHECK" = "x127" ]; then
-		printf "\nFound Kubernetes cluster URL of: $DCLUSTERURL\n"
+	LOOPCHECK=$(echo "$DCLUSTERURL" | cut -d '/' -f 3 | cut -d '.' -f 1)
+	if [[ "$LOOPCHECK" = "127" ]]; then
+		printf "\nFound Kubernetes cluster URL of: %s\n" "$DCLUSTERURL"
 		printf "\nThis is a loopback address, which is not available from a pod.\n"
 		printf "Please provide the URL with the externally accessible IP address.\n\n"
-		read -p "ClusterUrl [$DCLUSTERURL]: " CLUSTERURL
+		read -r -p "ClusterUrl [$DCLUSTERURL]: " CLUSTERURL
 		CLUSTERURL=${CLUSTERURL:-$DCLUSTERURL}
 	else
 		CLUSTERURL=$DCLUSTERURL
@@ -163,29 +168,30 @@ get_clusterUrl() {
 
 get_storageclass() {
 	printf "\nWhich storageclass will be used for volumes?\n"
-	if [ $NUM_NODES -gt 1 ]; then
+	if [[ "$NUM_NODES" -gt 1 ]]; then
 		printf "Rules: It must support dynamic provisioning and mode ReadWriteMany.\n"
 	else
 		printf "Rules: It must support dynamic provisioning.\n"
 	fi
 	printf "Currently installed options:\n\n"
-	if [ $OFFLINE -eq 1 ]; then
+	if [[ "$OFFLINE" -eq 1 ]]; then
 		printf "List not available in manual mode\n"
 	else
 		for SC in $KUBE_SC; do
-			printf "$SC\n"
+			printf "%s\n" "$SC"
 		done
 	fi
 	printf "\n"
 	DSTORAGECLASS=$(get_existing_value storageclass)
-	while [ "x$STORAGECLASS" = "x" ]; do
-		read -p "Storageclass [$DSTORAGECLASS]: " STORAGECLASS
+	while [[ -z "$STORAGECLASS" ]]; do
+		read -r -p "Storageclass [$DSTORAGECLASS]: " STORAGECLASS
 		STORAGECLASS=${STORAGECLASS:-$DSTORAGECLASS}
-		if [ $OFFLINE -eq 0 ]; then
-			check_sc $STORAGECLASS
-			if [ $(echo $?) -ne 0 ]; then
-				read -p "Storageclass $STORAGECLASS is not installed. Are you sure (y/n)? " YESNO
-				if [ "x$YESNO" != "xy" ]; then
+		if [[ "$OFFLINE" -eq 0 ]]; then
+			check_sc "$STORAGECLASS"
+			if [[ $? -ne 0 ]]; then
+				read -r -p "Storageclass $STORAGECLASS is not installed. Are you sure (y/n)? " YESNO
+				YESNO=$(awk '{ print tolower($1) }' <<< "$YESNO")
+				if [[ "$YESNO" != "y" ]]; then
 					STORAGECLASS=""
 				fi
 			fi
@@ -203,11 +209,11 @@ get_waitTimeout() {
 	printf "The default 120 represents 10 minutes, which should be sufficient in most\n"
 	printf "cases.\n\n"
 	DWAITTIMEOUT=$(get_existing_value waitTimeout)
-	while [ "x$WAITTIMEOUT" = "x" ]; do
-		read -p "Value for waitTimeout [$DWAITTIMEOUT]: " WAITTIMEOUT
+	while [[ -z "$WAITTIMEOUT" ]]; do
+		read -r -p "Value for waitTimeout [$DWAITTIMEOUT]: " WAITTIMEOUT
 		WAITTIMEOUT=${WAITTIMEOUT:-$DWAITTIMEOUT}
-		check_digits $WAITTIMEOUT 1000
-		if [ $(echo $?) -ne 0 ]; then
+		check_digits "$WAITTIMEOUT" 1000
+		if [[ $? -ne 0 ]]; then
 			printf "\nInvalid value. Must be an integer less than 1000.\n\n"
 			WAITTIMEOUT=""
 		fi
@@ -221,8 +227,8 @@ get_customRepo() {
 	printf "details are host:port, but :port can be left off if it's using 443.\n\n"
 
 	prompt_not_empty "Are you using a custom image repository? (y/N)" "N"
-	VALUE=$(awk '{ print tolower($1) }' <<< $VALUE)
-	if [ $VALUE != "y" ]; then
+	VALUE=$(awk '{ print tolower($1) }' <<< "$VALUE")
+	if [[ "$VALUE" != "y" ]]; then
 		return
 	fi
 
@@ -234,9 +240,9 @@ get_customRepo() {
 
 prompt_not_empty() {
 	VALUE=""
-	while [ "x$VALUE" = "x" ]; do
+	while [[ -z "$VALUE" ]]; do
 		prompt "$1" "$2"
-		if [ "x$VALUE" = "x" ]; then
+		if [[ -z "$VALUE" ]]; then
 			printf "\nValue cannot be empty.\n\n"
 		fi
 	done
@@ -253,25 +259,25 @@ pw_prompt() {
 	PWVALUE="1"
 	PWVALUE2=""
 	printf "\n"
-	while [ "x$PWVALUE" != "x$PWVALUE2" ]; do
-		read -sp "$1 " PWVALUE
-		if [ "x$2" = "xrequired" ] && [ "x$PWVALUE" = "x" ]; then
+	while [[ "$PWVALUE" != "$PWVALUE2" ]]; do
+		read -r -sp "$1 " PWVALUE
+		if [[ "$2" = "required" ]] && [[ -z "$PWVALUE" ]]; then
 			printf "\nA value MUST be specified.\n\n"
 			PWVALUE="1"
 			continue
 		fi
 		printf "\n"
-		read -sp "Re-enter $1 " PWVALUE2
+		read -r -sp "Re-enter $1 " PWVALUE2
 		printf "\n"
-		if [ "x$PWVALUE" != "x$PWVALUE2" ]; then
+		if [[ "$PWVALUE" != "$PWVALUE2" ]]; then
 			printf "Passwords don't match.\n\n"
 		fi
 	done
 } #pw_prompt
 
 user_prompt() {
-	printf "\nPlease provide the credentials IVIG will use to connect to $1.\n"
-	prompt_not_empty "Username" "$(get_existing_value $2)" && USER=$VALUE
+	printf "\nPlease provide the credentials IVIG will use to connect to %s.\n" "$1"
+	prompt_not_empty "Username" "$(get_existing_value "$2")" && USER=$VALUE
 } #user_prompt
 
 get_mqPasswords() {
@@ -285,13 +291,13 @@ get_mqPasswords() {
 get_truefalse() {
 	printf "\n"
 	TFVALUE=""
-	while [ "x$TFVALUE" = "x" ]; do
-		read -p "$1 (true/false) [$2]? " TFVALUE
+	while [[ -z $TFVALUE ]]; do
+		read -r -p "$1 (true/false) [$2]? " TFVALUE
 		TFVALUE=${TFVALUE:-$2}
-		TFVALUE=$(awk '{ print tolower($1) }' <<< $TFVALUE)
-		check_truefalse $TFVALUE
-		if [ $(echo $?) -ne 0 ]; then
-			printf "\nInvalid value. Must be "true" or "false".\n\n"
+		TFVALUE=$(awk '{ print tolower($1) }' <<< "$TFVALUE")
+		check_truefalse "$TFVALUE"
+		if [[ $? -ne 0 ]]; then
+			printf "\nInvalid value. Must be \"true\" or \"false\".\n\n"
 			TFVALUE=""
 		fi
 		
@@ -301,8 +307,8 @@ get_truefalse() {
 get_activation_key() {
 	printf "\nThe activation key is required to use the IVIG.\n"
 	printf "It is available from your IVIG entitlement on Passport Advantage.\n\n"
-	read -p "Activation Key: " ACTKEY
-	if [ "x$ACTKEY" = "x" ]; then
+	read -r -p "Activation Key: " ACTKEY
+	if [[ -z $ACTKEY ]]; then
 		printf "\nWARNING: Installation will FAIL without a valid activation key!\n"
 		printf "         Please re-run this program or update config.yaml with a valid\n"
 		printf "         activation key before running the installer.\n"
@@ -314,21 +320,21 @@ get_risk_key() {
 	printf "\nThe Enterprise or Compliance key is required to activate the analytics module.\n"
 	printf "It is available as an upgrade from your IVIG Lifecycle entitlement.\n"
 	printf "If you do not have this key, please leave the value blank.\n\n"
-	read -p "Enterprise or Compliance Key: " RISKKEY
+	read -r -p "Enterprise or Compliance Key: " RISKKEY
 } #get_risk_key
 
 get_key() {
-	printf "\n$1 requires a license key.\n"
+	printf "\n%s requires a license key.\n" "$1"
 	printf "It can be found with your entitlement on Passport Advantage.\n"
 	printf "IMPORTANT: The key must be a single line. To avoid problems with multi-lines\n"
 	printf "           when copied from a document, <Enter> has been disabled and you\n"
 	printf "           MUST use the semi-colon (;) character to submit the value.\n\n"
-	read -d ";" -p "License Key: " KEY
-	KEY=$(tr -d '\n' <<< $KEY)
-	if [ "x$KEY" = "x" ]; then
+	read -r -d ";" -p "License Key: " KEY
+	KEY=$(tr -d '\n' <<< "$KEY")
+	if [[ -z "$KEY" ]]; then
 		printf "\nWARNING: Installation will FAIL without a valid license key!\n"
 		printf "         Please re-run this program or update config.yaml with a valid\n"
-		printf "         $2 license key before running the installer.\n"
+		printf "         %s license key before running the installer.\n" "$2"
 		sleep 5
 	fi
 	printf "\n"
@@ -336,17 +342,17 @@ get_key() {
 
 get_port(){
 	PORT=""
-	printf "\nPlease provide the port number of the $1 server.\n\n"
+	printf "\nPlease provide the port number of the %s server.\n\n" "$1"
 	DPORT=$(get_existing_value "$2")
-	if [ "x$PORT" = "x" ]; then
+	if [[ -z $PORT ]]; then
 		DPORT=$3
 	fi
-	while [ "x$PORT" = "x" ]; do
-		read -p "Port [$DPORT]: " PORT
+	while [[ -z $PORT ]]; do
+		read -r -p "Port [$DPORT]: " PORT
 		PORT=${PORT:-$DPORT}
-		check_digits $PORT $4
-		if [ $(echo $?) -ne 0 ]; then
-			printf "\nValue must be an integer less than $4.\n\n"
+		check_digits "$PORT" "$4"
+		if [[ $? -ne 0 ]]; then
+			printf "\nValue must be an integer less than %s.\n\n" "$4"
 			PORT=""
 		fi
 	done
@@ -354,22 +360,22 @@ get_port(){
 
 get_host() {
 	HOST=""
-	printf "\nPlease provide the hostname or IP address of the $1 server.\n"
+	printf "\nPlease provide the hostname or IP address of the %s server.\n" "$1"
 	prompt_not_empty "Hostname / IP" "$(get_existing_value "$2")" && HOST=$VALUE
 } #get_host
 
 get_ssl() {
 	SSL=""
-	find_ssl_line $1
-	DSSL=$(sed -n "${LINE}p" $CFGFILE | awk '{ print $2 }')
-	if [ "x$DSSL" = "x" ]; then
+	find_ssl_line "$1"
+	DSSL=$(sed -n "${LINE}p" "$CFGFILE" | awk '{ print $2 }')
+	if [[ -z "$DSSL" ]]; then
 		DSSL="false"
-	elif [ "x$DSSL" = "ssl" ]; then
+	elif [[ "$DSSL" = "ssl" ]]; then
 		DSSL="true"
 	fi
 	printf "\n"
 	get_truefalse "Is the $2 server using SSL" "$DSSL"
-	if [ $TFVALUE = "true" ]; then
+	if [[ $TFVALUE = "true" ]]; then
 		SSL=ssl
 	fi
 } #get_ssl
@@ -380,57 +386,71 @@ get_dbuser() {
 } #get_dbuser
 
 get_dbadmin() {
-	if [ $DEPLOYDB = "true" ]; then
+	if [[ "$DEPLOYDB" = "true" ]]; then
 		printf "\nOPTIONALLY: provide the admin credentials for the PostgreSQL pod.\n"
 		printf "If left blank, the user will be \"postgres\" with a random password.\n\n"
 	else
 		printf "\nPlease provide the admin credentials for the database server.\n\n"
 	fi
 	DDBADM=$(get_existing_value "  admin")
-	while [ "x$DBADM" = "x" ]; do
-		read -p "Admin Username [$DDBADM]: " DBADM
-		if [ $DEPLOYDB = "true" ]; then
+	while [[ -z $DBADM ]]; do
+		read -r -p "Admin Username [$DDBADM]: " DBADM
+		if [[ "$DEPLOYDB" = "true" ]]; then
 			break
 		fi
 		DBADM=${DBADM:-$DDBADM}
-		if [ "x$DBADM" = "x" ]; then
+		if [[ -z "$DBADM" ]]; then
 			printf "\nAdmin username cannot be empty.\n\n"
 		fi
 	done
 	printf "\n"
-	if [ "x$DBADM" != "x" ]; then
+	if [[ -n "$DBADM" ]]; then
 		pw_prompt "Admin Password:" && DBADMPASS=$PWVALUE
 	fi
 } #get_dbadmin
 
 get_dbname() {
-	if [ $DEPLOYDB = "true" ]; then
+	if [[ "$DEPLOYDB" = "true" ]]; then
 		printf "\nOPTIONALLY: provide a name for the database.\n\n"
 	else
 		printf "\nPlease provide the name of the database.\n\n"
 	fi
 	DDBNAME=$(get_existing_value "  name")
-	if [ "x$DDBNAME" = "x" ]; then
+	if [[ -z "$DDBNAME" ]]; then
 		DDBNAME="ivig"
 	fi
-	while [ "x$DBNAME" = "x" ]; do
-		read -p "Database Name [$DDBNAME]: " DBNAME
+	while [[ -z $DBNAME ]]; do
+		read -r -p "Database Name [$DDBNAME]: " DBNAME
 		DBNAME=${DBNAME:-$DDBNAME}
 	done
 } #get_dbname
 
 get_dbtype() {
-	printf "\nPlease provide database type. Valid values are db2 and postgres\n\n"
+	printf "\nPlease provide database type. Valid values are db2, oracle and postgres\n\n"
 	DDBTYPE=$(get_existing_value dbtype)
-	while [ "x$DBTYPE" = "x" ]; do
-		read -p "Database type [$DDBTYPE]: " DBTYPE
+	while [[ -z $DBTYPE ]]; do
+		read -r -p "Database type [$DDBTYPE]: " DBTYPE
 		DBTYPE=${DBTYPE:-$DDBTYPE}
-		if [[ ! $DBTYPE =~ ^(db2|postgres)$ ]]; then
-			printf "\nInvalid type: $DBTYPE\n\n"
+		if [[ ! "$DBTYPE" =~ ^(db2|postgres|oracle)$ ]]; then
+			printf "\nInvalid type: %s\n\n" "$DBTYPE"
 			DBTYPE=""
 		fi
 	done
 } #get_dbtype
+get_oracle_service_name_flag() {
+	printf "\nSpecify how Oracle database is configured.\n"
+	printf "true  - Using Oracle SERVICE NAME\n"
+	printf "false - Using Oracle SID\n\n"
+
+	DORACLESERVICE=$(get_existing_value isOracleServiceName)
+
+	if [[ -z "$DORACLESERVICE" ]]; then
+		DORACLESERVICE="true"
+	fi
+
+	get_truefalse "Is Oracle configured using SERVICE NAME" "$DORACLESERVICE"
+	ISORACLESERVICENAME=$TFVALUE
+}
 
 get_tablespaces() {
 	printf "\nPlease specify the paths which will hold the tablespaces.\n\n"
@@ -441,10 +461,10 @@ get_tablespaces() {
 } #get_tablespaces
 
 get_ldap_admin_dn() {
-	while [ "x$LDAPUSER" = "x" ]; do
+	while [[ -z "$LDAPUSER" ]]; do
 		user_prompt LDAP security.principal && LDAPUSER=$USER
-		check_ldapuser_naming $LDAPUSER
-		if [ $(echo $?) -ne 0 ]; then
+		check_ldapuser_naming "$LDAPUSER"
+		if [[ $? -ne 0 ]]; then
 			LDAPUSER=""
 		fi
 	done
@@ -452,7 +472,7 @@ get_ldap_admin_dn() {
 
 
 get_ldap_user() {
-	if [ "x$DEPLOYLDAPHA" = "xtrue" ]; then
+	if [[ "$DEPLOYLDAPHA" = "true" ]]; then
 		printf "\nThe userid specified here will be the admin user on the replica servers.\n"
 		printf "The proxy server admin will be cn=manager,cn=ibmpolicies.\n"
 		printf "The specified password will be used for both accounts.\n"
@@ -468,7 +488,7 @@ get_tenant() {
 	printf "Tenant is the name of the OrgUnit in LDAP\n"
 	printf "Organization is the name displayed in the IVIG user interface\n"
 	printf "Root suffix is the base of the IVIG tree in LDAP\n"
-	while [ "x$TENANT" = "x" ]; do
+	while [[ -z "$TENANT" ]]; do
 		prompt_not_empty "Tenant" "$(get_existing_value defaulttenant.id)" && TENANT=$VALUE
 		if [[ $TENANT =~ = ]]; then
 			printf "\nThe value cannot contain the \"=\" sign\n"
@@ -485,7 +505,7 @@ get_suffix() {
 		printf "         You hve entered a more complex suffix. This is allowed, but\n"
 		printf "         you will need to modify config/ldap_config.yaml to specify\n"
 		printf "         additional objectclasses and/or attributes for your suffix.\n"
-		if [ $DEPLOYLDAPHA = "true" ]; then
+		if [[ "$DEPLOYLDAPHA" = "true" ]]; then
 			printf "         You will also need to make the same changes to ldap2_config.yaml.\n"
 		fi
 	fi
@@ -496,16 +516,16 @@ get_extreg_type() {
 	printf "The supported options are Microsoft Active Directory and IBM Security\n"
 	printf "Verify Directory Server. Specify either \"AD\" or \"IBM\"\n\n"
 	DERTYPE=$(get_existing_value "  type")
-	while [ "x$ERTYPE" = "x" ]; do
-		read -p "Type [$DERTYPE]: " ERTYPE
+	while [[ -z $ERTYPE ]]; do
+		read -r -p "Type [$DERTYPE]: " ERTYPE
 		ERTYPE=${ERTYPE:-$DERTYPE}
-		ERTYPE=$(awk '{ print tolower($1) }' <<< $ERTYPE)
-		if [ "x$ERTYPE" = "xad" ]; then
+		ERTYPE=$(awk '{ print tolower($1) }' <<< "$ERTYPE")
+		if [[ "$ERTYPE" = "ad" ]]; then
 			ERTYPE="Microsoft Active Directory"
-		elif [ "x$ERTYPE" = "xibm" ]; then
+		elif [[ "$ERTYPE" = "ibm" ]]; then
 			ERTYPE="IBM Tivoli Directory Server"
 		else
-			printf "\nInvalid option: $ERTYPE\n\n"
+			printf "\nInvalid option: %s\n\n" "$ERTYPE"
 			ERTYPE=""
 		fi
 	done
@@ -545,16 +565,16 @@ get_liberty_metrics() {
 
 	# To work with options, we need to know the line number because the
 	# only unique value to grep on is the option name.
-	LMLINE=$(grep -n libertyMetrics $CFGFILE | cut -d ':' -f 1)
-	LMENABLEDLINE=$(($LMLINE+1))
-	LMUSERLINE=$(($LMLINE+4))
-	LMPASSLINE=$(($LMLINE+6))
-	DLMENABLED=$(sed -n "${LMENABLEDLINE}p" $CFGFILE | awk '{ print $2 }')
+	LMLINE=$(grep -n libertyMetrics "$CFGFILE" | cut -d ':' -f 1)
+	LMENABLEDLINE=$((LMLINE+1))
+	LMUSERLINE=$((LMLINE+4))
+	LMPASSLINE=$((LMLINE+6))
+	DLMENABLED=$(sed -n "${LMENABLEDLINE}p" "$CFGFILE" | awk '{ print $2 }')
 
 	get_truefalse "Enable LibertyMetrics option" "$DLMENABLED" && LMENABLED=$TFVALUE
-	if [ $LMENABLED = "true" ]; then
+	if [[ $LMENABLED = "true" ]]; then
 		printf "\n\nPlease provide the credentials that will be used to access the metrics.\n\n"
-		DLMUSER=$(sed -n "${LMUSERLINE}p" $CFGFILE | awk '{ print $2 }')
+		DLMUSER=$(sed -n "${LMUSERLINE}p" "$CFGFILE" | awk '{ print $2 }')
 		prompt_not_empty "Username" "$DLMUSER" && LMUSER=$VALUE
 		pw_prompt "Password:" && LMPASS=$PWVALUE
 		printf "\nAfter IVIG is running, please use the util/encryptLibertyPwd.sh\n"
@@ -595,10 +615,10 @@ get_hostnames() {
 	printf "\nEnter a blank line to stop list collection.\n\n"
 	HOSTNAMES=""
 	HOST="x"
-	while [ "x$HOST" != "x" ]; do
-		read -p "Hostname: " HOST
-		if [ "x$HOST" != "x" ]; then
-			if [ "x$HOSTNAMES" != "x" ]; then
+	while [[ -n $HOST ]]; do
+		read -r -p "Hostname: " HOST
+		if [[ -n "$HOST" ]]; then
+			if [[ -n "$HOSTNAMES" ]]; then
 				HOSTNAMES="$HOSTNAMES,$HOST"
 			else
 				HOSTNAMES=$HOST
@@ -617,8 +637,8 @@ get_truststore() {
 	printf "B64:Pz8fjWSN...    where \"B64:\" is the prefix, and the rest is the base64\n"
 	printf "   encoded version of the file itself.\n\n"
 
-	if { [ $DEPLOYDB = "false" ] && [ "x$DBSSL" = "xssl" ] ;} \
-	   || { [ $DEPLOYLDAP = "false" ] && [ "x$LDAPSSL" = "xssl" ] ;}; then
+	if { [[ $DEPLOYDB = "false" ]] && [[ "$DBSSL" = "ssl" ]] ;} \
+	   || { [[ $DEPLOYLDAP = "false" ]] && [[ "$LDAPSSL" = "ssl" ]] ;}; then
 		printf "Note: You have an external data tier configured for SSL. You MUST specify\n"
 		printf "the CA certificate or the connection will fail.\n\n"
 	fi
@@ -626,15 +646,15 @@ get_truststore() {
 	printf "Enter a blank line to stop list collection.\n\n"
 	CACERTS=""
 	CERT="x"
-	while [ "x$CERT" != "x" ]; do
-		read -p "Certificate: " CERT
-		if [ "x$CERT" != "x" ]; then
-			check_cert_format $CERT
-			if [ $(echo $?) -ne 0 ]; then
+	while [[ -n $CERT ]]; do
+		read -r -p "Certificate: " CERT
+		if [[ -n $CERT ]]; then
+			check_cert_format "$CERT"
+			if [[ $? -ne 0 ]]; then
 				CERT="x"
 				continue
 			fi
-			if [ "x$CACERTS" != "x" ]; then
+			if [[ -n "$CACERTS" ]]; then
 				CACERTS="$CACERTS,$CERT"
 			else
 				CACERTS=$CERT
@@ -655,12 +675,12 @@ get_keystore() {
 	printf "Enter a blank line to stop list collection.\n\n"
 	KSCERTS=""
 	KSCERT="x"
-	while [ "x$KSCERT" != "x" ]; do
+	while [[ -n "$KSCERT" ]]; do
 		# Ask for cert, check format, and add to "array"
 		prompt "Certificate" "" && KSCERT=$VALUE
-		if [ "x$KSCERT" != "x" ]; then
-			check_cert_format $KSCERT
-			if [ $(echo $?) -ne 0 ]; then
+		if [[ -n "$KSCERT" ]]; then
+			check_cert_format "$KSCERT"
+			if [[ $? -ne 0 ]]; then
 				KSCERT=x
 				continue
 			fi
@@ -668,10 +688,10 @@ get_keystore() {
 
 			# Reset worker var and get valid key input
 			KSCERT=""
-			while [ "x$KSCERT" = "x" ]; do
+			while [[ -z "$KSCERT" ]]; do
 				prompt_not_empty "Key" "" && KSCERT=$VALUE
-				check_cert_format $KSCERT
-				if [ $(echo $?) -ne 0 ]; then
+				check_cert_format "$KSCERT"
+				if [[ $? -ne 0 ]]; then
 					KSCERT=""
 				fi
 			done
@@ -679,10 +699,10 @@ get_keystore() {
 
 			# One more value to collect
 			KSCERT=""
-			while [ "x$KSCERT" = "x" ]; do
+			while [[ -z "$KSCERT" ]]; do
 				prompt_not_empty "CA Certificate" "" && KSCERT=$VALUE
-				check_cert_format $KSCERT
-				if [ $(echo $?) -ne 0 ]; then
+				check_cert_format "$KSCERT"
+				if [[ $? -ne 0 ]]; then
 					KSCERT=""
 				fi
 			done
@@ -711,17 +731,18 @@ do_installation() {
 
 	get_truefalse "Deploy ISVD LDAP Pod" "$(get_existing_value deployLdap)" && DEPLOYLDAP=$TFVALUE
 
-	if [ $DEPLOYLDAP = "true" ]; then
+	if [[ $DEPLOYLDAP = "true" ]]; then
 		get_truefalse "Deploy LDAP in HA Configuration" "$(get_existing_value deployLdapHA)" && DEPLOYLDAPHA=$TFVALUE
 		get_truefalse "Enable LDAP audit log" "$(get_existing_value enableAuditLog)" && AUDITLOG=$TFVALUE
 	fi
 
 	get_truefalse "Deploy PostgreSQL DB Pod" "$(get_existing_value deployDb)" && DEPLOYDB=$TFVALUE
-	if [ $DEPLOYDB = "true" ]; then
+	if [[ $DEPLOYDB = "true" ]]; then
 		get_truefalse "Deploy DB in HA Configuration" "$(get_existing_value deployDbHA)" && DEPLOYDBHA=$TFVALUE
 	fi
 
 	get_truefalse "Deploy Adapter RMI Dispatcher Pod" "$(get_existing_value deployIsvdi)" && DEPLOYISVDI=$TFVALUE
+
 } #do_installation
 
 do_license() {
@@ -733,7 +754,7 @@ do_license() {
 	printf "\tPVU: Processor Value Unit, usage calculated based on CPU activity\n"
 	printf "\tUVU: User Value Unit, usage calculated based on number of users managed\n"
 	prompt_not_empty "License Type" "$(get_existing_value licenseType)" && LICTYPE=$VALUE
-	if [ $LICTYPE != "UVU" ]; then
+	if [[ $LICTYPE != "UVU" ]]; then
 		LICTYPE=PVU
 	else
 		printf "\nFor UVU, you can specify criteria to identify External Users.  These are\n"
@@ -744,7 +765,7 @@ do_license() {
 		printf "userType=external).  If both are specified, only objectclass will be used.\n"
 		prompt "External User objectclass" "" && LICOBJC=$VALUE
 		prompt "External User attribute and value" "" && LICATTR=$VALUE
-		if [ "x$LICOBJC" = "x" ] && [ "x$LICATTR" = "x" ]; then
+		if [[ -z "$LICOBJC" ]] && [[ -z "$LICATTR" ]]; then
 			printf "\nWARNING: No External User criteria specified.  All users will be considered\n"
 			printf "         Internal Users.  Please update enRole.properties to specify either\n"
 			printf "         enrole.license.externaluser.objectclass or\n"
@@ -753,20 +774,21 @@ do_license() {
 	fi
 
 	get_truefalse "Do you accept the terms of the license in the license directory" "false" && LICENSE=$TFVALUE
-	if [ $LICENSE = "false" ]; then
+	if [[ $LICENSE = "false" ]]; then
 		printf "\nWARNING: Installation will FAIL if the license is not accepted!\n"
 		printf "         Please re-run this program or update config.yaml with acceptance\n"
 		printf "         before running the installer.\n"
 		sleep 5
 	fi
 
-	if [ $DEPLOYLDAP = "true" ]; then
+	if [[ $DEPLOYLDAP = "true" ]]; then
 		get_key "IBM Security Verify Directory" LDAP && LDAPKEY=$KEY
 	fi
 
-	if [ $DEPLOYISVDI = "true" ]; then
+	if [[ $DEPLOYISVDI = "true" ]]; then
 		get_key "IBM Security Verify Directory Integrator" ISVDI && ISVDIKEY=$KEY
 	fi
+
 } #do_license
 
 do_database() {
@@ -774,17 +796,20 @@ do_database() {
 	get_dbadmin
 	get_dbname
 
-	if [ $DEPLOYDB = "false" ]; then
+	if [[ $DEPLOYDB = "false" ]]; then
 		get_dbtype
+		if [[ "$DBTYPE" = "oracle" ]]; then
+			get_oracle_service_name_flag
+		fi
 		get_host database "  ip" && DBHOST=$HOST
 		get_port database "  port" 50000 65535 && DBPORT=$PORT
 		get_ssl db database && DBSSL=$SSL
 
-		if [ "x$DBTYPE" = "xpostgres" ]; then
+		if [[ "$DBTYPE" = "postgres" ]]; then
 			get_truefalse "Do you want to create Tablespace?" "$(get_existing_value createTablespace)" && CREATETABLESPACE=$TFVALUE
 		fi
 
-		if [ "x$DBTYPE" = "xpostgres" ] && [ "x$CREATETABLESPACE" = "xtrue" ]; then
+		if [[ "$DBTYPE" = "postgres" ]] && [[ "$CREATETABLESPACE" = "true" ]]; then
 			get_tablespaces
 		fi
 	else
@@ -798,7 +823,7 @@ do_ldap() {
 	get_tenant
 	get_suffix
 
-	if [ $DEPLOYLDAP = "false" ]; then
+	if [[ $DEPLOYLDAP = "false" ]]; then
 		get_host "LDAP" "ldapserver.ip" && LDAPHOST=$HOST
 		get_port LDAP "ldapserver.port" 389 65535 && LDAPPORT=$PORT
 		get_ssl ldap LDAP && LDAPSSL=$SSL
@@ -859,21 +884,23 @@ provide attribute configuration for external user registry.
 enter 'y' when prompted to end list collection.
 "
     EURATTRIBUTES=""
-    local attrconfigline=$(grep -n attributeConfiguration $CFGFILE | cut -d ':' -f 1)
-    local attrstart=$(($attrconfigline+2))
-    local attrend=$(($attrstart+5))
+    local attrconfigline
+	attrconfigline=$(grep -n attributeConfiguration "$CFGFILE" | cut -d ':' -f 1)
+    local attrstart=$((attrconfigline+2))
+    local attrend=$((attrstart+5))
     while true; do
         # since there can be multiple attributes we need to grep only on the 5 lines which are currently relevent
-        local view=$(sed -n "${attrstart},${attrend}p" $CFGFILE)
-        printf "$view" | head -1 | grep -q '-' # test if the block is list item
-        local isListEl=$(echo $?)
+        local view
+		view=$(sed -n "${attrstart},${attrend}p" "$CFGFILE")
+        printf "%s" "$view" | head -1 | grep -q '-' # test if the block is list item
+        local isListEl=$?
         # only grep for existing values if this is a list element
-        prompt "defaultValue" $([ $isListEl -eq 0 ] && echo "$view" | grep defaultValue | cut -d ':' -f2-) && EURATTRDEF=$VALUE
-        prompt "entityType" $([ $isListEl -eq 0 ] && echo "$view" | grep entityType | cut -d ':' -f2-) && EURATTRENTTTYPE=$VALUE
-        prompt "id" $([ $isListEl -eq 0 ] && echo "$view" | grep id | cut -d ':' -f2-) && EURATTRID=$VALUE
-        prompt "name" $([ $isListEl -eq 0 ] && echo "$view" | grep name | cut -d ':' -f2-) && EURATTRNAME=$VALUE
-        prompt "propertyName" $([ $isListEl -eq 0 ] && echo "$view" | grep propertyName | cut -d ':' -f2-) && EURATTRPROPNAME=$VALUE
-        prompt "syntax" $([ $isListEl -eq 0 ] && echo "$view" | grep syntax | cut -d ':' -f2-) && EURATTRSYNTAX=$VALUE
+        prompt "defaultValue" "$([[ "$isListEl" -eq 0 ]] && echo "$view" | grep defaultValue | cut -d ':' -f2-)" && EURATTRDEF=$VALUE
+        prompt "entityType" "$([[ "$isListEl" -eq 0 ]] && echo "$view" | grep entityType | cut -d ':' -f2-)" && EURATTRENTTTYPE=$VALUE
+        prompt "id" "$([[ "$isListEl" -eq 0 ]] && echo "$view" | grep id | cut -d ':' -f2-)" && EURATTRID=$VALUE
+        prompt "name" "$([[ "$isListEl" -eq 0 ]] && echo "$view" | grep name | cut -d ':' -f2-)" && EURATTRNAME=$VALUE
+        prompt "propertyName" "$([[ "$isListEl" -eq 0 ]] && echo "$view" | grep propertyName | cut -d ':' -f2-)" && EURATTRPROPNAME=$VALUE
+        prompt "syntax" "$([[ "$isListEl" -eq 0 ]] && echo "$view" | grep syntax | cut -d ':' -f2-)" && EURATTRSYNTAX=$VALUE
         ATTR=$(printf "
     - defaultValue: $EURATTRDEF
       entityType: $EURATTRENTTTYPE
@@ -884,14 +911,17 @@ enter 'y' when prompted to end list collection.
 ")
 
         EURATTRIBUTES+="$ATTR"
-        read -p "stop? [n] " STOP
+        read -r -p "stop? [n] " STOP
         case "$STOP" in
-            y|yes|Y|Yes)
+            y|yes|Y|Yes|YES)
                 break
                 ;;
+			*)
+				continue
+				;;
         esac
-        [ $isListEl -eq 0 ] && attrstart=$(($attrend+1)) # stop incrementing if list is over
-        [ $isListEl -eq 0 ] && attrend=$(($attrstart+5))
+        [[ "$isListEl" -eq 0 ]] && attrstart=$((attrend+1)) # stop incrementing if list is over
+        [[ "$isListEl" -eq 0 ]] && attrend=$((attrstart+5))
     done
 } #get_attribute_config
 
@@ -912,7 +942,7 @@ do_external_registry() {
 
 do_smtp_mail() {
     get_truefalse "Do you want to enable OAuth mail configuration? If true then Please use Additional Mail Properties in Admin Console to setup OAuth Configuration" "$(get_existing_value authentication.type)" && OAUTH_ENABLED=$TFVALUE
-    if [ "x$OAUTH_ENABLED" == "xtrue" ]; then
+    if [[ "$OAUTH_ENABLED" = "true" ]]; then
         AUTH_TYPE="oauth"
     else
         AUTH_TYPE="basic"
@@ -923,7 +953,7 @@ do_smtp_mail() {
         get_port "SMTP Mail Port" "smtp.port" 25 65535 && MAILPORT=$PORT
         get_truefalse "Enable StartTLS with Mail Server" "$(get_existing_value smtp.starttls.enable)" && MAILTLS=$TFVALUE
         get_truefalse "Enable Authentication with Mail Server" "$(get_existing_value smtp.auth)" && MAILAUTH=$TFVALUE
-        if [ "x$MAILAUTH" == "xtrue" ]; then
+        if [[ "$MAILAUTH" = "true" ]]; then
             prompt_not_empty "Mail Username" "$(get_existing_value smtp.auth.user)" && MAILUSER=$VALUE
             pw_prompt "Mail user Password:" required && MAILPASSWORD=$PWVALUE
         fi
@@ -931,7 +961,7 @@ do_smtp_mail() {
     
     printf "\n--- Email-based Approval Configuration ---\n"    
     get_truefalse "Do you want to enable Email-based Approval monitoring?" "$(get_existing_value monitoring.enabled)" && EMAIL_APPROVAL_ENABLED=$TFVALUE
-    if [ "x$EMAIL_APPROVAL_ENABLED" == "xtrue" ]; then
+    if [[ "$EMAIL_APPROVAL_ENABLED" = "true" ]]; then
         printf "\nConfiguring Office365 email approval monitoring...\n"
         printf "You will need Azure AD App Registration details.\n\n"
         
@@ -945,7 +975,7 @@ do_smtp_mail() {
 } #do_smtp_mail
 
 # Ensure EMAIL_APPROVAL_ENABLED is always set to a valid boolean
-if [ "x$MAILREG" != "xtrue" ]; then
+if [[ "$MAILREG" != "true" ]]; then
     EMAIL_APPROVAL_ENABLED="false"
 fi
 
@@ -956,17 +986,17 @@ do_ilmt_server() {
 	printf "bin/util/getILMTInfo.sh and restart the ISVGIM pod for it to sync.\n"
 	printf "\nFor more details, refer to: https://www.ibm.com/docs/en/cloud-paks/foundational-services/3.23?topic=platforms-tracking-license-usage-stand-alone-containerized-software\n"
 
-	if [ $OFFLINE -eq 0 ]; then
+	if [[ $OFFLINE -eq 0 ]]; then
 		sleep 3
 		printf "\nAttempting to download the installation script...\n"
 
 		# Check for download tool
 		wget -V > /dev/null 2>&1
-		if [ $(echo $?) -eq 0 ]; then
+		if [[ $? -eq 0 ]]; then
 			CMD=wget
 		else
 			curl -V > /dev/null 2>&1
-			if [ $(echo $?) -eq 0 ]; then
+			if [[ $? -eq 0 ]]; then
 				CMD="curl -k -o $LICENSE_SCRIPT_NAME -s"
 			else
 				printf "\nUnable to find wget or curl, cannot download the script.\n"
@@ -976,34 +1006,34 @@ do_ilmt_server() {
 		fi
 
 		# Attempt to download the script
-		if [ "x$CMD" != "x" ]; then
-			RESULT=$($CMD $LICENSE_SCRIPT_LOCATION 2>&1)
-			if [ $(echo $?) -ne 0 ]; then
+		if [[ -n "$CMD" ]]; then
+			RESULT=$($CMD "$LICENSE_SCRIPT_LOCATION" 2>&1)
+			if [[ $? -ne 0 ]]; then
 				printf "\nFailed to download the script. See error below.\n"
-				echo $RESULT
+				echo "$RESULT"
 				offline_ilmt
 				return
 			else
-				chmod +x ${LICENSE_SCRIPT_NAME}
+				chmod +x "${LICENSE_SCRIPT_NAME}"
 			fi
 		fi
 
-		printf "\nSuccessfully retrieved ${LICENSE_SCRIPT_NAME}.\n"
-		printf "Install the IBM License Service by running bin/${LICENSE_SCRIPT_NAME}."
+		printf "\nSuccessfully retrieved %s.\n" "$LICENSE_SCRIPT_NAME"
+		printf "Install the IBM License Service by running bin/%s." "$LICENSE_SCRIPT_NAME"
 	else
 		offline_ilmt
 	fi
 } #do_ilmt_server
 
 offline_ilmt() {
-	printf "\nPlease retrieve the installation script from: ${LICENSE_SCRIPT_LOCATION}\n"
+	printf "\nPlease retrieve the installation script from: %s\n" "$LICENSE_SCRIPT_LOCATION"
 	printf "If this machine lacks Internet access, please refer to the offline instructions:\n"
 	printf "https://www.ibm.com/docs/en/cloud-paks/foundational-services/3.23?topic=software-offline-installation\n"
 } #offline_ilmt
 
 write_config_yaml() {
-	mv $CFGFILE $CFGBAK
-	cat <<EOF > $CFGFILE
+	mv "$CFGFILE" "$CFGBAK"
+	cat <<EOF > "$CFGFILE"
 version: "24.12"
 general:
   install:
@@ -1044,6 +1074,7 @@ db:
   name: $DBNAME
   admin: $DBADM
   adminPwd: $DBADMPASS
+  isOracleServiceName: $ISORACLESERVICENAME
   security.protocol: $DBSSL
   tablespace.location.data: $DBTBLDATA
   tablespace.location.indexes: $DBTBLIDX
@@ -1085,13 +1116,13 @@ externalRegistry:
   bindPassword: $ERBINDPASS
   isimsystemPassword: $ERIMSYSPASS
   filterProperties:
-    groupFilter: $ERGRPFILTER
-    groupIdMap: $ERGRPIDMAP
-    groupMemberIdMap: $ERGRPMBRMAP
-    userFilter: $ERUSERFILTER
-    userIdMap: $ERUSERIDMAP
+    groupFilter: "$ERGRPFILTER"
+    groupIdMap: "$ERGRPIDMAP"
+    groupMemberIdMap: "$ERGRPMBRMAP"
+    userFilter: "$ERUSERFILTER"
+    userIdMap: "$ERUSERIDMAP"
   attributeConfiguration:
-    attributes: $EURATTRIBUTES
+    attributes: "$EURATTRIBUTES"
 server:
   keypass: $KEYPASS
   options:
@@ -1109,32 +1140,32 @@ server:
 EOF
 
 # Now process the lists
-if [ "x$HOSTNAMES" != "x" ]; then
+if [[ -n $HOSTNAMES ]]; then
 	IFS="," read -r -a hosts <<< "$HOSTNAMES"
-	for host in ${hosts[@]}; do
-		echo "  - $host" >> $CFGFILE
+	for host in "${hosts[@]}"; do
+		echo "  - $host" >> "$CFGFILE"
 	done
 fi
 
-echo "  truststore:" >> $CFGFILE
-if [ "x$CACERTS" != "x" ]; then
+echo "  truststore:" >> "$CFGFILE"
+if [[ -n $CACERTS ]]; then
 	IFS="," read -r -a certs <<< "$CACERTS"
-		for cert in ${certs[@]}; do
-		echo "  - \"$cert\"" >> $CFGFILE
+		for cert in "${certs[@]}"; do
+		echo "  - \"$cert\"" >> "$CFGFILE"
 	done
 fi
 
-echo "  keystore:" >> $CFGFILE
-if [ "x$KSCERTS" != "x" ]; then
+echo "  keystore:" >> "$CFGFILE"
+if [[ -n $KSCERTS ]]; then
 	IFS="," read -r cert key cacert <<< "$KSCERTS"
-	echo "  - cert: \"$cert\"" >> $CFGFILE
-	echo "    key: \"$key\"" >> $CFGFILE
-	echo "    cacert: \"$cacert\"" >> $CFGFILE
+	echo "  - cert: \"$cert\"" >> "$CFGFILE"
+	echo "    key: \"$key\"" >> "$CFGFILE"
+	echo "    cacert: \"$cacert\"" >> "$CFGFILE"
 fi
 
-echo "" >> $CFGFILE
+echo "" >> "$CFGFILE"
 # Remove all spaces on empty lines
-$SED 's/:\ $/:/g' $CFGFILE
+$SED 's/:\ $/:/g' "$CFGFILE"
 } #write_config_yaml
 
 # Start of main script
@@ -1150,12 +1181,12 @@ do_ldap
 printf "\n--- Database Section ---\n"
 do_database
 
-if [ "x$EXTREG" = "xtrue" ]; then
+if [[ "$EXTREG" = "true" ]]; then
 	printf "\n--- External Registry Section ---\n"
 	do_external_registry
 fi
 
-if [ "x$MAILREG" = "xtrue" ]; then
+if [[ "$MAILREG" = "true" ]]; then
 	printf "\n--- MAIL Configuration Section ---\n"
 	do_smtp_mail
 fi
@@ -1163,7 +1194,7 @@ fi
 printf "\n--- Server Section ---\n"
 do_server
 
-if [ "x$USEOIDC" = "xtrue" ]; then
+if [[ "$USEOIDC" = "true" ]]; then
 	do_oidc
 fi
 

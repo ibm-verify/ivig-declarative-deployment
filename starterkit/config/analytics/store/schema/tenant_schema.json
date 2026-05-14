@@ -1,0 +1,29 @@
+{
+  "type": "struct",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "tntId",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "size",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name":"activeUsers",
+      "type":"long",
+      "nullable":true,
+      "metadata": {}
+    }
+  ]
+}

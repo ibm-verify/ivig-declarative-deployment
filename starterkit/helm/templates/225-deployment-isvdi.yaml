@@ -36,6 +36,7 @@ spec:
       containers:
       - name: isvdi
         image: {{ .Values.images.isvdi }}
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: {{ .Values.services.isvdi.ports.api }}
           name: api

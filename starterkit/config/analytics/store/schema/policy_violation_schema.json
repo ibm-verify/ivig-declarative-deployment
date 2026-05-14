@@ -1,0 +1,393 @@
+  {
+    "type": "struct",
+    "fields": [
+      {
+        "name": "associatedEntities",
+        "type": {
+          "type": "array",
+          "elementType": "string",
+          "containsNull": true
+        },
+        "nullable": true
+      },
+      {
+        "name": "crtTime",
+        "type": "long",
+        "nullable": true
+      },
+      {
+        "name": "critical",
+        "type": "long",
+        "nullable": true
+      },
+      {
+        "name": "dip",
+        "type": "long",
+        "nullable": true
+      },
+      {
+        "name": "eventInfo",
+        "type": {
+          "type": "struct",
+          "fields": [
+            {
+              "name": "evtSubType",
+              "type": "string",
+              "nullable": true
+            },
+            {
+              "name": "evtTs",
+              "type": "long",
+              "nullable": true
+            },
+            {
+              "name": "procTs",
+              "type": "long",
+              "nullable": true
+            },
+            {
+              "name": "srcEvtId",
+              "type": "string",
+              "nullable": true
+            },
+            {
+              "name": "type",
+              "type": "string",
+              "nullable": true
+            },
+            {
+              "name": "startTs",
+              "type": "long",
+              "nullable": true
+            },
+            {
+              "name": "endTs",
+              "type": "long",
+              "nullable": true
+            },
+            {
+              "name": "count",
+              "type": "long",
+              "nullable": true
+            }
+          ]
+        },
+        "nullable": true
+      },
+      {
+        "name": "eventType",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "name": "high",
+        "type": "long",
+        "nullable": true
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "name": "isDeleted",
+        "type": "boolean",
+        "nullable": false
+      },
+      {
+        "name": "low",
+        "type": "long",
+        "nullable": true
+      },
+      {
+        "name": "medium",
+        "type": "long",
+        "nullable": true
+      },
+      {
+        "name": "modTime",
+        "type": "long",
+        "nullable": true
+      },
+      {
+        "name": "policyId",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "name": "policyInfo",
+        "type": {
+          "type": "struct",
+          "fields": [
+            {
+              "name": "policyId",
+              "type": "string",
+              "nullable": true
+            },
+            {
+              "name": "policyName",
+              "type": "string",
+              "nullable": true
+            },
+            {
+              "name": "policyType",
+              "type": "string",
+              "nullable": true
+            }
+          ]
+        },
+        "nullable": true
+      },
+      {
+        "name": "rollupEntities",
+        "type": {
+          "type": "array",
+          "elementType": "string",
+          "containsNull": true
+        },
+        "nullable": true
+      },
+      {
+        "name": "ruleInfo",
+        "type": {
+          "type": "struct",
+          "fields": [
+            {
+              "name": "ruleId",
+              "type": "string",
+              "nullable": true
+            },
+            {
+              "name": "ruleName",
+              "type": "string",
+              "nullable": true
+            }
+          ]
+        },
+        "nullable": true
+      },
+      {
+        "name": "score",
+        "type": "double",
+        "nullable": true
+      },
+      {
+        "name": "severity",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "name": "tntId",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "name": "tags",
+        "type": {
+          "type": "array",
+          "elementType": "string",
+          "containsNull": true
+        },
+        "nullable": true
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "name": "userId",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "name": "usrInfo",
+        "type": {
+          "type": "struct",
+          "fields": [
+            {
+              "name": "usrId",
+              "type": "string",
+              "nullable": true
+            },
+            {
+              "name": "usrName",
+              "type": "string",
+              "nullable": true
+            },
+            {
+              "name": "email",
+              "type": "string",
+              "nullable": true
+            }
+          ]
+        },
+        "nullable": true
+      },
+      {
+        "name": "acctInfo",
+        "type": {
+          "type": "struct",
+          "fields": [
+            {
+              "name": "acctId",
+              "type": "string",
+              "nullable": true
+            },
+            {
+              "name": "acctName",
+              "type": "string",
+              "nullable": true
+            }
+          ]
+        },
+        "nullable": true
+      },
+      {
+        "name": "accountId",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "name": "applicationId",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "name": "applInfo",
+        "type": {
+          "type": "struct",
+          "fields": [
+            {
+              "name": "applId",
+              "type": "string",
+              "nullable": true
+            },
+            {
+              "name": "applName",
+              "type": "string",
+              "nullable": true
+            }
+          ]
+        },
+        "nullable": true
+      },
+      {
+        "name": "entitlementId",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "name": "entInfo",
+        "type": {
+          "type": "struct",
+          "fields": [
+            {
+              "name": "entId",
+              "type": "string",
+              "nullable": true
+            },
+            {
+              "name": "entName",
+              "type": "string",
+              "nullable": true
+            }
+          ]
+        },
+        "nullable": true
+      },
+      {
+        "name": "assignmentId",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "name": "assgInfo",
+        "type": {
+          "type": "struct",
+          "fields": [
+            {
+              "name": "assgId",
+              "type": "string",
+              "nullable": true
+            },
+            {
+              "name": "assgName",
+              "type": "string",
+              "nullable": true
+            }
+          ]
+        },
+        "nullable": true
+      },
+      {
+        "name": "riskId",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "name": "riskInfo",
+        "type": {
+          "type": "struct",
+          "fields": [
+            {
+              "name": "riskId",
+              "type": "string",
+              "nullable": true
+            },
+            {
+              "name": "riskName",
+              "type": "string",
+              "nullable": true
+            }
+          ]
+        },
+        "nullable": true
+      },
+      {
+        "name": "riskName",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "name": "accountName",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "name": "applicationName",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "name": "assignmentName",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "name": "entitlementName",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "name": "userName",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "name": "actionTaken",
+        "type": "boolean",
+        "nullable": true
+      },
+      {
+        "name": "policyName",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "name": "violationId",
+        "type": "string",
+        "nullable": true
+      }
+    ]
+  }

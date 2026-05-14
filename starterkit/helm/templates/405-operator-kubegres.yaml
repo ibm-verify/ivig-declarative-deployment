@@ -2431,6 +2431,7 @@ spec:
         - --logtostderr=true
         - --v=0
         image: {{ .Values.images.kuberbac }}
+        imagePullPolicy: IfNotPresent
         name: kube-rbac-proxy
         ports:
         - containerPort: 8443
@@ -2455,6 +2456,7 @@ spec:
         command:
         - /manager
         image: {{ .Values.images.kubegres }}
+        imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
             path: /healthz

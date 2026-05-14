@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "x$1" = "x--help" ]; then
+if [[ "$1" = "--help" ]]; then
 	echo "Name: DBPurge.sh"
 	echo "When to run: On a regular basis to remove obsolete data from the DB"
 	echo "Description:"
@@ -38,22 +38,24 @@ if [ "x$1" = "x--help" ]; then
 fi
 
 CDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-TDIR=$(basename $CDIR)
-if [ "x$TDIR"  = "xutil" ]; then
-	cd $CDIR/..
+TDIR=$(basename "$CDIR")
+if [[ "$TDIR"  = "util" ]]; then
+	cd "$CDIR/.." || exit 1
 fi
+source ./lib/common.sh
 
-NS=$(./sys/getNamespace.sh)
+get_namespace || die "Unable to get namespace" $?
+NS=$REPLY
 
 kubectl=$(./sys/preReqCheck.sh)
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	echo $kubectl
-	exit $RC
+RC=$?
+if [[ $RC -ne 0 ]]; then
+	echo "$kubectl"
+	exit "$RC"
 fi
 
 POD=isvgim-0
-$kubectl -n $NS exec $POD -c isvgim -- /bin/bash /work/DBPurge.sh $*
-if [ $(echo $?) -ne 0 ]; then
+$kubectl -n "$NS" exec "$POD" -c isvgim -- /bin/bash /work/DBPurge.sh "$@"
+if [[ $? -ne 0 ]]; then
 	exit 1
 fi

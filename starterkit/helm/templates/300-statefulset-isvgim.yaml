@@ -55,6 +55,8 @@ spec:
         env:
         - name: ADMIN_UI_TIMEOUT
           value: {{ .Values.services.isvgim.config.adminUITimeoutSeconds | quote }}
+        - name: LIBERTY_LTPA_TIMEOUT
+          value: {{ .Values.services.isvgim.config.libertyLtpaTimeout | quote }}
         - name: ISC_UI_TIMEOUT
           value: {{ .Values.services.isvgim.config.iscUITimeoutSeconds | quote }}
         - name: DEBUG_INIT
@@ -70,6 +72,8 @@ spec:
           value: {{ .Values.services.isvgim.config.libertyLogMaxFileSize | quote }}
         - name: LIBERTY_LOG_MAX_FILES
           value: {{ .Values.services.isvgim.config.libertyLogMaxFiles | quote }}
+        - name: LIBERTY_CONSOLE_LOG_LEVEL
+          value: {{ .Values.services.isvgim.config.libertyConsoleLogLevel | quote }}
         - name: MQ_LOCAL_MQ_PORT
           value: {{ .Values.services.mqlocal.ports.mq | quote }}
         - name: MQ_USER_LOCAL
@@ -279,12 +283,14 @@ spec:
           mountPath: /etc/mqm/pki/keys/mykey
       - name: logs-liberty
         image: {{ .Values.images.isvgim }}
+        imagePullPolicy: IfNotPresent
         args: [ "/bin/sh", "-c", "tail -n+1 -F /logs/console.log" ]
         volumeMounts:
         - name: logs
           mountPath: /logs
       - name: logs-im
         image: {{ .Values.images.isvgim }}
+        imagePullPolicy: IfNotPresent
         args: [ "/bin/sh", "-c", "tail -n+1 -F /logs/ivig_console.log" ]
         volumeMounts:
         - name: logs

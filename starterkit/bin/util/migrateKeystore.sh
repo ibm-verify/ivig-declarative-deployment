@@ -4,7 +4,7 @@ MKBACKUP="Invalid"
 KSKEY="Invalid"
 IM_HOME="/opt/ibm/wlp/usr/servers/defaultServer/config"
 
-if [ "x$1" = "x--help" ]; then
+if [[ "$1" = "--help" ]]; then
 	echo "Name: migrateKeystore.sh"
 	echo "When to run: When migrating to the IVIG Kubernetes deployment."
 	echo "Description:"
@@ -18,67 +18,66 @@ fi
 
 collect_ksfile() {
 	printf "\nSpecify location of itimKeystore.jceks file.  Use an absolute path or one\n"
-	printf "relative to `pwd`.\n\n"
-	read -p 'Location: ' KSFILE
+	printf "relative to %s.\n\n" "$PWD"
+	read -r -p 'Location: ' KSFILE
 } #collect_ksfile
 
 collect_mkbackup() {
 	printf "\nSpecify location of masterkey backup file.  Use an absolute path or one\n"
-	printf "relative to `pwd`. Leave blank if there is no masterkey.\n\n"
-	read -p 'Location: ' MKBACKUP
+	printf "relative to %s. Leave blank if there is no masterkey.\n\n" "$PWD"
+	read -r -p 'Location: ' MKBACKUP
 } #collect_mkbackup
 
 collect_encodedValue() {
 	printf "\nSpecify value of enrole.encryption.password.encoded in\n"
 	printf "enRole.properties from prior system.  true or false\n\n"
-	read -p 'Value: ' ENCODED
+	read -r -p 'Value: ' ENCODED
 } #collect_encodedValue
 
 collect_key() {
 	printf "\nSpecify location of encryptionKey.properties.  Use an absolute path or\n"
-	printf "one relative to `pwd`. Leave blank if there is no\n"
+	printf "one relative to %s. Leave blank if there is no\n" "$PWD"
 	printf "encryptionKey.properties and you know the keystore password.\n\n"
-	read -p 'Location: ' KSKEY
+	read -r -p 'Location: ' KSKEY
 } #collect_key
 
 collect_mkpass() {
 	printf "\nSpecify password of masterkey backup file.\n"
-	read -sp 'Password: ' MKPASS
+	read -r -sp 'Password: ' MKPASS
 	echo ""
-	read -sp 'Confirm Password: ' MKPSWD
+	read -r -sp 'Confirm Password: ' MKPSWD
 	echo ""
 } #collect_mkpass
 
 collect_kspass() {
 	printf "\nSpecify password of keystore.\n"
-	read -sp 'Password: ' KSPASS
+	read -r -sp 'Password: ' KSPASS
 	echo ""
-	read -sp 'Confirm Password: ' KSPSWD
+	read -r -sp 'Confirm Password: ' KSPSWD
 	echo ""
 } #collect_kspass
 
 CDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-TDIR=$(basename $CDIR)
-if [ "x$TDIR"  = "xutil" ]; then
-	cd $CDIR/..
+TDIR=$(basename "$CDIR")
+if [[ "$TDIR"  = "util" ]]; then
+	cd "$CDIR/.." || exit 1
 fi
+source ./lib.common.sh
+PWD=$(pwd)
 
 kubectl=$(./sys/preReqCheck.sh)
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	echo $kubectl
-	exit $RC
+RC=$?
+if [[ $RC -ne 0 ]]; then
+	echo "$kubectl"
+	exit "$RC"
 fi
 
-NS=$(./sys/getNamespace.sh)
-if [ $(echo $?) -ne 0 ]; then
-	echo "Unable to determine namespace from values.yaml file"
-	exit 7
-fi
+get_namespace || die "Unable to determine namespace" $?
+NS=$REPLY
 
 # Make sure application is stopped during the migration
-POD=$($kubectl -n $NS get pods | grep isvgim-0 | grep Running | awk '{ print $1 }')
-if [ "x$POD" != "x" ]; then
+get_pod_name "$NS" isvgim-0 && POD=$REPLY
+if [[ -n "$POD" ]]; then
 	echo "The ISVG-IM application is still running.  Please stop it before running migrateKeystore.sh"
 	echo "e.g. kubectl -n $NS scale --replicas=0 statefulset isvgim"
 	exit 1
@@ -91,52 +90,53 @@ printf "\n##### Deploying configuration pod #####\n"
 POD=""
 TIMER=0
 # Waiting for pod to be ready again
-while [ "x$POD" = "x" ]; do
+while [[ -z "$POD" ]]; do
 	sleep 5
-	POD=$($kubectl -n $NS get pods | grep isvgimconfig | grep Running | awk '{ print $1 }')
-	if [ $TIMER -gt 60 ]; then
-		$kubectl -n $NS describe deployment isvgimconfig
+	get_pod_name "$NS" isvgimconfig && POD=$REPLY
+
+	if [[ $TIMER -gt 60 ]]; then
+		$kubectl -n "$NS" describe deployment isvgimconfig
 		echo "Failed to schedule the ISVGIM Config pod after 5 minutes.  Aborting!"
 		echo "Run \"$kubectl -n $NS describe rs theReplicaSetListedAbove\" for details."
 		exit 8
 	fi
-	TIMER=$(($TIMER+1))
+	TIMER=$((TIMER+1))
 done
 
-./sys/waitFor.sh $POD pod
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	exit $RC
+./sys/waitFor.sh "$POD" pod
+RC=$?
+if [[ $RC -ne 0 ]]; then
+	exit "$RC"
 fi
 ./sys/waitFor.sh isvgimconfig application
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	exit $RC
+RC=$?
+if [[ $RC -ne 0 ]]; then
+	exit "$RC"
 fi
 
 # Collect the path to the keystore itimKeystore.jceks
-while [ "x$KSFILE" = "x" ]; do
+while [[ -z "$KSFILE" ]]; do
 	collect_ksfile
-	if [ ! -f $KSFILE ]; then
-		printf "\nUnable to read file $KSFILE.\n\n"
+	if [[ ! -f $KSFILE ]]; then
+		printf "\nUnable to read file %s.\n\n" "$KSFILE"
 		KSFILE=""
 	fi
 done
 
 # Collect the path to encryptionKey.properties
-while [ "$KSKEY" = "Invalid" ]; do
+while [[ "$KSKEY" = "Invalid" ]]; do
 	collect_key
-	if [ ! -f $KSKEY ] && [ "x$KSKEY" != "x" ]; then
-		printf "\nUnable to read file $KSKEY.\n\n"
+	if [[ ! -f $KSKEY ]] && [[ -n "$KSKEY" ]]; then
+		printf "\nUnable to read file %s.\n\n" "$KSKEY"
 		KSKEY="Invalid"
 	fi
 done
 
 # If no encryptionKey.properties was entered, ask for keystore password
-if [ "x$KSKEY" = "x" ]; then
-	while [ "x$KSPASS" = "x" ]; do
+if [[ -z "$KSKEY" ]]; then
+	while [[ -z "$KSPASS" ]]; do
 		collect_kspass
-		if [ "x$KSPASS" != "x$KSPSWD" ]; then
+		if [[ "$KSPASS" != "$KSPSWD" ]]; then
 			printf "\nPasswords don't match.\n\n"
 			KSPASS=""
 		fi
@@ -145,9 +145,9 @@ if [ "x$KSKEY" = "x" ]; then
 	ENCODED=true
 else
 # Otherwise ask if the password is encoded or not
-	while [ "x$ENCODED" = "x" ]; do
+	while [[ -z "$ENCODED" ]]; do
 		collect_encodedValue
-		if [ "x$ENCODED" != "xtrue" ] && [ "x$ENCODED" != "xfalse" ]; then
+		if [[ "$ENCODED" != "true" ]] && [[ "$ENCODED" != "false" ]]; then
 			printf "\nMust specify true or false.\n\n"
 			ENCODED=""
 		fi
@@ -155,19 +155,19 @@ else
 fi
 
 # Collect path to masterkey backup file
-while [ "$MKBACKUP" = "Invalid" ]; do
+while [[ "$MKBACKUP" = "Invalid" ]]; do
 	collect_mkbackup
-	if [ ! -f $MKBACKUP ] && [ "x$MKBACKUP" != "x" ]; then
-		printf "\nUnable to read file $MKBACKUP.\n\n"
+	if [[ ! -f $MKBACKUP ]] && [[ -n "$MKBACKUP" ]]; then
+		printf "\nUnable to read file %s.\n\n" "$MKBACKUP"
 		MKBACKUP="Invalid"
 	fi
 done
 
 # If masterkey backup exists, ask for the password
-if [ "x$MKBACKUP" != "x" ]; then
-	while [ "x$MKPASS" = "x" ]; do
+if [[ -n "$MKBACKUP" ]]; then
+	while [[ -z "$MKPASS" ]]; do
 		collect_mkpass
-		if [ "x$MKPASS" != "x$MKPSWD" ]; then
+		if [[ "$MKPASS" != "$MKPSWD" ]]; then
 			printf "\nPasswords don't match.\n\n"
 			MKPASS=""
 		fi
@@ -176,34 +176,34 @@ fi
 echo ""
 
 # Upload the keystore no matter what
-$kubectl -n $NS cp $KSFILE $POD:/work/itimKeystore.jceks
+$kubectl -n "$NS" cp "$KSFILE" "$POD":/work/itimKeystore.jceks
 
 # If user supplied keystore password, verify it can open the keystore
-if [ "x$KSPASS" != "x" ]; then
-	$kubectl -n $NS exec $POD -- /bin/bash -c "/work/migrateKeystore.sh check $KSPASS"
-	if [ $(echo $?) -ne 0 ]; then
+if [[ -n "$KSPASS" ]]; then
+	$kubectl -n "$NS" exec "$POD" -- /bin/bash -c "/work/migrateKeystore.sh check $KSPASS"
+	if [[ $? -ne 0 ]]; then
 		exit 3
 	fi 
 fi
 
-if [ "x$KSKEY" != "x" ] && [ "$KSKEY" != "Invalid" ]; then
-	$kubectl -n $NS cp $KSKEY $POD:/work/encryptionKey.properties
+if [[ -n "$KSKEY" ]] && [[ "$KSKEY" != "Invalid" ]]; then
+	$kubectl -n "$NS" cp "$KSKEY" "$POD":/work/encryptionKey.properties
 fi
-if [ "x$MKBACKUP" != "x" ]; then
-	$kubectl -n $NS cp $MKBACKUP $POD:/work/mkbackup
-	$kubectl -n $NS exec $POD -- /bin/bash -c "echo $MKPASS > /work/mkpass"
-fi
-
-$kubectl -n $NS exec $POD -- /bin/bash -c "/work/migrateKeystore.sh migrate $ENCODED"
-RESULT=$(echo $?)
-
-if [ ! -d ../logs ]; then
-	mkdir ../logs
+if [[ -n "$MKBACKUP" ]]; then
+	$kubectl -n "$NS" cp "$MKBACKUP" "$POD":/work/mkbackup
+	$kubectl -n "$NS" exec "$POD" -- /bin/bash -c "echo $MKPASS > /work/mkpass"
 fi
 
-$kubectl -n $NS cp $POD:${IM_HOME}/install_logs/migrateKeystore.stdout ../logs/migrateKeystore.stdout > /dev/null
+$kubectl -n "$NS" exec "$POD" -- /bin/bash -c "/work/migrateKeystore.sh migrate $ENCODED"
+RESULT=$?
 
-if [ $RESULT -ne 0 ]; then
+if [[ ! -d ../logs ]]; then
+	mkdir -p ../logs
+fi
+
+$kubectl -n "$NS" cp "$POD":"${IM_HOME}/install_logs/migrateKeystore.stdout" ../logs/migrateKeystore.stdout > /dev/null
+
+if [[ $RESULT -ne 0 ]]; then
 	tail -n 25 ../logs/migrateKeystore.stdout
 	echo "Failed to migrate keystore.  See messages above"
 	$kubectl delete -f ../yaml/201-deployment-isvgimconfig.yaml
@@ -211,14 +211,14 @@ if [ $RESULT -ne 0 ]; then
 fi
 
 # Remove old master keystore
-if [ -d ../data/keystore/kek* ]; then 
-    rm -rf ../data/keystore/kek*
-fi
+for FILE in ../data/keystore/kek*; do
+	rm -rf "$FILE"
+done
 
 # Download the new properties files
 FILES="keystore encryptionKey.properties enRole.properties enRoleLDAPConnection.properties enRoleDatabase.properties"
 for FILE in $FILES; do
-	$kubectl -n $NS cp $POD:${IM_HOME}/data/$FILE ../data/$FILE > /dev/null 2>&1
+	$kubectl -n "$NS" cp "$POD":"${IM_HOME}/data/$FILE" "../data/$FILE" > /dev/null 2>&1
 done
 
 ./createConfigs.sh keystore
@@ -226,7 +226,7 @@ done
 
 printf "\n##### Removing configuration pod #####\n"
 $kubectl delete -f ../yaml/201-deployment-isvgimconfig.yaml
-if [ $(echo $?) -ne 0 ]; then
+if [[ $? -ne 0 ]]; then
 	echo "Error removing ISVGIM config pod"
 	exit 16
 fi

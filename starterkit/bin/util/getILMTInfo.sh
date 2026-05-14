@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "x$1" = "x--help" ]; then
+if [[ "$1" = "--help" ]]; then
 	echo "Name: getILMTInfo.sh"
 	echo "When to run: Monthly to refresh token and certificate of License Server"
 	echo "Description:"
@@ -15,28 +15,38 @@ fi
 
 IBMNS="ibm-common-services"
 
-cd $(dirname ${BASH_SOURCE[0]})
-NS=$(../sys/getNamespace.sh)
+CDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+TDIR=$(basename "$CDIR")
+if [[ "$TDIR"  = "util" ]]; then
+	cd "$CDIR/.." || exit 1
+fi
+source ./lib/common.sh
+get_namespace || die "Unable to get namespace" $?
+NS=$REPLY
 
-kubectl=$(../sys/preReqCheck.sh)
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	echo $kubectl
-	exit $RC
+kubectl=$(./sys/preReqCheck.sh)
+RC=$?
+if [[ $RC -ne 0 ]]; then
+	echo "$kubectl"
+	exit "$RC"
 fi
 
-$kubectl get ns -o name | grep -q "namespace/${IBMNS}$"
-if [ $(echo $?) -ne 0 ]; then
+if [[ $kubectl = "oc" ]]; then
+	$kubectl get projects -o name | grep -q "namespace/${IBMNS}$"
+else
+	$kubectl get ns -o name | grep -q "namespace/${IBMNS}$"
+fi
+if [[ $? -ne 0 ]]; then
 	echo "${IBMNS} not found.  Assuming IBM License Server is not installed yet."
 	exit 1
 fi
 
-if [ "x$OFFLINE" != "x1" ]; then
+if [[ "$OFFLINE" != "1" ]]; then
 	echo "Importing License Server connection information"
-	$kubectl -n $NS delete --ignore-not-found=true secret ibm-licensing-upload-token
-	$kubectl -n $NS delete --ignore-not-found=true cm ibm-licensing-upload-config
-	$kubectl get secret ibm-licensing-upload-token -n ${IBMNS} -oyaml | grep -v "namespace: ${IBMNS}" | kubectl apply -n ${NS} -f -
-	$kubectl get cm ibm-licensing-upload-config -n ${IBMNS} -oyaml | grep -v "namespace: ${IBMNS}" | kubectl apply -n ${NS} -f -
+	$kubectl -n "$NS" delete --ignore-not-found=true secret ibm-licensing-upload-token
+	$kubectl -n "$NS" delete --ignore-not-found=true cm ibm-licensing-upload-config
+	$kubectl get secret ibm-licensing-upload-token -n "${IBMNS}" -oyaml | grep -v "namespace: ${IBMNS}" | kubectl apply -n "${NS}" -f -
+	$kubectl get cm ibm-licensing-upload-config -n "${IBMNS}" -oyaml | grep -v "namespace: ${IBMNS}" | kubectl apply -n "${NS}" -f -
 else
 	echo "Please run the following commands to import the IBM License Service tokens:"
 	echo "$kubectl -n $NS delete --ignore-not-found=true secret ibm-licensing-upload-token"

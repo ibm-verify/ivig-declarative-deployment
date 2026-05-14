@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "x$1" = "x--help" ]; then
+if [[ "$1" = "--help" ]]; then
 	echo "Name: upgradeRoleHierarchy.sh"
 	echo "When to run: Need to Upgrade Role Hierarchy data"
 	echo "Description:"
@@ -17,34 +17,36 @@ fi
 IM_HOME="/opt/ibm/wlp/usr/servers/defaultServer/config"
 
 CDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-TDIR=$(basename $CDIR)
-if [ "x$TDIR"  = "xutil" ]; then
-	cd $CDIR/..
+TDIR=$(basename "$CDIR")
+if [[ "$TDIR"  = "util" ]]; then
+	cd "$CDIR/.." || exit 1
 fi
+source ./lib/common.sh
 
-NS=$(./sys/getNamespace.sh)
+get_namespace || die "Unable to get namespace" $?
+NS=$REPLY
 
 kubectl=$(./sys/preReqCheck.sh)
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	echo $kubectl
-	exit $RC
+RC=$?
+if [[ $RC -ne 0 ]]; then
+	echo "$kubectl"
+	exit "$RC"
 fi
 
-POD=$($kubectl -n $NS get pods | grep isvgim | grep Running | awk '{ print $1 }')
-if [[ $POD == isvgim-* ]]; then
-	$kubectl -n $NS exec $POD -c isvgim -- /bin/bash /work/upgradeRoleHierarchy.sh $*
+get_pod_name "$NS" isvgim && POD=$REPLY
+if [[ $POD = isvgim-* ]]; then
+	$kubectl -n "$NS" exec "$POD" -c isvgim -- /bin/bash /work/upgradeRoleHierarchy.sh "$@"
 else
-	$kubectl -n $NS exec $POD -- /bin/bash /work/upgradeRoleHierarchy.sh $*
+	$kubectl -n "$NS" exec "$POD" -- /bin/bash /work/upgradeRoleHierarchy.sh "$@"
 fi
 
-if [ ! -d ../logs ]; then
-	mkdir ../logs
+if [[ ! -d ../logs ]]; then
+	mkdir -p ../logs
 fi
 
-$kubectl -n $NS cp $POD:${IM_HOME}/install_logs/upgradeRoleHierarchy.stdout ../logs/upgradeRoleHierarchy.stdout > /dev/null
+$kubectl -n "$NS" cp "$POD":"${IM_HOME}/install_logs/upgradeRoleHierarchy.stdout" ../logs/upgradeRoleHierarchy.stdout > /dev/null
 
 
-if [ $(echo $?) -ne 0 ]; then
+if [[ $? -ne 0 ]]; then
 	exit 1
 fi

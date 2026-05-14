@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "x$1" = "x--help" ]; then
+if [[ "$1" = "--help" ]]; then
 	echo "Name: restartConfigContainer.sh"
 	echo "When to run: Never, called automatically by the installer."
 	echo "Description:"
@@ -14,66 +14,79 @@ fi
 
 CERTDIR="../config/certs"
 CFGFILE="../config/config.yaml"
+YMLDIR="../yaml"
 
 CDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-TDIR=$(basename $CDIR)
-if [ "x$TDIR"  = "xsys" ]; then
-	cd $CDIR/..
+TDIR=$(basename "$CDIR")
+if [[ "$TDIR"  = "sys" ]]; then
+	cd "$CDIR/.." || exit 1
 fi
+source ./lib/common.sh
 
-SED=$(./sys/sedCheck.sh)
+get_sed_cmd && SED=$REPLY
+get_namespace || die "Unable to determine namespace" $?
+NS=$REPLY
+
 kubectl=$(./sys/preReqCheck.sh)
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	echo $kubectl
-	exit $RC
+RC=$?
+if [[ $RC -ne 0 ]]; then
+	echo "$kubectl"
+	exit "$RC"
 fi
 
-NS=$(./sys/getNamespace.sh)
-if [ $(echo $?) -ne 0 ]; then
-	if [ "x$1" = "x" ]; then
-		echo "Unable to determine namespace in use from values.yaml file"
-	fi
-	exit 7
-fi
 
-grep -q isvgimRootCA.crt $CFGFILE
-if [ $(echo $?) -ne 0 ]; then
-	if [ -f $CERTDIR/isvgimRootCA.crt ]; then
-		LINE=$(grep -n truststore: $CFGFILE | cut -d ':' -f 1)
-		LINE=$(($LINE+1))
-		$SED "${LINE}i \ \ - \"@isvgimRootCA.crt\"" $CFGFILE
+grep -q isvgimRootCA.crt "$CFGFILE"
+if [[ $? -ne 0 ]]; then
+	if [[ -f "$CERTDIR/isvgimRootCA.crt" ]]; then
+		LINE=$(grep -n truststore: "$CFGFILE" | cut -d ':' -f 1)
+		LINE=$((LINE+1))
+		$SED "${LINE}i \ \ - \"@isvgimRootCA.crt\"" "$CFGFILE"
 	fi
 fi
 
 ./createConfigs.sh setup
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	if [ "x$1" = "x" ]; then
+RC=$?
+if [[ $RC -ne 0 ]]; then
+	if [[ -z "$1" ]]; then
 		echo "Errors creating ConfigMap for setup"
 	fi
-	exit $RC
+	exit "$RC"
 else
-	if [ $OFFLINE -eq 1 ]; then
+	if [[ $OFFLINE -eq 1 ]]; then
 		echo "Please load yaml/020-config-isvgimconfig.yaml"
 		read -n 1 -s -r -p "Once loaded, press any key to continue..."
 		printf "\n\n"
 	fi
 fi
 
+./createConfigs.sh
+RC=$?
+if [[ $RC -ne 0 ]]; then
+	if [[ -z "$1" ]]; then
+		echo "Errors creating ConfigMap for data"
+	fi
+	exit "$RC"
+else
+	if [[ $OFFLINE -eq 1 ]]; then
+		echo "Please load yaml/015-config-isvgimdata.yaml"
+		read -n 1 -s -r -p "Once loaded, press any key to continue..."
+		printf "\n\n"
+	fi
+fi
+
 # The real work
-$kubectl -n $NS scale --replicas=0 deployment isvgimconfig > /dev/null
+$kubectl delete -f "${YMLDIR}/200-deployment-isvgimconfig.yaml"
 sleep 5
-$kubectl -n $NS scale --replicas=1 deployment isvgimconfig > /dev/null
+./updateYaml.sh 201-deployment-isvgimconfig.yaml
 
 POD=""
 # Waiting for pod to be ready again
-while [ "x$POD" = "x" ]; do
+while [[ -z "$POD" ]]; do
 	sleep 5
-	POD=$($kubectl -n $NS get pods | grep isvgimconfig | grep Running | awk '{ print $1 }')
+	get_pod_name "$NS" isvgimconfig && POD=$REPLY
 done
-./sys/waitFor.sh $POD application
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	exit $RC
+./sys/waitFor.sh "$POD" application
+RC=$?
+if [[ $RC -ne 0 ]]; then
+	exit "$RC"
 fi

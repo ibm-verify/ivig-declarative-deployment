@@ -17,9 +17,9 @@ print_help() {
 } #print_help
 
 install_key() {
-	POD=$($kubectl -n $NS get pods | grep isvgim | head -n 1 | awk '{ print $1 }')
-	$kubectl -n $NS exec $POD -- /bin/bash -c "/work/loadEnterpriseKey.sh $RISKKEY"
-	if [ $(echo $?) -ne 0 ]; then
+	get_pod_name "$NS" isvgim && POD=$REPLY
+	$kubectl -n "$NS" exec "$POD" -- /bin/bash -c "/work/loadEnterpriseKey.sh $RISKKEY"
+	if [[ $? -ne 0 ]]; then
 		echo "Failed to install the enterprise key.  See messages above"
 		exit 48
 	fi
@@ -28,22 +28,20 @@ install_key() {
 
 # Start of main script
 CDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-TDIR=$(basename $CDIR)
-if [ "x$TDIR"  = "xsys" ]; then
-	cd $CDIR/..
+TDIR=$(basename "$CDIR")
+if [[ "$TDIR"  = "sys" ]]; then
+	cd "$CDIR/.." || exit 1
 fi
+source ./lib/common.sh
 
 kubectl=$(./sys/preReqCheck.sh)
-RC=($echo $?)
-if [ $RC -ne 0 ]; then
-	exit $RC
+RC=$?
+if [[ "$RC" -ne 0 ]]; then
+	exit "$RC"
 fi
 
-NS=$(./sys/getNamespace.sh)
-if [ $(echo $?) -ne 0 ]; then
-	echo "Unable to determine namespace in use from values.yaml file"
-	exit 7
-fi
+get_namespace || die "Unable to determine namespace" $?
+NS=$REPLY
 
 case $(awk -vs1="$1" 'BEGIN { print tolower(s1) }') in
 	--help|-help)

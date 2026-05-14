@@ -1,0 +1,39 @@
+general:
+  logging:
+    root-level: "info"
+    json-logging: true
+  ssl:
+    fips: {{ .Values.fips }}
+    protocols:
+      - "TLS12"
+      - "TLS13"
+  license:
+
+advanced:
+  - attr: api.on
+    value: "true"
+  - attr: api.remote.on
+    value: "true"
+  - attr: api.remote.ssl.on
+    value: "true"
+  - attr: com.ibm.di.dispatcher.ssl
+    value: "true"
+  - attr: com.ibm.di.SSLProtocols
+    value: "TLSv1.2,TLSv1.3"
+  - attr: com.ibm.di.SSLServerProtocols
+    value: "TLSv1.2,TLSv1.3"
+
+server:
+  assembly-line-file: ITIM_RMI.xml
+
+init:
+  aux-config-programs:
+    - command: /home/isvdi/adapterContainerScripts/initAdapterContainer.sh
+    - command: /home/isvdi/setHostname.sh
+
+keyfile:
+  keys:
+    - key: "@/tmp/isvgimsdi/isvdi.pem"
+      label: ivig
+  trusted-certificates:
+    - "@/tmp/isvgimsdi/isvgimRootCA.crt"

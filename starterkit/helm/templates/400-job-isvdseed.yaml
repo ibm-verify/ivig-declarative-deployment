@@ -39,6 +39,7 @@ spec:
 
         # The fully qualified name of the image.
         image: {{ .Values.images.isvdseed }}
+        imagePullPolicy: IfNotPresent
 
         # Environment definition.
         env:

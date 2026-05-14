@@ -38,7 +38,7 @@ spec:
       containers:
       - name: isvd-proxy
         image: {{ .Values.images.isvdproxy }}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
 
         # The port on which the container will be listening.
         ports:

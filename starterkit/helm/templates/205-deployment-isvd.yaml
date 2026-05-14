@@ -43,6 +43,7 @@ spec:
         
         # The fully qualified name of the image.
         image: {{ .Values.images.isvd }}
+        imagePullPolicy: IfNotPresent
 
         # The port on which the container will be listening.
         ports:

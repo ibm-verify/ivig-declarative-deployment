@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "x$1" = "x--help" ]; then
+if [[ "$1" = "--help" ]]; then
 	echo "Name: configls.sh"
 	echo "When to run: When updating configuration files in data directory"
 	echo "Description:"
@@ -13,26 +13,30 @@ if [ "x$1" = "x--help" ]; then
 	exit 0
 fi
 
-cd $(dirname ${BASH_SOURCE[0]})
+RUNDIR=$(dirname "${BASH_SOURCE[0]}")
+cd "$RUNDIR" || exit 1
+source ./lib/common.sh
 IM_HOME="/opt/ibm/wlp/usr/servers/defaultServer/config/data"
-NS=$(./sys/getNamespace.sh)
+
+get_namespace || die "Unable to determine namespace" $?
+NS=$REPLY
 
 kubectl=$(./sys/preReqCheck.sh)
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	echo $kubectl
-	exit $RC
+RC=$?
+if [[ "$RC" -ne 0 ]]; then
+	echo "$kubectl"
+	exit "$RC"
 fi
 
-POD=$($kubectl -n $NS get pods | grep isvgim-0 | awk '{ print $1 }')
-if [ "x$POD" = "x" ]; then
+get_pod_name "$NS" isvgim-0 && POD=$REPLY
+if [[ -z "$POD" ]]; then
 	echo "Unable to find name of ISVGIM pod using grep and awk"
 	echo "Try manually running: kubectl -n $NS get pods | grep isvgim-0 | awk '{ print \$1 }'"
 	exit 8
 fi
 
-$kubectl -n $NS exec $POD -c isvgim -- /bin/bash -c "cd $IM_HOME; ls -lR $1"
-if [ $(echo $?) -ne 0 ]; then
+$kubectl -n "$NS" exec "$POD" -c isvgim -- /bin/bash -c "cd $IM_HOME; ls -lR $1"
+if [[ $? -ne 0 ]]; then
 	echo "Unable to exec into container."
 	exit 19
 fi

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "x$1" = "x--help" ]; then
+if [[ "$1" = "--help" ]]; then
 	echo "Name: ldapUUIDUpgrade.sh"
 	echo "When to run: To Upgrade ldap data with UUID"
 	echo "Description:"
@@ -10,6 +10,17 @@ if [ "x$1" = "x--help" ]; then
 	echo ""
 	exit 0
 fi
+
+IM_HOME="/opt/ibm/wlp/usr/servers/defaultServer/config"
+
+CDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+TDIR=$(basename "$CDIR")
+if [[ "$TDIR"  = "util" ]]; then
+	cd "$CDIR/.." || exit 1
+fi
+source ./lib/common.sh
+get_namespace || die "Unable to get namespace" $?
+NS=$REPLY
 
 # Display list of available entities
 echo "Select an entity to upgrade UUID:"
@@ -26,7 +37,7 @@ echo "10. BPOrgItem"
 echo "11. ServiceProfile"
 
 # Prompt the user for entity selection
-read -p "Enter the number of the entity you want to choose (1-11): " entityChoice
+read -r -p "Enter the number of the entity you want to choose (1-11): " entityChoice
 
 # Validate the entity choice
 if ! [[ "$entityChoice" =~ ^[1-9]$|^10$|^11$ ]]; then
@@ -53,9 +64,9 @@ case "$entityChoice" in
         ;;
 esac
 
-read -p "Enter the page size (e.g., 1000): " pageSize
+read -r -p "Enter the page size (e.g., 1000): " pageSize
 
-if [ -z "$pageSize" ]; then
+if [[ -z "$pageSize" ]]; then
     echo "Error: Page size is required. Please enter a valid number."
     exit 1
 fi
@@ -65,37 +76,28 @@ if ! [[ "$pageSize" =~ ^[0-9]+$ ]]; then
     exit 1
 fi
 
-IM_HOME="/opt/ibm/wlp/usr/servers/defaultServer/config"
-
-CDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-TDIR=$(basename $CDIR)
-if [ "x$TDIR"  = "xutil" ]; then
-	cd $CDIR/..
-fi
-
-NS=$(./sys/getNamespace.sh)
 
 kubectl=$(./sys/preReqCheck.sh)
-RC=$(echo $?)
-if [ $RC -ne 0 ]; then
-	echo $kubectl
-	exit $RC
+RC=$?
+if [[ $RC -ne 0 ]]; then
+	echo "$kubectl"
+	exit "$RC"
 fi
 
-POD=$($kubectl -n $NS get pods | grep isvgim | grep Running | awk '{ print $1 }')
-if [[ $POD == isvgim-* ]]; then
-	$kubectl -n $NS exec $POD -c isvgim -- /bin/bash /work/ldapUUIDUpgrade.sh "$pageSize" "$entity" $*
+get_pod_name "$NS" isvgim && POD=$REPLY
+if [[ $POD = isvgim-* ]]; then
+	$kubectl -n "$NS" exec "$POD" -c isvgim -- /bin/bash /work/ldapUUIDUpgrade.sh "$pageSize" "$entity" "$@"
 else
-	$kubectl -n $NS exec $POD -- /bin/bash /work/ldapUUIDUpgrade.sh "$pageSize" "$entity" $*
+	$kubectl -n "$NS" exec "$POD" -- /bin/bash /work/ldapUUIDUpgrade.sh "$pageSize" "$entity" "$@"
 fi
 
-if [ ! -d ../logs ]; then
+if [[ ! -d ../logs ]]; then
 	mkdir ../logs
 fi
 
-$kubectl -n $NS cp $POD:${IM_HOME}/install_logs/ldapUUIDUpgrade.stdout ../logs/ldapUUIDUpgrade.stdout > /dev/null
+$kubectl -n "$NS" cp "$POD":"${IM_HOME}/install_logs/ldapUUIDUpgrade.stdout" ../logs/ldapUUIDUpgrade.stdout > /dev/null
 
 
-if [ $(echo $?) -ne 0 ]; then
+if [[ $? -ne 0 ]]; then
 	exit 1
 fi
