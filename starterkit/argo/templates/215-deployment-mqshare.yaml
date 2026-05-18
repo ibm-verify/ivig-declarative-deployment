@@ -36,7 +36,7 @@ spec:
       containers:
       - name: mqshare
         image: {{ .Values.images.mq }}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         ports:
         - name: mq
           containerPort: {{ .Values.services.mqshare.ports.mq }}

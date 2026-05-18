@@ -47,6 +47,7 @@ spec:
       containers:
       - name: postgres
         image: {{ .Values.images.postgres }}
+        imagePullPolicy: IfNotPresent
         args:
         - -c
         - config_file=/tmp/isvgimdb/postgres.conf
