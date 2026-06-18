@@ -5,6 +5,7 @@ metadata:
   name: isvdi
   namespace: {{ .Values.namespace }}
 spec:
+  replicas: {{ .Values.services.isvdi.replicas | default 1 }}
   selector:
     matchLabels:
       app: isvdi

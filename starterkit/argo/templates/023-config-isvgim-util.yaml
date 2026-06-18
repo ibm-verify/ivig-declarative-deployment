@@ -4,4 +4,4 @@ metadata:
   name: isvgim-util
   namespace: {{ .Values.namespace }}
 data:
-{{ (.Files.Glob "config/util/*.sh").AsConfig | indent 2 }}
+{{ (.Files.Glob "config/util/{*.patch,*.sh}").AsConfig | indent 2 }}

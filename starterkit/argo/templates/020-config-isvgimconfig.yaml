@@ -11,7 +11,7 @@ data:
         createTablespace: {{ .Values.general.install.createTablespace }}
       license:
         activationKey: {{ .Values.general.license.activationKey | default "null" }}
-        accepted: true
+        accepted: {{ .Values.general.license.accepted }}
         riskKey: {{ .Values.general.license.riskKey | default "null" }}
     server: {{- .Values.server | toYaml | nindent 6 }}
     {{- if .Values.oidc}}

@@ -1,6 +1,6 @@
 # IVIG Declarative Deployment
 
-Alternative deployment method for IBM Verifiy Identity Governance for GitOps-driven K8s environments
+Alternative deployment method for IBM Verify Identity Governance for GitOps-driven K8s environments
 
 ## Goals and Scope
 
@@ -12,9 +12,9 @@ The desired state is stored in git and based on this, declarative deployment (di
 - Minimal amount of human actions (low effort and low risk of human errors)
 - Ability to keep stages (e.g. DEV, TEST, PROD) configured similarly (avoid "configuration drift" to reduce operational risk, increase test reliability, easily separate stage agnostic and stage specific configuration)
 - Ability to know what is currently deployed where, audit-ability via clear history of changes
-- Ability to verify if deployment is "correct" (deployed state equals desired state) to ensure there is no error or devation
+- Ability to verify if deployment is "correct" (deployed state equals desired state) to ensure there is no error or deviation
 - Ability to be able to rollback to former state
-- Ability to deterministically finish a deployment easily, producing the same final result even with transient errors inbetween (resilient deployment, idempotency, “self healing”)
+- Ability to deterministically finish a deployment easily, producing the same final result even with transient errors in between (resilient deployment, idempotency, “self healing”)
 
 ### Lower level objectives
 - Move as much as possible to pure declarative deployment
@@ -35,7 +35,7 @@ The desired state is stored in git and based on this, declarative deployment (di
 
 ## Components and Dependencies
 
-This project targets following IBM Verifiy Identity Governance versions:
+This project targets following IBM Verify Identity Governance versions:
 - 11.0.0.0 (as of chart 2.0.0)
 - 11.0.0.0_IF1
 - 11.0.0.0_IF2
@@ -59,7 +59,7 @@ There are no specific system requirements other than those of IVIG, which will b
 There are optional user convenience scripts which can be used for quickly setting up a demo or development environment. These scripts have been specifically developed with efficiency and minimal dependencies in mind and are known to work with the following versions of standard Linux/Unix utilities:
 - `cert-setup.sh`: bash 3.2, sed (GNU 4.2, BSD)
 - `cert-util.sh`: bash 3.2, OpenSSL 3
-- `vault-setup.sh`: bash 3.2, grep (GNU 3.6, BSD 2.6), OpenSSL 3
+- `secrets-setup.sh`: bash 3.2, grep (GNU 3.6, BSD 2.6), OpenSSL 3
 
 Note: Although GNU/Linux is the primary target platform, there is at least one user of this project who runs MacOS. The current version of MacOS still ships with an extremely outdated bash version (3.2.57 from 2007) due to GPLv3 licensing issues. Convenience scripts of version 2.3.4 are compatible with this old bash version as well as BSD sed and grep.
 
@@ -79,7 +79,7 @@ Minimal setup from scratch, assuming your k8s cluster has a storage class called
 git clone https://github.com/ibm-verify/ivig-declarative-deployment.git
 cd ivig-declarative-deployment/starterkit/argo && git checkout demo
 ./cert-setup.sh
-./vault-setup.sh
+./secrets-setup.sh
 helm template --dry-run=client -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml . | kubectl apply -f -
 kubectl -n ivig-argo wait --for=condition=Ready --timeout=5m pod -l app=isvgim
 kubectl -n ivig-argo exec isvgim-0 -- /bin/bash -c "/work/util/extract-config-response.sh --install && /work/ldapConfig.sh install && /work/dbConfig.sh install"
@@ -105,7 +105,7 @@ git commit -m "init quick demo"
 Generate secrets (not to be stored in git), then deploy to k8s and initialize data tier:
 ```
 # autogenerate random secrets
-./vault-setup.sh
+./secrets-setup.sh
 # deploy desired state
 helm template --dry-run=client -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml --set revision=$(git log -n 1 --pretty=format:%h) . | kubectl apply -f -
 # init data tier
@@ -270,7 +270,7 @@ Specify the image pull secret to be used for downloading container images, adjus
 
 #### Autogenerate random passwords and data encryption key
 
-The script `vault-setup.sh` can be used create `secrets.yaml` with random generated passwords and a random 128 bit Data Encryption Key. Generated passwords consist of 16 characters from the base64 alphabet to avoid issues with special characters. Password complexity rules of the middleware components are considered, specifically, the LDAP admin password is randomly generated until it fulfills the following password policies: minLength 8, minAlpha 2, minOther 2, maxRepeated 2. This script is geared towards developers who need to quickly setup a reasonably secure development environment, but may be useful during the initial setup of environments which prefer to manage secrets internally, or where secrets are later moved to an external vault such as HashiCorp Vault.
+The script `secrets-setup.sh` can be used create `secrets.yaml` with random generated passwords and a random 128 bit Data Encryption Key. Generated passwords consist of 16 characters from the base64 alphabet to avoid issues with special characters. Password complexity rules of the middleware components are considered, specifically, the LDAP admin password is randomly generated until it fulfills the following password policies: minLength 8, minAlpha 2, minOther 2, maxRepeated 2. This script is geared towards developers who need to quickly setup a reasonably secure development environment, but may be useful during the initial setup of environments which prefer to manage secrets internally, or where secrets are later moved to an external vault such as HashiCorp Vault.
 
 #### Vault integration via External Secrets (optional)
 
@@ -285,15 +285,15 @@ The following secrets can be individually toggled via `general.install.externalS
 - `isvdcred`: stores LDAP admin credentials, can be configured as external secret since 2.3.3
 - `isvdicerts`: as of version 2.3.3, enables externalization of ISVDI key and certificate along with trusted certificates
 - `isvgimcerts`: includes all files under the cert directory, which can be sourced from vault since 2.3.3
-- `mqcerts`: since 2.3.3, allows the use of external secrets for MQ key and certficate plus trusted CA certs
+- `mqcerts`: since 2.3.3, allows the use of external secrets for MQ key and certificate plus trusted CA certs
 - `pgcerts`: allows the use of external secrets for Postgres key and certificate, available since 2.3.3
-- `pgcreds`: enables externalisation of DB and DB Admin credentials since 2.3.3
+- `pgcreds`: enables externalization of DB and DB Admin credentials since 2.3.3
 - `metricscreds`: enables liberty metrics credentials to be provided externally since 2.3.7
 
 Note:
 - configuring `isvdcerts` and `isvdcred` as external secrets only makes sense if `general.install.deployLdap` is enabled
 - similarly, enabling an external secret for `isvdicerts` is only effective if ISVDI is deployed by the helm chart (`general.install.deployIsvdi`)
-- setting `pgcerts` and `pgcreds` to `true` will not have no effect unless `general.install.deployDb` is alse enabled
+- setting `pgcerts` and `pgcreds` to `true` will not have no effect unless `general.install.deployDb` is also enabled
 
 #### Post-deployment steps
 
@@ -347,7 +347,7 @@ Execute smoke tests for your IVIG project as necessary. (Smoke tests are a subse
 
 ### Troubleshooting guide
 
-~When using the demo setup script `vault-setup.sh`, please note that GNU grep 3.6 (from 2020, shipped with CentOS 9) yields abnormal behavior. Use a more recent version of grep (see section [Components and Dependencies](#components-and-dependencies)).~ This issue is resolved with version 2.3.3.
+~When using the demo setup script `secrets-setup.sh`, please note that GNU grep 3.6 (from 2020, shipped with CentOS 9) yields abnormal behavior. Use a more recent version of grep (see section [Components and Dependencies](#components-and-dependencies)).~ This issue is resolved with version 2.3.3.
 
 Should errors occur after deployment, review K8s events and IVIG application logs:
 ```
@@ -355,7 +355,7 @@ kubectl events -n <namespace>
 
 kubectl logs -n <namespace> isvgim-0 -c logs-im
 ```
-Check the avalability and configuration of your database and LDAP instance.
+Check the availability and configuration of your database and LDAP instance.
 
 Note that there should not be any additional files under the certificate directory (`starterkit/argo/config/certs` by default), the presence of binary files is known to yield abnormal helm template rendering.
 
@@ -365,17 +365,22 @@ This project delivers many [extras not included in the original product](docs/EX
 - Redesigned, more secure approach to working with sensitive data
   - Proper separation of sensitive and non-sensitive data
   - Dynamic credential injection
-  - Improved protection of data encyption keys
+  - Improved protection of data encryption keys
   - Interoperability with external secret management systems such as HashiCorp Vault
 - Custom flags for selectively enabling general hardening measures
 - Fixes of bugs which impact security but have not been addressed in the original product yet
 
 ## Setup guide - ArgoCD
 
+The repository setup and configuration steps described in the standalone setup guide applies to this scenario as well.
+
+On high level, the following sequence of steps should be followed:
 - Check out this project, adjust `values.yaml` and `values-config.yaml` for your environment and check into your git
 - Generate x509 certificates offline (or in another environment) and store these to git
 - Adjust the application manifest sample in the root directory of this project (use external or internal vault)
 - Enable automatic sync or sync manually via ArgoCD
+
+In a real-life setup, the typical pattern is to deploy multiple environments (such as development, test and production) from a single Git repository. A separate guide describes the [recommended approach for a multi-stage project via Argo CD](docs/ARGO-CD.md).
 
 ## Future plans
 
@@ -385,11 +390,11 @@ This section contains near and mid term plans, uncommitted feature candidates an
 
 - ~config property `general.install.externalSecret` to control if credentials will be managed via helm chart or externally~ DONE
 - ~move pre-init logic to a separate init container~ DONE
-- ~eliminate the need to store `isvgimks` by initializeing one on-the-fly during initialization~ DONE
+- ~eliminate the need to store `isvgimks` by initializing one on-the-fly during initialization~ DONE
 - ~optional/modular deployment of postgres DB and LDAP into the same namespace for demo or development~ DONE
 - ~convenience utility for DB and LDAP upgrade and initial schema and data load~ DONE
-- ~credentials from extenral secrets (optional, selectively configurable)~ DONE
-- ~x509 certificates and key from extenral secrets (optional, selectively configurable)~ DONE
+- ~credentials from external secrets (optional, selectively configurable)~ DONE
+- ~x509 certificates and key from external secrets (optional, selectively configurable)~ DONE
 - HashiCorp Vault integration walkthrough
 
 ## Further Documentation

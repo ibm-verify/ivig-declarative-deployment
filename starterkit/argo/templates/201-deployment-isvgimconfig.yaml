@@ -22,8 +22,7 @@ spec:
         args:
         - >
           cp -rLv /tmp/isvgimdata/* /opt/ibm/wlp/usr/servers/defaultServer/config/data/ &&
-          cp -v /work/util/tweaked-parseYaml.sh /work/parseYaml.sh &&
-          cp -v /work/util/tweaked-processOptions.sh /work/processOptions.sh &&
+          /work/util/fixup.sh /work/util/{{ .Chart.AppVersion }}-tweaks.patch &&
           /work/initIMContainer.sh config
         imagePullPolicy: IfNotPresent
         env:

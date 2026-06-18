@@ -46,10 +46,7 @@ spec:
         args:
         - >
           cp -rLv /tmp/isvgimdata/* /opt/ibm/wlp/usr/servers/defaultServer/config/data/ &&
-          sed -i 's/Xmx4096m/Xmx16384m/g' /opt/ibm/wlp/usr/servers/defaultServer/jvm.options &&
-          sed -i 's/Xmx256m/Xmx8192m/g' /work/DBPurge.sh &&
-          cp -v /work/util/tweaked-parseYaml.sh /work/parseYaml.sh &&
-          cp -v /work/util/tweaked-processOptions.sh /work/processOptions.sh &&
+          /work/util/fixup.sh /work/util/{{ .Chart.AppVersion }}-tweaks.patch &&
           /work/initIMContainer.sh
         ports:
         - containerPort: {{ .Values.services.isvgim.ports.https }}
@@ -294,14 +291,14 @@ spec:
         - name: mqconfigtls
           mountPath: /etc/mqm/pki/keys/mykey
       - name: logs-liberty
-        image: {{ .Values.images.busybox }}
+        image: {{ .Values.images.isvgim }}
         imagePullPolicy: IfNotPresent
         args: [ "/bin/sh", "-c", "tail -n+1 -F /logs/console.log" ]
         volumeMounts:
         - name: logs
           mountPath: /logs
       - name: logs-im
-        image: {{ .Values.images.busybox }}
+        image: {{ .Values.images.isvgim }}
         imagePullPolicy: IfNotPresent
         args: [ "/bin/sh", "-c", "tail -n+1 -F /logs/ivig_console.log" ]
         volumeMounts:

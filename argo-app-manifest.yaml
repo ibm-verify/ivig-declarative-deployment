@@ -7,15 +7,50 @@ spec:
     namespace: ivig-argo
     server: https://kubernetes.default.svc
   source:
-    path: starter/argo
+    path: starterkit/argo
     repoURL: https://git.example.com/foobar/myproject.git
     targetRevision: develop
     helm:
+      # Values (configuration data) can be specified via a default/override
+      # pattern where multiple sources of configuration are merged top-down.
+      #
+      # 1. Values are read from files listed under source.helm.valueFiles. All
+      #    files are merged top-down.
+      #
+      # 2. The equivalent of a values file can be specified directly in the this
+      #    app manifest using the source.helm.valuesObject key, the content of
+      #    which is merged with values files, overriding conflicting values.
+      #
+      # 3. Individual parameters can be specified under source.helm.parameters
+      #    in a path-based notation. These parameters are merged with the
+      #    highest precedence, and will override any value defined above.
       valueFiles:
+        # Typically, the solution is deployed to multiple isolated environments
+        # which represent core stages such as DEV, TEST and PROD.
+        # It is a good practice to split common configuration from stage
+        # specific configuration.
         - values.yaml
         - values-config.yaml
-      valuesObject: # insert the content of secrets.yaml for a dummy/DEV setup
-      paramters:
+        # In this example, the configuration files above this line are project
+        # specific (common to all stages within the project) and the config file
+        # below merely captures the values which are to be overridden on a
+        # per-environment basis. This approach highly reduces redundancy.
+        - values-override-DEV.yaml
+      valuesObject:
+        # Insert the content of secrets.yaml for a dummy/DEV setup!
+        # Alternatively, leave this blank and source secrets from vault
+      parameters:
+        # Annotating the k8s namespace with the git commit hash (or any other
+        # revision identifier of your choice) allows to track what was deployed.
         - name: revision
           value: $ARGO_APP_REVISION_SHORT
+        # Instead of storing license keys in git (e.g. in values-config.yaml)
+        # let ArgoCD dynamically inject these values during template rendering.
+        # CHANGE DUMMY VALUES in this sample file to your actual license keys! 
+        - name: general.install.license.activationKey
+          value: XXAZ6-Z7O6E-H6DUA-Y1PBZ-5RS5X
+        - name: general.install.license.ldapKey
+          value: R2VuDGJSa0vqJH01+JKryHts2dRZy/8aCH0k2wq1Rxp3q/A36a5Uei4D...JWs=
+        - name: general.install.license.isvdiKey
+          value: UmVCYBaU+QRpmAtuTNp2VaUACVH29SCmgHeR9YGanL9tyPRmzmMmHRbF...ATw=
   project: integrator

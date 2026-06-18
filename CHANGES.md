@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.4.1 (2026-06-18)
+
+This version delivers a patching mechanism and uses it to alter files on startup rather than storing complete files to replace the original counterparts with. The patching mechanism features integrity checking and makes changes only if all files match, no fuzz factor and no heuristics are applied which is a conscious design decision when operating in a containerized environment. Patches are compact and efficiently deal with small changes in many large text files. A patch is specifically built for a certain image version and provides:
+- new features/enhancements that extend the capabilities of the original product
+- fixes to upstream bugs before product fixpack is publishes (could take months)
+- field customizable, project specific tuning such as JVM heap size adjustment
+
+The bundled `11.0.2.0-tweaks.patch` includes changes from all of these 3 categories.
+
+Further, minor improvements in this version:
+- propagate license acceptance from `values-config.yaml` to `isvgimconfig/config.yaml` same way it is already done for isvd and isvdi
+- change `logs-im` and `logs-liberty` image from busybox to isvgim
+- allow specifying the number of replicas for isvdi/dispatcher
+- fix several typos in documentation
+- document recommendations and guidance for multi-stage setup with Argo CD
+- use a new MQ image (security update)
+- rename `vault-setup.sh` to `secrets-setup.sh` to avoid confusion with HC Vault
+
+Fixes to new upstream bugs:
+- Custom java extensions such as workflow, script or REST, are not loaded
+- Broken keystore migration (superseded in this project, but fixing anyway)
+- Broken certificate renewal (obsoleted by this project, but fixing anyway)
+
 ## 2.4.0 (2026-05-21)
 
 This version bases on upstream version 11.0.2.0 and delivers extra flexibility.
@@ -39,7 +62,7 @@ WARNING! Known issues of the original product during upgrade to 11.0.2.0:
 
 This version delivers 3 hardening measures which can be selectively applied.
 
-These measures can be enabled via custom flags not included in the original product. Flags can be activated by setting `server.flags.*` to `true` in `values-config.yaml`. Specifying an unkown flag on a vanilla (non-enhanced) container will yield the error message `./work/parseYaml.sh: line 57: handle_*: command not found` but not cause further errors.
+These measures can be enabled via custom flags not included in the original product. Flags can be activated by setting `server.flags.*` to `true` in `values-config.yaml`. Specifying an unknown flag on a vanilla (non-enhanced) container will yield the error message `./work/parseYaml.sh: line 57: handle_*: command not found` but not cause further errors.
 
 A secure session cookie informs the browser to send the session cookie back only over an HTTPS connection. When this feature is enabled, session cookies over an HTTP connection no longer work. Further, session cookies should instruct the user agent to not expose cookie content to client-side scripts in order to mitigate cross-site scripting (XSS) attacks.
 
@@ -60,15 +83,15 @@ To make the identification of the exact Application Server version harder, set `
 
 This version improves ISVDI autodiscovery and liberty metrics configuration.
 
-ISVDI init script autodiscovery is run right after `initAdapterContainer.sh` so `setHostname.sh` would be executed after autodiscovered init scripts are run. This improvement avoids a pontential issue where changes made by `setHostname.sh` could be overwritten by autodiscovered scripts on some setups, specifically by an ISVA adapter init script which replaces the original `ibmdisrv` script with an adjusted version, where the original at that point would have already been modified by `setHostname.sh`.
+ISVDI init script autodiscovery is run right after `initAdapterContainer.sh` so `setHostname.sh` would be executed after autodiscovered init scripts are run. This improvement avoids a potential issue where changes made by `setHostname.sh` could be overwritten by autodiscovered scripts on some setups, specifically by an ISVA adapter init script which replaces the original `ibmdisrv` script with an adjusted version, where the original at that point would have already been modified by `setHostname.sh`.
 
 A more secure way is implemented for handing over liberty metrics credentials, which does not require storing sensitive data in git (not even in encrypted form). Both username and password can be left blank (empty or null) in `values-config.yaml` in which case missing data will be read from a k8s secret. This secret by default will be populated based on username in `values-config.yaml` and password specified in `secrets.yaml`, however, the secret can be marked as externally managed in which case it will be assumed to pre-exist (e.g. created and updated by vault, see feature added in 2.1.2).
 
 ## 2.3.6 (2026-03-26)
 
-This version delivers improved truststore creation for IVIG and additional flexibiity for ISVDI.
+This version delivers improved truststore creation for IVIG and additional flexibility for ISVDI.
 
-During container initialization, certficates are read from PEM files and added to truststores and keystores. Due to a bug in IVIG, only the first entry from a PEM file is processed, causing certificate validation errors when PEM files consisting of multiple entries are used. This version fixes this bug by overriding `parseYaml.sh` in the IVIG container with a tweaked version that properly imports all certificates from PEM files when builing the truststores.
+During container initialization, certificates are read from PEM files and added to truststores and keystores. Due to a bug in IVIG, only the first entry from a PEM file is processed, causing certificate validation errors when PEM files consisting of multiple entries are used. This version fixes this bug by overriding `parseYaml.sh` in the IVIG container with a tweaked version that properly imports all certificates from PEM files when building the truststores.
 
 ISVDI allows additional configuration scripts to be specified via yaml configuration, but the absence of such scripts causes a crash loop. For the ISVA adapter to function properly, additional initialization logic is needed, which is typically implemented via scripts in the solution directory, on a PVC. The original initialization consists of multiple steps:
 1. Start ISVDI without config scripts required by the adapter
@@ -76,13 +99,13 @@ ISVDI allows additional configuration scripts to be specified via yaml configura
 3. Amend yaml configuration to reference the custom init script on the PVC
 4. Restart the container for the updated init logic to take effect
 
-This creates a chicken and egg problem which does not play well with declarative deployment, as initialization requires a phased approach and deploying the final desired state right away would not yield a correctly functioning environemnt. This flaw is fixed by adding logic that finds and calls adapter initialization scripts on startup and avoids crash loops caused by missing scripts.
+This creates a chicken and egg problem which does not play well with declarative deployment, as initialization requires a phased approach and deploying the final desired state right away would not yield a correctly functioning environment. This flaw is fixed by adding logic that finds and calls adapter initialization scripts on startup and avoids crash loops caused by missing scripts.
 
-Additionally, a reasonable default value is used for non-existing or empty `encryptionKey.properties` with the intention to avoid false positives during comparison of the desired state with the actual state (cosmetic improvement for ArgoCD diff).
+Additionally, a reasonable default value is used for nonexistent or empty `encryptionKey.properties` with the intention to avoid false positives during comparison of the desired state with the actual state (cosmetic improvement for ArgoCD diff).
 
 ## 2.3.5 (2026-03-19)
 
-This version improves flexibiity of certificate creation and introduces minor improvements
+This version improves flexibility of certificate creation and introduces minor improvements
 
 The script `cert-util.sh` is enhanced to allow subjectAltName override for all auto-deployed components:
 - IVIG itself via `ISVGIM_ALTNAME`
@@ -93,7 +116,7 @@ The script `cert-util.sh` is enhanced to allow subjectAltName override for all a
 
 Note: Before this version, specifying subjectAltNames via environment variables was available for any additional component, but not for auto-deployed core components.
 
-Further, a more compact, optimised mechanism is used to include certificates in ConfigMaps or Secrets, this change yields more intuitive, easier to read templates.
+Further, a more compact, optimized mechanism is used to include certificates in ConfigMaps or Secrets, this change yields more intuitive, easier to read templates.
 
 Cosmetic changes:
 - trailing whitespace removal on the few files taken over from the original starterkit
@@ -123,21 +146,21 @@ The following concept is implemented for all files related to x509 certificates:
 - mount projected volumes to existing directories to maintain compatibility
 - apply conditional template rendering to selectively enable external secrets for such cert-secrets
 
-This clean sepration enables vault integration for the following secrets which can be individually toggled via `general.install.externalSecret.*`:
+This clean separation enables vault integration for the following secrets which can be individually toggled via `general.install.externalSecret.*`:
 - `mqcreds`, `oidccreds` and `extcreds`: MQ, OIDC and platform credentials, support external secrets since 2.1.2
 - `regcred`: image pull secret, supports external secrets since 2.1.2, can be actively managed since 2.2.5
 - `isvdcerts`: new, enables externalization of LDAP key and certificate along with trusted certificates
 - `isvdcred`: stores LDAP admin credentials, can now be configured as external secret
 - `isvdicerts`: new, enables externalization of ISVDI key and certificate along with trusted certificates
 - `isvgimcerts`: new, includes all files under the cert directory, which can now be sourced from vault
-- `mqcerts`: new, allows the use of external secrets for MQ key and certficate plus trusted CA certs
+- `mqcerts`: new, allows the use of external secrets for MQ key and certificate plus trusted CA certs
 - `pgcerts`: new, allows the use of external secrets for Postgres key and certificate
 - `pgcreds`: new, enables externalisation of DB and DB Admin credentials
 
 Note:
 - configuring `isvdcerts` and `isvdcred` as external secrets only makes sense if `general.install.deployLdap` is enabled
 - similarly, enabling an external secret for `isvdicerts` is only effective if ISVDI is deployed by the helm chart (`general.install.deployIsvdi`)
-- setting `pgcerts` and `pgcreds` to `true` will not have no effect unless `general.install.deployDb` is alse enabled
+- setting `pgcerts` and `pgcreds` to `true` will not have no effect unless `general.install.deployDb` is also enabled
 
 The following fixes and improvements are also included:
 - `vault-setup.sh`: compatibility with very old version of `grep`, such as GNU 3.6
@@ -173,7 +196,7 @@ Following annotations are generated for the namespace during template rendering:
 
 These annotations provide extra visibility into the last deployed desired state.
 
-Further, `config` and `data` symlinking is switched, that is, the real folders are now the ones within the `argo` directory and symlinks pointing to these are created under `starterkit`. The purpose of this change is compability with hardened ArgoCD/Helm where symlinks pointing outside the chart directory are not followed by `.Files.Glob` helm function.
+Further, `config` and `data` symlinking is switched, that is, the real folders are now the ones within the `argo` directory and symlinks pointing to these are created under `starterkit`. The purpose of this change is compatibility with hardened ArgoCD/Helm where symlinks pointing outside the chart directory are not followed by `.Files.Glob` helm function.
 
 Additionally, minor fixes and documentation updates are included.
 
@@ -185,7 +208,7 @@ Prior to this version, the k8s namespace resource and the image pull secret `reg
 
 Helm templates will now deploy (create and sync) the namespace with all annotations required for pod security admission control.
 
-Image pull secret `regcred` is assumed to be present and externally managed when `general.install.externalSecret.regcred` is set to `true` in `values-config.yaml`, in this case, the templates will not create or alter this resource (also see Vault integration via External Secrets introduced in 2.1.2). Altentively and by default, `regcred` is generated via a special helm template:
+Image pull secret `regcred` is assumed to be present and externally managed when `general.install.externalSecret.regcred` is set to `true` in `values-config.yaml`, in this case, the templates will not create or alter this resource (also see Vault integration via External Secrets introduced in 2.1.2). Alternatively and by default, `regcred` is generated via a special helm template:
 - supports multiple repos in the same Secret with separate credentials for each
 - input uses the structure of dockerconfigjson, but without the redundant `auth`
 - `auth` properties will be dynamically injected for all repo entries
@@ -196,7 +219,7 @@ Image pull secret `regcred` is assumed to be present and externally managed when
 
 This version ships templates for upstream version 11.0.1.1 and includes documentation updates.
 
-Office 365 Email-based Approval is a new upstream feature which can be configured in `values-config.yaml` via the same options the `configure.sh` script of the original startetkit would create when generating `config.yaml`:
+Office 365 Email-based Approval is a new upstream feature which can be configured in `values-config.yaml` via the same options the `configure.sh` script of the original starterkit would create when generating `config.yaml`:
 - `monitoring.enabled` (defaults to false)
 - `user.id` which defines the UPN or email address to be used
 - `tenant.id` to define the directory (tenant) ID of the Azure AD organization
@@ -231,7 +254,7 @@ The `cert-util.sh` script is added to create, renew and list certificates for a 
 
 The logic is implemented such that existing cryptographic keys and certificate signing requests are reused when creating or renewing certificates.
 
-Subject alternate names (domain names) are configured according to the requirements of each component, inline with how the original startetkit would create certificates.
+Subject alternate names (domain names) are configured according to the requirements of each component, inline with how the original starterkit would create certificates.
 
 This script is intentionally de-couple and self-contained, it does not have dependencies other than `bash` and `openssl`.
 
@@ -291,7 +314,7 @@ This version ships templates for upstream version 11.0.1.0 and includes minor do
 
 This version moves the credential injection and data folder initialization logic into initcontainers of both the `isvgimconfig` pod and the main application `isvgim`.
 
-Initcontiainers run when the deployment/stateful set is started and terminate once the initialization task is accomplished. The initialized data folder (containing the preconfigured property files with sensitive data encrypted) is copied to an ephemeral (non-persistent) volume shared by the initcontainer and the main container. Once the initcontainer terminates, the main container is started, which takes configuration data from the shared ephemeral volume.
+Initcontainers run when the deployment/stateful set is started and terminate once the initialization task is accomplished. The initialized data folder (containing the preconfigured property files with sensitive data encrypted) is copied to an ephemeral (non-persistent) volume shared by the initcontainer and the main container. Once the initcontainer terminates, the main container is started, which takes configuration data from the shared ephemeral volume.
 
 This encapsulation of the initialization logic serves two purposes: ease of maintenance and security hardening. Ease of maintenance is realized through simpler, leaner main containers with reduced amount of references to other K8s resources, and the fact that each container focuses on one particular task. Hardening happens by eliminating the need to expose sensitive data via environment variables within long running containers and thereby decreasing the attack surface (environment variables cannot be deleted within the lifecycle of a given container).
 
@@ -343,12 +366,12 @@ The file `config.yaml` needs to exist in its reduced form (post-installation for
 ## 2.0.2 (2025-08-15)
 
 This version attempts to be as close to the original StartetKit as possible, but provide the ability to deploy from Git, with helm only.
-- uses the Starterkit as a starting point, maintaining as much compatiblity as possible (a subset of the original folder structure is used)
+- uses the Starterkit as a starting point, maintaining as much compatibility as possible (a subset of the original folder structure is used)
 - all modifications are contained in a folder named `argo`
 - include the `config` and `data` folder as-is, via symlinks
 - reuse as many existing template as possible, via symlinks under `argo/templates`
 - eliminates tarballs hardcoded in helm templates e.g. configmaps isvgimks and isvgimdata
-- eliminate the usage of any script which generates helm tempates 'on the fly' such as `createConfigs.sh`
+- eliminate the usage of any script which generates helm templates 'on the fly' such as `createConfigs.sh`
 - eliminate the `yaml` folder completely
 - the `bin` folder is retained in its original version but is never used
 

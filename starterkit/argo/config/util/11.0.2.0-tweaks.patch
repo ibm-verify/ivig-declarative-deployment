@@ -1,0 +1,71 @@
+e work/parseYaml.sh "0b374330a31647f89105cc46ff89081fdef977a0
+95a
+	rm /work/cacert.*_*
+.
+90,92c
+	for CAFILE in /work/cacert.*; do
+		[[ -e "$CAFILE" ]] || continue
+		csplit -z -s -f "${CAFILE}_" "$CAFILE" '/END CERTIFICATE/+1' '{*}'
+	done
+	for CA in /work/cacert.*_*; do
+		ALIAS="$CA"
+.
+52a
+handle_secureSessionCookies() {
+	if [[ "$1" = "true" ]]; then
+		sed -i '/<\/server>/i\\
+		<httpSession cookieSecure="true" cookieHttpOnly="true" />' "${CONFDIR}/endpoint.xml"
+	fi
+} #handle_secureSessionCookies
+
+handle_globalHSTS() {
+	if [[ "$1" = "true" ]]; then
+		sed -i '/<\/server>/i\\
+		<webContainer addstricttransportsecurityheader="max-age=31536000;includeSubDomains" />' "${CONFDIR}/endpoint.xml"
+	fi
+} #handle_globalHSTS()
+
+handle_hideServerVersion() {
+	if [[ "$1" = "true" ]]; then
+		sed -i '/<\/server>/i\\
+		<httpDispatcher enableWelcomePage="false" />\\
+		<httpOptions removeServerHeader="true" />\\
+		<webContainer disableXPoweredBy="true" />' "${CONFDIR}/endpoint.xml"
+	fi
+} #handle_hideServerVersion()
+
+.
+w
+e work/processOptions.sh "42e413107b50953b6c764c944a0a6162dd77865f
+36c
+				PASSWORD="${VALUE:-$LIBERTYMETRICS_PASSWORD}"
+.
+33c
+				USERNAME="${VALUE:-$LIBERTYMETRICS_USERNAME}"
+.
+w
+e work/initIMContainer.sh "f8a36b4ba24d72d67d48aa19072a8b7d68a6fe0f
+456c
+			cp "${CUSTOMDIR}/restExtensionJars/"*.jar "${RESTEXTENSION}/lib"
+.
+448c
+			cp "${CUSTOMDIR}/jars/"*.jar "${SVRDIR}/lib"
+.
+w
+e work/DBPurge.sh "bd7e770827aac4c7ce5b81606b3b15aedbeab63d
+$s/-Xmx[0-9]\+m/-Xmx4096m/
+w
+e opt/ibm/wlp/usr/servers/defaultServer/jvm.options "d6e12ac7f8666069f27f1dd36c92dbda87d7297f
+2s/-Xmx4096m/-Xmx16384m/
+w
+e work/migrateKeystore.sh "3fa1a8f7c189113b00772c6d8958a439947bc7d1
+145c
+	rm -rf "${IM_HOME}"/data/keystore/kek*
+.
+w
+e work/renewCerts.sh "fd412bcab8b3d7bdd34e35056e5d95bdac6d6501
+18c
+cp "$CDIR"/isvgimRootCA.* /work
+.
+w
+q

@@ -12,11 +12,11 @@ Proper separation of sensitive and non-sensitive data is a security measure in i
 
 This enhancement moves the credential injection and data folder initialization logic into initcontainers of both the `isvgimconfig` pod and the main application `isvgim`.
 
-Initcontiainers run when the deployment/stateful set is started and terminate once the initialization task is accomplished. The initialized data folder (containing the preconfigured property files with sensitive data encrypted) is copied to an ephemeral (non-persistent) volume shared by the initcontainer and the main container. Once the initcontainer terminates, the main container is started, which takes configuration data from the shared ephemeral volume.
+Initcontainers run when the deployment/stateful set is started and terminate once the initialization task is accomplished. The initialized data folder (containing the preconfigured property files with sensitive data encrypted) is copied to an ephemeral (non-persistent) volume shared by the initcontainer and the main container. Once the initcontainer terminates, the main container is started, which takes configuration data from the shared ephemeral volume.
 
 This encapsulation of the initialization logic serves two purposes: ease of maintenance and security hardening. Ease of maintenance is realized through simpler, leaner main containers with reduced amount of references to other K8s resources, and the fact that each container focuses on one particular task. Hardening happens by eliminating the need to expose sensitive data via environment variables within long running containers and thereby decreasing the attack surface (environment variables cannot be deleted within the lifecycle of a given container).
 
-### Improved protection of data encyption keys
+### Improved protection of data encryption keys
 
 This enhancement implements a more secure but at the same time also more convenient approach to protecting sensitive data.
 
@@ -47,21 +47,21 @@ The following secrets can be individually toggled via `general.install.externalS
 - `isvdcred`: stores LDAP admin credentials, can be configured as external secret since 2.3.3
 - `isvdicerts`: as of version 2.3.3, enables externalization of ISVDI key and certificate along with trusted certificates
 - `isvgimcerts`: includes all files under the cert directory, which can be sourced from vault since 2.3.3
-- `mqcerts`: since 2.3.3, allows the use of external secrets for MQ key and certficate plus trusted CA certs
+- `mqcerts`: since 2.3.3, allows the use of external secrets for MQ key and certificate plus trusted CA certs
 - `pgcerts`: allows the use of external secrets for Postgres key and certificate, available since 2.3.3
-- `pgcreds`: enables externalisation of DB and DB Admin credentials since 2.3.3
+- `pgcreds`: enables externalization of DB and DB Admin credentials since 2.3.3
 - `metricscreds`: enables liberty metrics credentials to be provided externally since 2.3.7
 
 Note:
 - configuring `isvdcerts` and `isvdcred` as external secrets only makes sense if `general.install.deployLdap` is enabled
 - similarly, enabling an external secret for `isvdicerts` is only effective if ISVDI is deployed by the helm chart (`general.install.deployIsvdi`)
-- setting `pgcerts` and `pgcreds` to `true` will not have no effect unless `general.install.deployDb` is alse enabled
+- setting `pgcerts` and `pgcreds` to `true` will not have no effect unless `general.install.deployDb` is also enabled
 
 ## Enhancements for General Hardening
 
 Various security measures can be enabled via custom flags not included in the original product. Flags can be activated by setting `server.flags.*` to `true` in `values-config.yaml`.
 
-Specifying an unkown flag on a vanilla (non-enhanced) container will yield the error message `./work/parseYaml.sh: line 57: handle_*: command not found` but not cause further errors.
+Specifying an unknown flag on a vanilla (non-enhanced) container will yield the error message `./work/parseYaml.sh: line 57: handle_*: command not found` but not cause further errors.
 
 ### Secure session cookies
 
@@ -98,13 +98,19 @@ Note that this flag is not available in the original product.
 
 ## Bugfixes
 
-Some bugs identified in the original product carry high impact and therefore are fixed locally in this project. Once a future version of the original product delivers fixes for these bugs, these local fixes will be retired.
+Some bugs identified in the original product carry high impact and therefore are fixed locally in this project. Dynamically patched fixes are applied to bridge the gap until an official fix is delivered with a future version of the original product which might happen only up to a few months after discovery. Once a bugfix is delivered upstream, these local fixes are retired.
 
 ### Correctly import all certificates from PEM files
 
-During container initialization, certficates are read from PEM files and added to truststores and keystores. Due to a bug in IVIG, only the first entry from a PEM file is processed, causing certificate validation errors when PEM files consisting of multiple entries are used. This project fixes the bug by overriding `parseYaml.sh` in the IVIG container with a tweaked version that properly imports all certificates from PEM files when builing the truststores.
+During container initialization, certificates are read from PEM files and added to truststores and keystores. Due to a bug in IVIG, only the first entry from a PEM file is processed, causing certificate validation errors when PEM files consisting of multiple entries are used. This project fixes the bug by overriding `parseYaml.sh` in the IVIG container with a tweaked version that properly imports all certificates from PEM files when building the truststores.
 
 ### Correctly handle long passwords
 
-A bug inherited from the original product is corrected. Platform credentials (specifically LDAP, DB, DBADMIN, APPSERVER, ISIMSYSTEM and MAIL) consisting of 48 or more characters would yield errors. This issue is addressed in this project and the fix is expected to be delivered with a future version of the original product as well.
+A bug inherited from the original product is corrected. Platform credentials (specifically LDAP, DB, DBADMIN, APPSERVER, ISIMSYSTEM and MAIL) consisting of 48 or more characters would yield errors. This issue is addressed in this project and the fix is expected to be delivered with a future version of the original product as well. *Fixed in 11.0.2.0*
 
+### Fix a handful of bugs caused by an erroneous repeating pattern in scripts
+
+Multiple bugs were introduced in 11.0.2.0 with the common root cause of improper quoting preventing wildcard expansion in shell scripts and thereby breaking functionality that used to work in earlier versions.
+- Custom java extensions such as workflow, script or REST, are not loaded
+- Broken keystore migration (superseded in this project, bit fixing anyway)
+- Broken certificate renewal (obsoleted by this project, but fixing anyway)
