@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.4.2 (2026-07-02)
+
+This version enables integration with secret management systems such as Vault.
+
+Improved integration is geared towards any secret management platform supported by the External Secrets Operator in general, and covers HashiCorp Vault specifically in depth.
+
+The integration deploys External Secrets for any secret marked as externally managed by setting `general.install.externalSecret.*` to `true`, and is available in two variants:
+- Vendor agnostic way, where the ClusterSecretStore is expected to already exist and be configured against one of the secret management platforms supported by the External Secrets Operator
+- Vault-based approach where the ClusterSecretStore and service account is automatically deployed
+
+Detailed step-by-step guidance is provided for both variants.
+
 ## 2.4.1 (2026-06-18)
 
 This version delivers a patching mechanism and uses it to alter files on startup rather than storing complete files to replace the original counterparts with. The patching mechanism features integrity checking and makes changes only if all files match, no fuzz factor and no heuristics are applied which is a conscious design decision when operating in a containerized environment. Patches are compact and efficiently deal with small changes in many large text files. A patch is specifically built for a certain image version and provides:

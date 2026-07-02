@@ -276,7 +276,7 @@ The script `secrets-setup.sh` can be used create `secrets.yaml` with random gene
 
 Interoperability with Vault is achieved via the use of External Secrets. The External Secrets Operator interacts with [HashiCorp Vault](https://www.vaultproject.io/), [IBM Cloud Secrets Manager](https://www.ibm.com/cloud/secrets-manager) or external secret management systems like [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/), [Google Secrets Manager](https://cloud.google.com/secret-manager), [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/), [CyberArk Conjur](https://www.conjur.org/).
 
-The optional Vault integration can be configured via `general.install.externalSecret` selectively for various credentials, image pull secret and x509 keys and certificates, and is disabled by default.
+The optional Vault interoperability can be configured via `general.install.externalSecret` selectively for various credentials, image pull secret and x509 keys and certificates, and is disabled by default.
 
 The following secrets can be individually toggled via `general.install.externalSecret.*`:
 - `mqcreds`, `oidccreds` and `extcreds`: MQ, OIDC and platform credentials, support external secrets since 2.1.2
@@ -294,6 +294,8 @@ Note:
 - configuring `isvdcerts` and `isvdcred` as external secrets only makes sense if `general.install.deployLdap` is enabled
 - similarly, enabling an external secret for `isvdicerts` is only effective if ISVDI is deployed by the helm chart (`general.install.deployIsvdi`)
 - setting `pgcerts` and `pgcreds` to `true` will not have no effect unless `general.install.deployDb` is also enabled
+
+Integration with Vault or another secret management systems is documented in detail [here](docs/VAULT.md).
 
 #### Post-deployment steps
 
@@ -395,7 +397,7 @@ This section contains near and mid term plans, uncommitted feature candidates an
 - ~convenience utility for DB and LDAP upgrade and initial schema and data load~ DONE
 - ~credentials from external secrets (optional, selectively configurable)~ DONE
 - ~x509 certificates and key from external secrets (optional, selectively configurable)~ DONE
-- HashiCorp Vault integration walkthrough
+- ~HashiCorp Vault integration walkthrough~ DONE
 
 ## Further Documentation
 

@@ -15,7 +15,7 @@ Key Capabilities:
 - **Auditability and traceability** – Every deployment is tied to a Git commit, making it easy to track what was deployed and when.
 
 In a nutshell: Argo CD monitors a Git repository containing a Helm chart, renders the chart using environment-specific configuration, and deploys the resulting Kubernetes resources into the target namespace. Any changes committed to the configured Git branch can then be automatically synchronized to the cluster according to the application's sync policy. All one needs to do is:
-1. Create and populate your Git repository
+1. Create and populate your Git repository as described under [repo setup](../README.md#repo-setup).
 2. Configure a repository connection, tell Argo CD where your Git repo is located and how to access it (preferably use HTTPS and API key based authentication)
 3. Adjust the [application manifest](../argo-app-manifest.yaml) and import it to Argo CD
 
@@ -47,10 +47,22 @@ from environment-specific configuration that differs between stages.
 The following file contains environment-agnostic configuration common to all stages:
 - `values.yaml`
 
-The config files below merely captures the values which are to be overridden on a per-environment basis. This approach highly reduces redundancy.
+The config files below merely capture the values which are to be overridden on a per-environment basis. This approach highly reduces redundancy.
 - `values-override-DEV.yaml`
 - `values-override-TEST.yaml`
 - `values-override-PROD.yaml`
+
+Example of a sparse `values-override-XYZ.yaml` file that defines overrides only:
+```yaml
+storage:
+  className: vsan-fast
+  mode: ReadWriteMany
+
+services:
+  isvgim:
+    config:
+      replicas: 2
+```
 
 In addition, a full `values-config.yaml` variant for each environment is provided, the format of which most users of the product are familiar with. 
 - `values-config-DEV.yaml`
