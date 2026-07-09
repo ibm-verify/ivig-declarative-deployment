@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.4.3 (2026-07-09)
+
+This version enhances Vault integration and restructures the repo for packaging.
+
+With this version, the repository structure is updated. The declarative deployment helm chart is moved to its own top level directory `smarterkit` and the few remaining symlinks pointing outside of that folder are dereferenced. This change is carried out to facilitate packaging and distributing declarative deployment as a first-class deployment method for IVIG.
+
+Further improvements:
+- gracefully skip patching if no patch exists for given app version
+- complete rewrite of Vault helper scripts to minimize dependencies to bash 3.2 and jq 1.5
+- documentation updates for Vault integration and in general around secret management
+
 ## 2.4.2 (2026-07-02)
 
 This version enables integration with secret management systems such as Vault.

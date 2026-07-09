@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mqshare
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:
+    - name: mq
+      port: {{ .Values.services.mqshare.ports.mq }}
+    - name: console
+      port: {{ .Values.services.mqshare.ports.console }}
+  selector:
+    app: mqshare

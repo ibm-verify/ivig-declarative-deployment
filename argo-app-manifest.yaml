@@ -17,7 +17,7 @@ spec:
     # It is recommended to use HTTPS and API key based authentication.
     repoURL: https://git.example.com/foobar/myproject.git
     # The path to the helm chart within the repository
-    path: starterkit/argo
+    path: smarterkit
     # Git tag, branch or commit hash which identifies the revision to deploy.
     targetRevision: develop
     # This section controls how the helm chart is rendered.

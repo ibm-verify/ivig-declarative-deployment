@@ -77,7 +77,7 @@ The standalone setup is a viable option for both Developers/Integrators and for 
 Minimal setup from scratch, assuming your k8s cluster has a storage class called 'local-path':
 ```
 git clone https://github.com/ibm-verify/ivig-declarative-deployment.git
-cd ivig-declarative-deployment/starterkit/argo && git checkout demo
+cd ivig-declarative-deployment/smarterkit && git checkout demo
 ./cert-setup.sh
 ./secrets-setup.sh
 helm template --dry-run=client -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml . | kubectl apply -f -
@@ -92,7 +92,7 @@ Setup your own git repo and adjust config as needed:
 ```
 # fork the project on GitHub, then clone it and configure upstream
 git clone https://github.com/${YOUR_USER}/ivig-declarative-deployment.git
-cd ivig-declarative-deployment/starterkit/argo
+cd ivig-declarative-deployment/smarterkit
 git remote add upstream https://github.com/ibm-verify/ivig-declarative-deployment.git
 git checkout demo
 # adjust values.yaml and values-config.yaml as needed, generate certs and commit
@@ -133,7 +133,7 @@ git remote add upstream https://github.com/ibm-verify/ivig-declarative-deploymen
 Next, adjust `values.yaml` and `values-config.yaml` for your environment and store them to your git project. Users unfamiliar with the product may run `bin/configure.sh -manual` to generate `config.yaml` which may then be used as a baseline for `values-config.yaml`, as these file follow the same structure with minimal deviations. Keep the following in mind:
 
 -  Adjust `values.yaml`:
-  -  `namespace`, `timezone`, `licenseType`, `storage.className` and `storage.mode` are only read from `starterkit/argo/values.yaml`, define them there!
+  -  `namespace`, `timezone`, `licenseType`, `storage.className` and `storage.mode` are only read from `smarterkit/values.yaml`, define them there!
   -  `clusterUrl` is not used, leave it as-is.
 -  If you decide to use `bin/configure.sh -manual` to generate `config.yaml` then just copy the content to `values-config.yaml` and adjust as follows:
   - `general.install`: it is advised to only retain properties which are defined in the bundled `values-config.yaml`, others are not used
@@ -153,10 +153,10 @@ Subject alternate names (domain names) are configured according to the requireme
 This script is intentionally de-coupled and self-contained, it does not have dependencies other than `bash` and `openssl`. 
 
 ```
-$ cd starterkit
-$ argo/cert-util.sh
+$ cd smarterkit
+$ ./cert-util.sh
 Create, renew or show certificates used by IVIG deployment
-usage: argo/cert-util.sh [OPTION...]
+usage: ./cert-util.sh [OPTION...]
 
 Operation modes:
    -c|--create      setup CA, create keys & CSRs if missing, issue certificates
@@ -169,14 +169,14 @@ Options for create:
                     certificates for, defaults to "isvd,isvdi,pgsql"
 Additional options:
    -d|--directory   local directory for certificates, defaults to "config/certs"
-$ argo/cert-util.sh --create
+$ ./cert-util.sh --create
 ```
 
 As an alternative, another script, `cert-setup.sh` is included to auto-detects the part of configuration that is relevant for certificates, once `values.yaml` and `values-config.yaml` have already been adjusted. In particular, it will retrieve the k8s namespace from `values.yaml`, collect extra hostnames (which should be added to the certificate of IVIG server) and the list of optional components to be deployed from `values-config.yaml`. This script, after collecting the information required, will invoke `cert-util.sh` to create certificates, and after that, to list the details of the certificates created.
 
 ```
-$ cd starterkit
-$ argo/cert-setup.sh
+$ cd smarterkit
+$ ./cert-setup.sh
 ```
 
 Elliptic Curve prime256v1 keys and certificates are created for the following when `cert-setup.sh` is run:
@@ -255,7 +255,7 @@ As the last step before deployment, additional sensitive data which should not b
 
 There are four alternative approaches to handling credentials:
 - Provide sensitive data in file `secrets.yaml` manually, use `secrets.yaml.envsubst` as template
-- Use a bundled script to automatically generate `secrets.yaml` with random data
+- Use a bundled script `secrets-setup.sh` to automatically generate `secrets.yaml` with random data
 - Use external secrets for Vault integration
 - Set up manually in k8s and configure as externally managed (set `general.install.externalSecret.*creds` to `true` in `values-config.yaml`)
 
@@ -328,10 +328,10 @@ When working directly with `helm` rather than via ArgoCD (which is a viable opti
 ```
 # Development/integration
 
-# inspect the output of a single template (from within the argo directory)
+# inspect the output of a single template (from within the smarterkit directory)
 helm template --dry-run=client -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml -s templates/201-deployment-isvgimconfig.yaml .
 # split output into separate files for each template and store to output-dir for inspection/debugging
-helm template --dry-run=client -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml . | ../../helm-fan-out.sh output-dir
+helm template --dry-run=client --output-dir output-dir -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml .
 
 # Normal operation
 
@@ -359,7 +359,7 @@ kubectl logs -n <namespace> isvgim-0 -c logs-im
 ```
 Check the availability and configuration of your database and LDAP instance.
 
-Note that there should not be any additional files under the certificate directory (`starterkit/argo/config/certs` by default), the presence of binary files is known to yield abnormal helm template rendering.
+Note that there should not be any additional files under the certificate directory (`smarterkit/config/certs` by default), the presence of binary files is known to yield abnormal helm template rendering.
 
 ### Hardening
 

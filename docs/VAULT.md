@@ -4,7 +4,7 @@
 
 The [External Secrets Operator](https://external-secrets.io/) is a Kubernetes operator that synchronizes secrets from external secret management systems such as [Vault](https://developer.hashicorp.com/vault/docs) into Kubernetes Secret objects.
 
-With Vault Integration enabled, you can securely store all or a subset of the credentials from `secrets.yaml` in Vault, which will be automatically propagated to the k8s cluster and exposed to the containers in a secure manner. Additionally, PKI related files, such as private keys and certificates can also be sourced from Vault and mounted to the containers in a similar way.
+With Vault Integration enabled, you can securely store all or a subset of the [credentials from `secrets.yaml`](../README.md#deploy) in Vault, which will be automatically propagated to the k8s cluster and exposed to the containers in a secure manner. Additionally, PKI related files, such as private keys and certificates can also be sourced from Vault and mounted to the containers in a similar way.
 
 ```
                               +---------------------+
@@ -58,8 +58,8 @@ When using Vault in tandem with Argo CD, this recommended integration pattern ev
 - [External Secrets Operator](https://external-secrets.io/latest/introduction/getting-started/) running (0.10.3 or newer)
 
 There are two optional user convenience scripts for importing from and exporting to Vault, which require the following dependencies in addition to what is already documented under [System Requirements](../README.md#system-requirements):
-- `vault-create-json.sh`: bash 3.2, jq 1.5
-- `vault-json-to-files.py`: python 3.6
+- `vault-json-pack.sh`: bash 3.2, jq 1.5
+- `vault-json-unpack.sh`: bash 3.2, jq 1.5
 
 ## Vault configuration
 
@@ -93,22 +93,45 @@ path "certs/data/*" {
 
 The following steps document how to link the Kubernetes Cluster with Vault by registering and authorizing an already existing k8s service account, the example uses `idm-vault-viewer` in namespace `isvgim`. The steps are carried out on Vault web UI.
 
-1. Access / Authentication Methods / Enable new method / Kubernetes
-2. Token type: Default service
-3. Enable Method
-4. Kubernetes host: from `kubectl cluster-info` **Note:** ensure vault can reach the k8s API server, e.g. change to `https://kubernetes.default.svc:6443` if running in the same cluster
-5. Kubernetes CA Certificate: **See note below.** `kubectl get secret idm-vault-viewer-secret -n isvgim -o json | jq -r '.data["ca.crt"]' | base64 -d`
-6. Token Reviewer JWT: **See note below.** `kubectl get secret idm-vault-viewer-secret -n isvgim -o json | jq -r '.data["token"]' | base64 -d`
-7. Save
-8. Kubernetes / Roles / Create role
-9. Name: idm-app-role
-10. Bound service account names: idm-vault-viewer
-11. Bound service account namespaces: isvgim
-12. Generated Token's Policies: read-secrets
-13. Save
-14. Back to main navigation
+1. Using the main menu on the left, navigate to **Access** → **Authentication Methods**, select **Enable new method** and choose **Kubernetes**
 
-**Note:** Depending on your choice of deployment options, this service account may not exist yet at this point. In this case, you will have to revisit steps 5 and 6 once the service account and its secret holding JSON Web Token and CA certificate becomes available. A non-exhaustive list of options:
+2. Leave **Token type** set to **Default service**
+
+3. Click **Enable Method**
+
+4. Fill in the k8s API server endpoint in the **Kubernetes host** field
+
+     **Note:** Ensure that Vault can reach the Kubernetes API server. In general, the k8s API server URL can be retrieved via `kubectl cluster-info`. If Vault is running in the same Kubernetes cluster, you may need to use the internal API endpoint instead: `https://kubernetes.default.svc:6443`
+
+5. Populate the **Kubernetes CA Certificate** field with the cluster CA certificate in PEM format
+   ```bash
+   kubectl get secret idm-vault-viewer-secret -n isvgim -o json | jq -r '.data["ca.crt"]' | base64 -d
+   ```
+6. Populate the **Token Reviewer JWT** field with the service account token:
+   ```bash
+   kubectl get secret idm-vault-viewer-secret -n isvgim -o json | jq -r '.data["token"]' | base64 -d
+   ```
+7. Click **Save**
+
+8. Create a Create a Kubernetes Authentication Role, Navigate to **Kubernetes** → **Roles**
+
+9. Click **Create role**
+
+10. Configure the role with the following values:
+
+   | Field                                | Value              |
+   | ------------------------------------ | ------------------ |
+   | **Name**                             | `idm-app-role`     |
+   | **Bound service account names**      | `idm-vault-viewer` |
+   | **Bound service account namespaces** | `isvgim`           |
+   | **Generated Token's Policies**       | `read-secrets`     |
+
+11. Click **Save**
+
+12. Return to the main navigation
+
+
+**Note:** Depending on your choice of deployment options, the service account may not exist yet at this point. In this case, you will have to revisit steps 5 and 6 once the service account and its secret holding the JSON Web Token and CA certificate becomes available. A non-exhaustive list of options:
 - **Option A:** Use the same namespace IVIG will be deployed to and automatically create the service account via the helm chart (revisit steps 5 and 6 after first run of helm/Argo CD)
 - **Option B:** Use the same namespace IVIG will be deployed to but create the minimally required k8s resources upfront, manually (no need to revisit steps later on)
 - **Option C:** Create a service account in another namespace, e.g. 'external-secrets', manually - no overlap with the namespace IVIG will be deployed to, no need to revisit steps later, at the cost of scattering configuration across multiple namespaces which you may or may not prefer
@@ -139,7 +162,7 @@ type: kubernetes.io/service-account-token
 EOF
 ```
 
-### Create Secrets
+### Onboard Secrets
 
 Create Secret Engine "secrets" (type KV which stands for key-value store) and populate with secrets in the following structure. Copy over the secrets from `secrets.yaml` for any secret you marked as externally managed by setting `general.install.externalSecret.*creds` to `true` in `values-config.yaml`.
 
@@ -206,37 +229,67 @@ The following subsets are defined:
 
 #### Onboard PKI/x509 related data in Vault
 
-Make sure the certificate directory for your target environment has already been populated via `cert-setup.sh`, `cert-util.sh` or a comparable alternative method with either locally or externally created certificates. This section assumes certificates for your User Acceptance Testing (UAT) environment are already available on an isolated admin server (ADM) under `starterkit/argo/config/certs/UAT` and demonstrates how you can import the above mentioned subsets of files into Vault.
+Make sure the certificate directory for your target environment has already been populated via `cert-setup.sh`, `cert-util.sh` or a comparable alternative method with either locally or externally created certificates. This section assumes certificates for your User Acceptance Testing (UAT) environment are already available on an isolated admin server (ADM) under `smarterkit/config/certs/UAT` and demonstrates how you can import the above mentioned subsets of files into Vault.
 
-**Note:** Vault provides a REST API and CLI tool which could automate the import, however, that requires direct network access from the ADM server to Vault, which may not be available in the case of a hardened, airgapped target environment. Therefore, the JSON file based manual transport and import is the general recommended approach.
+Vault provides a REST API and CLI tool which could automate the import, however, that requires direct network access from the ADM server to Vault, which may not be available in the case of a hardened, airgapped target environment. The JSON file based manual transport and import is described first, followed by the direct import process.
+
+##### JSON file based manual import (no direct access to vault is assumed)
 
 The code listing below shows how to create and onboard each of the above sets in Vault. The example serves as a reasonable baseline, but of course one can expand or narrow down the set of files included in the subsets to meet project specific requirements.
 ```sh
-# on your ADM server (isolated admin server)
-cd starterkit/argo/config/certs/UAT
+# create Secret Engine "certs" (type KV) in Vault (see above)
 
-# Create Secret Engine "certs" (type KV) in Vault (see above)
+# on your ADM server (isolated admin server)
+cd smarterkit/config/certs/UAT
+
 
 # The certificates and related files created earlier in this section will be imported under "certs" in the following secrets.
 
 # certs/all: import JSON created with the following command on ADM:
-../../../vault-create-json.sh *
+../../../vault-json-pack.sh *
 
 # certs/isvdicerts: import JSON created with the following command on ADM:
-../../../vault-create-json.sh *.crt isvdi.pem
+../../../vault-json-pack.sh *.crt isvdi.pem
 
 # certs/isvgimcerts: import JSON created with the following command on ADM:
-../../../vault-create-json.sh isvgim.crt isvgim.key isvgimRootCA.crt xyz-ca-certs.crt
+../../../vault-json-pack.sh isvgim.crt isvgim.key isvgimRootCA.crt xyz-ca-certs.crt
 
 # certs/mqcerts: import JSON created with the following command on ADM:
-../../../vault-create-json.sh mq.{key,crt} isvgimRootCA.crt
+../../../vault-json-pack.sh mq.{key,crt} isvgimRootCA.crt
 
 # certs/isvdcerts: [optional] import JSON created with the following command on ADM:
-../../../vault-create-json.sh isvd.pem *.crt
+../../../vault-json-pack.sh isvd.pem *.crt
 
 # certs/pgcerts: [optional] import JSON created with the following command on ADM:
-../../../vault-create-json.sh pgsql.{key,crt}
+../../../vault-json-pack.sh pgsql.{key,crt}
 ```
+
+##### Direct import via Vault CLI
+
+If the ADM server has direct network access to Vault REST API, and the Vault command line tool is installed, the code listing above can be adjusted to directly import the JSON payload into Vault. The code listing below assumes the certificates and related files have already been prepared and available in the directory `smarterkit/config/certs/UAT`.
+
+```sh
+# create Secret Engine "certs" (type KV) in Vault (see above)
+
+# on your ADM server (isolated admin server)
+cd smarterkit/config/certs/UAT
+
+# login to Vault via CLI
+export VAULT_ADDR=https://vault.full-qualified-hostname.example.com/ # defaults to https:127.0.0.1:8200
+export VAULT_NAMESPACE=example.com/vault-enterprise-namespace        # only for Vault Enterprise
+vault login -method=ldap -username=xyz                               # adjust for your own Vault
+
+# JSON payload created in the same way as during manual import, but output is piped directly to 'vault' command
+# The dash ('-') tells vault to read data from STDIN.
+../../../vault-json-pack.sh * | vault kv put certs/all -
+../../../vault-json-pack.sh *.crt isvdi.pem | vault kv put certs/isvdicerts -
+../../../vault-json-pack.sh isvgim.crt isvgim.key isvgimRootCA.crt xyz-ca-certs.crt | vault kv put certs/isvgimcerts -
+../../../vault-json-pack.sh mq.{key,crt} isvgimRootCA.crt | vault kv put certs/mqcerts -
+# optionally, for internal data tier
+../../../vault-json-pack.sh isvd.pem *.crt | vault kv put certs/isvdcerts -
+../../../vault-json-pack.sh pgsql.{key,crt} | vault kv put certs/pgcerts -
+```
+**Note:** If unsure, it is recommended to inspect the output of the specific `vault-json-pack.sh` invocations (not piping to `vault` directly) as a first step, in the same way covered in the section above.
 
 #### Example on how to renew certificates which are stored in Vault
 
@@ -245,12 +298,12 @@ The example below assumes external data tier and no direct access from the admin
 1. Export `certs/all` to JSON from Vault (i.e. via UI, visit the secret, toggle both JSON and 'review values', then copy the text) and transfer to admin server `/tmp/vault.json`
 2. On an isolated admin server with the repo checked out, create a certs directory for the target environment
 ```
-cd starterkit/argo/config
+cd smarterkit/config
 mkdir -p certs/UAT && cd certs/UAT
 ```
 3. Split Vault export into files to populate the certs directory
 ```
-cat /tmp/vault.json | ../../../vault-json-to-files.py
+cat /tmp/vault.json | ../../../vault-json-unpack.sh
 ```
 4. Use `cert-util.sh` to list expiration dates
 ```
@@ -265,10 +318,10 @@ cat /tmp/vault.json | ../../../vault-json-to-files.py
 ```
 # dump the appropriate subsets of files to JSON, then manually copy & paste JSON text into Vault
 # we may be working in an airgapped environment and do not assume Vault API access.
-../../../vault-create-json.sh * # import JSON to certs/all in Vault
-../../../vault-create-json.sh *.crt isvdi.pem # import JSON to certs/isvdicerts in Vault
-../../../vault-create-json.sh isvgim.crt isvgim.key isvgimRootCA.crt xyz-ca-certs.crt # import JSON to certs/isvgimcerts in Vault
-../../../vault-create-json.sh my.crt mq.key isvgimRootCA.crt # import JSON to certs/mqcerts in Vault
+../../../vault-json-pack.sh * # import JSON to certs/all in Vault
+../../../vault-json-pack.sh *.crt isvdi.pem # import JSON to certs/isvdicerts in Vault
+../../../vault-json-pack.sh isvgim.crt isvgim.key isvgimRootCA.crt xyz-ca-certs.crt # import JSON to certs/isvgimcerts in Vault
+../../../vault-json-pack.sh my.crt mq.key isvgimRootCA.crt # import JSON to certs/mqcerts in Vault
 ```
 8. Confirm Vault update, then delete certs directory and with that, any sensitive data
 ```
