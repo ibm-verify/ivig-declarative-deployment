@@ -2,8 +2,8 @@ general:
   install:
     createTablespace: true
     deployIsvdi: true
-    deployDb: false
-    deployLdap: false
+    deployDb: true
+    deployLdap: true
     deployIsvart: false
     externalSecret:
       extcreds: false

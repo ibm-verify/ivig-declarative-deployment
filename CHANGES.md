@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.4.4 (2026-07-16)
+
+This version moves to a more recent External Secrets API version
+
+Templates transition to non-beta External Secrets API, and with this change, all versions from 0.16.2 to 2.7.0 (current) of the External Secrets Operator version are supported when using the optional External Secrets integration.
+
+Further changes:
+- updates in README for clarity
+- change default configuration in `values-config.yaml` to deploy internal data tier
+- add SPDX tags to dynamically generated `*.properties` files
+
 ## 2.4.3 (2026-07-09)
 
 This version enhances Vault integration and restructures the repo for packaging.

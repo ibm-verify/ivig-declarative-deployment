@@ -55,7 +55,7 @@ When using Vault in tandem with Argo CD, this recommended integration pattern ev
 ## Prerequisites
 
 - [Vault](https://developer.hashicorp.com/vault/docs/get-vault#install-options) up and running (tested on Vault Enterprise 1.15.4)
-- [External Secrets Operator](https://external-secrets.io/latest/introduction/getting-started/) running (0.10.3 or newer)
+- [External Secrets Operator](https://external-secrets.io/latest/introduction/getting-started/) running (0.16.2 or newer)
 
 There are two optional user convenience scripts for importing from and exporting to Vault, which require the following dependencies in addition to what is already documented under [System Requirements](../README.md#system-requirements):
 - `vault-json-pack.sh`: bash 3.2, jq 1.5
