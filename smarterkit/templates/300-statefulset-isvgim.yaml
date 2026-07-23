@@ -29,7 +29,9 @@ spec:
     metadata:
       labels:
         app: isvgim
+        {{- include "extra" (list . "labels.pod.isvgim") }}
       annotations:
+        {{- include "extra" (list . "annotations.pod.isvgim") }}
         productName: "IBM Verify Identity Governance Lifecycle"
         productId: "1fcf57ba04ee4a779a860a8d1fac675e"
         productMetric: "{{ .Values.licenseType }}_VALUE_UNIT"

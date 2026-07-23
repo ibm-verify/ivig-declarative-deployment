@@ -12,6 +12,9 @@ spec:
     metadata:
       labels:
         app: isvd-replica-1
+        {{- include "extra" (list . "labels.pod.isvd-replica-1") }}
+      annotations:
+        {{- include "extra" (list . "annotations.pod.isvd-replica-1") }}
     spec:
       # The name of the service account which has the required
       # capabilities enabled for the isvd container.

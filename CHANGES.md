@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.4.5 (2026-07-23)
+
+This version adds the ability to dynamically add metadata to pods and services
+
+The ability to dynamically inject metadata into helm templates allows turning static templates into highly adaptable infrastructure. Label and annotation injection centralizes metadata management, ensuring environment consistency and driving cross-system automation without hardcoding project specific metadata in helm templates. Dynamically injecting these key-value pairs enables third-party tools to auto-discover resources, seamlessly route traffic via Ingress, or acts as the foundation for centralized log management by tagging log sources with environments, teams, or application names.
+
+Further, this version includes the following documentation improvements:
+- clarification on and code sample for retrieving the login URL after deployment
+- detailed description on enabling inbound traffic via both NodePort and Ingress
+- warnings/reminders for passive readers who skim and skip details
+- clarification around prerequisite steps for external secrets
+- minor doc updates in VAULT
+
 ## 2.4.4 (2026-07-16)
 
 This version moves to a more recent External Secrets API version

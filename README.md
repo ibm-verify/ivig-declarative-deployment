@@ -21,7 +21,7 @@ The desired state is stored in git and based on this, declarative deployment (di
 - Clean separation of sensitive and non-sensitive configuration data
 - Deployment from git with environment specific variables
 - Deployment using externally managed secrets (vault)
-- No extra dependencies (vs Starterkit) but integrate with cloud native CD tools e.g. ArgoCD (whereas Starterkit does not).
+- No extra dependencies (vs Starterkit) but integrate with cloud native CD tools e.g. Argo CD (whereas Starterkit does not).
 - Observability/visibility increased due to "normalized" repo structure
 - Detect and remediate configuration shift, rollback, central desired state in git
 - Avoid chicken-egg problem, enable creation of desired state before containers are deployed to cluster (crucial for air-gapped environment)
@@ -48,7 +48,7 @@ This project targets following IBM Verify Identity Governance versions:
 
 There is no intention to backport newer chart version to support older IVIG versions.
 
-Strictly speaking, the only third party dependency is helm, version 3.18 or newer. Therefore any continuous delivery platform which supports helm should be supported but explicit testing was done on ArgoCD only.
+Strictly speaking, the only third party dependency is helm, version 3.18 or newer. Therefore any continuous delivery platform which supports helm should be supported but explicit testing was done on Argo CD only.
 
 ### System Requirements
 
@@ -69,9 +69,11 @@ A version history including all notable changes is maintained in the [Changelog]
 
 ## Setup guide - standalone
 
-The standalone setup is a viable option for both Developers/Integrators and for teams who have not adopted a full CI/CD solution for GitOps-driven Kubernetes. This setup requires Git, the user will directly interact with `helm` (rather than indirectly via ArgoCD) and `kubectl`. The fastest way to get up and running is this minimal standalone setup.
+The standalone setup is a viable option for both Developers/Integrators and for teams who have not adopted a full CI/CD solution for GitOps-driven Kubernetes. This setup requires Git, the user will directly interact with `helm` (rather than indirectly via Argo CD) and `kubectl`. The fastest way to get up and running is this minimal standalone setup.
 
 ### TL;DR
+
+This section is intended for users intimately familiar with IVIG, kubernetes and helm. It provide quick-start instructions in a compact and minimalistic fashion. It is recommended to read and understand the full documentation which covers technical details and deployment options.
 
 #### Quick demo
 Minimal setup from scratch, assuming your k8s cluster has a storage class called 'local-path':
@@ -85,8 +87,16 @@ kubectl -n ivig-argo wait --for=condition=Ready --timeout=5m pod -l app=isvgim
 kubectl -n ivig-argo exec isvgim-0 -- /bin/bash -c "/work/util/extract-config-response.sh --install && /work/ldapConfig.sh install && /work/dbConfig.sh install"
 kubectl -n ivig-argo rollout restart sts/isvgim
 ```
+The following command will wait for the application to start and then print out the login URL. Note that this is a long chained command spread across multiple lines via line continuation (backslack immediately followed by newline).
+```
+kubectl -n ivig-argo wait --for=condition=Ready --timeout=5m pod -l app=isvgim && \
+kubectl -n ivig-argo get pod/isvgim-0 -o jsonpath='Login at https://{.status.hostIP}:' && \
+kubectl -n ivig-argo get svc/isvgim -o jsonpath='{.spec.ports[?(@.name=="https")].nodePort}{"/itim/console\n"}'
+```
 
 #### Recommended standalone setup
+
+**Warning:** Users are encouraged to read the documentation carefully and be mindful when adjusting configuration. For less experienced users it is recommended to start with deploying a simple configuration first, and then increasing complexity in small iterations. Beyond ensuring correct syntax of configuration files, understanding the semantics of the configuration and avoiding logical errors is key, e.g. if you mark a component to be externally managed (enable external secrets), do not expect it to be automatically created, but ensure it is correctly provisioned upfront.
 
 Setup your own git repo and adjust config as needed:
 ```
@@ -113,11 +123,21 @@ kubectl -n $NAMESPACE wait --for=condition=Ready --timeout=5m pod -l app=isvgim
 kubectl -n $NAMESPACE exec isvgim-0 -- /bin/bash -c "/work/util/extract-config-response.sh --install && /work/ldapConfig.sh install && /work/dbConfig.sh install"
 kubectl -n $NAMESPACE rollout restart sts/isvgim
 ```
+Wait for the application to start and then print out the login URL:
+```
+kubectl -n $NAMESPACE wait --for=condition=Ready --timeout=5m pod -l app=isvgim && \
+kubectl -n $NAMESPACE get pod/isvgim-0 -o jsonpath='Login at https://{.status.hostIP}:' && \
+kubectl -n $NAMESPACE get svc/isvgim -o jsonpath='{.spec.ports[?(@.name=="https")].nodePort}{"/itim/console\n"}'
+```
+
+The [section on troubeshooting](#troubleshooting) provides guidance on diagnosing and resolving errors.
 
 ### Prerequisites
 - K8s cluster up and running
 - ~namespace and registry pull secret configured~ (chart 2.2.5 will deploy the namespace and optionally the pull secret as well)
 - data tier ready and available if using an external data tier (chart 2.2.1 enables optional deployment of DB and LDAP intended for non-production use)
+
+**Note:** Deployments of ISVDI scaled up to 2 or more pods require a storage class supporting `ReadWriteMany` access mode. A simple setup for demo or development purposes will work fine with `ReadWriteOnce` as long as ISVDI is not scaled up.
 
 ### Repo setup
 
@@ -137,7 +157,7 @@ Next, adjust `values.yaml` and `values-config.yaml` for your environment and sto
     - `clusterUrl` is set to the kubernets API server internal endpoint, leave it as-is!
 - If you decide to use `starterkit/bin/configure.sh -manual` to generate `config.yaml` then just copy the content to `values-config.yaml` and adjust as follows:
     - `general.install`: it is advised to only retain properties which are defined in the bundled `values-config.yaml`, others are not used
-    - `general.install.externalSecret`: while it is not supported by the original StarterKit and therefore absent in `config.yaml`, use this to selectively configure Vault integration for MQ, OIDC or platform credentials
+    - `general.install.externalSecret`: while it is not supported by the original StarterKit and therefore absent in `config.yaml`, use this to selectively mark MQ, OIDC or platform credentials as externally managed (requires manual setup of the secrets or Vault integration via External Secrets Operator)
     - `externalRegistry`: it is not supported - it will not cause any error but it is recommended to remove this section to avoid confusion
     - `server.truststore`: as `starterkit/bin/configure.sh -manual` may leave it empty or incomplete, make sure there is at least the list item `  - '@isvgimRootCA.crt'` present
     - `oidc`: while this section is not generated by the original StarterKit and therefore absent in the generated `config.yaml`, we support it and the same instructions apply for OIDC setup (if you already configured OIDC in one of your deployments, just append the `oidc` section to `values-config.yaml`
@@ -300,6 +320,148 @@ Note:
 
 Integration with Vault or another secret management system is documented in detail [here](docs/VAULT.md).
 
+#### Enabling inbound connections from the outside
+
+There are different ways one can expose a k8s service to the outside world, using a NodePort is one of them, which is fine for a demo/simple setup, but defining an Ingress would be a more typical way for a real-life production deployment.
+
+##### Via NodePort by default
+
+The default behavior is to expose the application via a NodePort: Every node in the cluster configures itself to listen on a specific port and to forward traffic to one of the ready endpoints associated with that Service. One can reach the application from outside the cluster, by connecting to any node using the appropriate protocol and port, in this case HTTPS and the port configured via `services.isvgim.ports.node` in `values.yaml`.
+
+Although the application could be reached via the IP of any node, the command used in this guide always generates an URL that points to the node the first pod of the isvgim StatefulSet is running on. This approach consistently works on small and large clusters. The HTTPS port is also dynamically queried to ensure the URL is correctly generated.
+```
+kubectl -n $NAMESPACE wait --for=condition=Ready --timeout=5m pod -l app=isvgim && \
+kubectl -n $NAMESPACE get pod/isvgim-0 -o jsonpath='Login at https://{.status.hostIP}:' && \
+kubectl -n $NAMESPACE get svc/isvgim -o jsonpath='{.spec.ports[?(@.name=="https")].nodePort}{"/itim/console\n"}'
+```
+
+##### Via Ingress
+
+An Ingress is a Kubernetes resource that routes external HTTP/HTTPS traffic to internal services. An Ingress Controller is a reverse proxy that watches the Kubernetes API and automatically configures routing rules based on your Ingress definitions. Traefik is a popular choice.
+
+Key benefits for large-scale deployments:
+- Security Hardening: Network access to the cluster nodes from the outside can be restricted to a single, tightly controlled secure channel
+- Cost Efficiency: Route thousands of microservices through a single cloud load balancer IP instead of using a unique balancer per service.
+- Dynamic Configuration: Traefik natively watches the Kubernetes API to update routing tables in real-time without restarts when pods scale or services change.
+- Built-in Features: Handle SSL/TLS automation, path-based routing, rate limiting, and request middleware right at the cluster edge.
+
+While configuration of an Ingress Controller is outside of the scope of this documentation, the following helm template shall provide inspiration and a solid starting point for a traefik-based ingress with the following features:
+- Session affinity via a properly secured and automatically managed HTTP cookie
+- Traefik reverse proxy will skip backend certificate checks such as CA and hostname verification (it uses the cluster-internal hostname to access the backend which would typically not be registered in the certificate as a subject alternate name)
+- Automatic creation of SSL/TLS certificate for the hostname configured
+- Routes inbould HTTPS traffic based on hostname (Server Name Indication during SSL handshake) to the right service
+
+```yaml
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: skipverify
+  namespace: {{ .Values.namespace }}
+spec:
+  insecureSkipVerify: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: isvgim-traefik
+  namespace: {{ .Values.namespace }}
+  annotations:
+    traefik.ingress.kubernetes.io/service.serversscheme: https
+    #syntax: <ServersTransport.namespace>-<ServersTransport.name>@kubernetescrd
+    traefik.ingress.kubernetes.io/service.serverstransport: {{ .Values.namespace }}-skipverify@kubernetescrd
+    traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
+    traefik.ingress.kubernetes.io/service.sticky.cookie.httponly: "true"
+    traefik.ingress.kubernetes.io/service.sticky.cookie.name: idm-stateful
+    traefik.ingress.kubernetes.io/service.sticky.cookie.secure: "true"
+spec:
+  selector:
+    app: isvgim
+  ports:
+    - name: https
+      port: {{ .Values.services.isvgim.ports.https }}
+      protocol: TCP
+      targetPort: {{ .Values.services.isvgim.ports.https }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: isvgim-ingress
+  namespace: {{ .Values.namespace }}
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: {{ first .Values.server.hostname }}
+      http:
+        paths:
+          - backend:
+              service:
+                name: isvgim-traefik
+                port:
+                  number: {{ .Values.services.isvgim.ports.https }}
+            path: /
+            pathType: Prefix
+  tls:
+    - hosts:
+        - {{ first .Values.server.hostname }}
+      secretName: isvgim-tls
+```
+
+#### Configuring metadata injection
+
+The ability to dynamically inject metadata into helm templates allows turning static templates into highly adaptable infrastructure. Label and annotation injection centralizes metadata management, ensuring environment consistency and driving cross-system automation without hardcoding project specific metadata in helm templates. Dynamically injecting these key-value pairs enables third-party tools to auto-discover resources, seamlessly route traffic via Ingress, or acts as the foundation for centralized log management by tagging log sources with environments, teams, or application names.
+
+Dynamic injection of kubernetes labels and annotations is supported into both pods and services and can be configured via `extra.annotations` and `extra.labels` in `values-config.yaml` (or any Values file included in your setup).
+
+One can select any of the following kubernetes resources and define extra annotations and labels to be injected without modifying the helm templates.
+- Services
+    - hazelcast-headless
+    - isvdi
+    - isvgim
+    - mq-headless
+    - mqshare
+- Pod templates of deployments and stateful sets
+    - isvgim
+    - isvdi
+    - mqshare
+
+The following example would be appended to `values-config.yaml` to enable the discovery of monitoring endpoints by the popular monitoring tool prometheus and to hint centralized log managemnet to correctly tag and parse log sources (assuming prometheus and fluentbit are up and running and configured for this use case).
+
+This is achieved by defining
+- static annotations to be added to the pod templates of `deployment isvdi` and `statulset isvgim`
+- string template for rendering annotations for the service `isvgim`, and reference the port number from within the template
+- string template to add pod labels for `isvdi` in this specific case including the environments name dynamically, along with a static label `app.kubernetes.io/component`
+
+```yaml
+extra:
+  annotations:
+    pod:
+      # hint log sources and parser for centralized log management via fluentbit
+      isvgim:
+        fluentbit.io/tag: "idm-server-logs"
+        fluentbit.io/parser: "multiline-custom-xml"
+      isvdi:
+        fluentbit.io/tag: "idm-adapter-logs"
+        fluentbit.io/parser: "multiline-regex-or-log4j"
+    service:
+      # instruct monitoring tool prometheus to scrape data from the service
+      isvgim: |-
+        prometheus.io/scrape: "true"
+        prometheus.io/port: {{ .Values.services.isvgim.ports.https }}
+        prometheus.io/path: "/metrics"
+  labels:
+    pod:
+      # assuming the values file for your production environment defines
+      #   environment: production
+      # this template string would dynamically render to
+      #     app.kubernetes.io/component: adapters
+      #     env: production
+      isvdi: |-
+        app.kubernetes.io/component: adapters
+        env: {{ .Values.environment }}
+```
+
+**Keep in mind:** While the ability to inject metadata dynamically opens up an unrestricted set of integration options, this feature does not implement any integration per se. It is a future-proof approach with high potential but always depends on third-party tools, platforms or services to be present and configured appropriately as a prerequisite.
+
 #### Post-deployment steps
 
 When installing from scratch, schema and initial data have to be loaded to both DB and LDAP, with external data tier as well as data tier deployed via the helm chart. This is not seen as a responsibility or an integral step of the helm chart itself, as there are valid scenarios where IVIG has to be deployed or redeployed with an existing data tier containing data which must not be erased (migration, disaster recovery, upgrade scenarios). This requires finer grained control over the data initialization process.
@@ -326,7 +488,7 @@ kubectl -n $NAMESPACE scale sts/isvgim --replicas 1
 
 #### Common tasks
 
-When working directly with `helm` rather than via ArgoCD (which is a viable option for both Developers/Integrators and for team who have not adopted a full CI/CD solution for GitOps-driven Kubernetes) see the following list of commands which illustrate various DevOps tasks.
+When working directly with `helm` rather than via Argo CD (which is a viable option for both Developers/Integrators and for team who have not adopted a full CI/CD solution for GitOps-driven Kubernetes) see the following list of commands which illustrate various DevOps tasks.
 
 ```
 # Development/integration
@@ -350,7 +512,9 @@ The first fundamental check is to log on to IVIG and list users.
 
 Execute smoke tests for your IVIG project as necessary. (Smoke tests are a subset of test cases that cover the most important functionality of a component or system, used to aid assessment of whether main functions of the software appear to work correctly.)
 
-### Troubleshooting guide
+### Troubleshooting
+
+**Note:** While users are free to customize the helm templates and other resources in this project, it is the sole responsibility of the user to investigate and eliminate undesired side effects of any modification. For example, renaming containers or other k8s resources, rearranging the order of containers within pods will require adjustments to the commands listed in this guide or even the overall procedure described.
 
 ~When using the demo setup script `secrets-setup.sh`, please note that GNU grep 3.6 (from 2020, shipped with CentOS 9) yields abnormal behavior. Use a more recent version of grep (see section [Components and Dependencies](#components-and-dependencies)).~ This issue is resolved with version 2.3.3.
 
@@ -362,7 +526,9 @@ kubectl logs -n <namespace> isvgim-0 -c logs-im
 ```
 Check the availability and configuration of your database and LDAP instance.
 
-Note that there should not be any additional files under the certificate directory (`smarterkit/config/certs` by default), the presence of binary files is known to yield abnormal helm template rendering.
+**Note:** There should not be any additional files under the certificate directory (`smarterkit/config/certs` by default), the presence of binary files is known to yield abnormal helm template rendering.
+
+**Warning:** In order to scale up ISVDI to 2 or more replicas, a persistent volume with `ReadWriteMany` access mode is needed. If this access mode is configured via `storage.mode` (e.g. in `values.yaml`) but the configured storage class does not support this mode, the persistent volume claim will be stuck in pending state indefinitely. It is recommended to ensure in advance that a access mode `ReadWriteMany` is supported by the selected storage class.
 
 ### Hardening
 
@@ -375,15 +541,15 @@ This project delivers many [extras not included in the original product](docs/EX
 - Custom flags for selectively enabling general hardening measures
 - Fixes of bugs which impact security but have not been addressed in the original product yet
 
-## Setup guide - ArgoCD
+## Setup guide - Argo CD
 
-The repository setup and configuration steps described in the standalone setup guide applies to this scenario as well.
+The repository setup and configuration steps described in the standalone setup guide apply to this scenario as well.
 
-On high level, the following sequence of steps should be followed:
+On high level, the following sequence of steps should be followed to quickly bootstrap your deployment via Argo CD:
 - Check out this project, adjust `values.yaml` and `values-config.yaml` for your environment and check into your git
-- Generate x509 certificates offline (or in another environment) and store these to git
-- Adjust the application manifest sample in the root directory of this project (use external or internal vault)
-- Enable automatic sync or sync manually via ArgoCD
+- Generate x509 certificates offline (or in another environment) and store these to git (or optionally, store these in vault)
+- Adjust the application manifest sample in the root directory of this project (optionally use external secrets from vault)
+- Enable automatic sync or sync manually via Argo CD
 
 In a real-life setup, the typical pattern is to deploy multiple environments (such as development, test and production) from a single Git repository. A separate guide describes the [recommended approach for a multi-stage project via Argo CD](docs/ARGO-CD.md).
 
@@ -407,7 +573,7 @@ This section contains near and mid term plans, uncommitted feature candidates an
 This section points the reader to further documentation within the repository (resources in the `docs` folder) or outside of the repository.
 
 - [Introductory Presentations](https://ibm.ent.box.com/folder/335821059835?s=gpwqalbj81ku5tc67rqdc6r2etqse862)
-- [Guidelines for Contributors](docs/CONTRIBUTING.md)
+- [Guidelines for Contributors](CONTRIBUTING.md)
 - [Changelog](CHANGES.md) 
 - Marketing flyers, Offering and Asset Information
 - Demos: see the `demo` branch here in git (or any of the `demo-x.y.z` branches for particular versions).

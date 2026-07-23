@@ -11,7 +11,9 @@ spec:
     metadata:
       labels:
         app: mqshare
+        {{- include "extra" (list . "labels.pod.mqshare") }}
       annotations:
+        {{- include "extra" (list . "annotations.pod.mqshare") }}
         productName: "IBM MQ"
         productId: "c661609261d5471fb4ff8970a36bccea"
         productMetric: "PROCESSOR_VALUE_UNIT"

@@ -13,6 +13,9 @@ spec:
     metadata:
       labels:
         app: isvdi
+        {{- include "extra" (list . "labels.pod.isvdi") }}
+      annotations:
+        {{- include "extra" (list . "annotations.pod.isvdi") }}
     spec:
       {{ if not .Values.isOpenShift }}securityContext:
         fsGroup: 0{{end}}

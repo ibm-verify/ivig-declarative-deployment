@@ -6,6 +6,9 @@ metadata:
   namespace: {{ .Values.namespace }}
   labels:
     app: postgres
+    {{- include "extra" (list . "labels.service.postgres" 4) }}
+  annotations:
+    {{- include "extra" (list . "annotations.service.postgres" 4) }}
 spec:
   selector:
     app: postgres

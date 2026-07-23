@@ -6,6 +6,9 @@ metadata:
   namespace: {{ .Values.namespace }}
   labels:
     app: isvdi
+    {{- include "extra" (list . "labels.service.isvdi" 4) }}
+  annotations:
+    {{- include "extra" (list . "annotations.service.isvdi" 4) }}
 spec:
   selector:
     app: isvdi

@@ -321,7 +321,7 @@ cat /tmp/vault.json | ../../../vault-json-unpack.sh
 ../../../vault-json-pack.sh * # import JSON to certs/all in Vault
 ../../../vault-json-pack.sh *.crt isvdi.pem # import JSON to certs/isvdicerts in Vault
 ../../../vault-json-pack.sh isvgim.crt isvgim.key isvgimRootCA.crt xyz-ca-certs.crt # import JSON to certs/isvgimcerts in Vault
-../../../vault-json-pack.sh my.crt mq.key isvgimRootCA.crt # import JSON to certs/mqcerts in Vault
+../../../vault-json-pack.sh mq.crt mq.key isvgimRootCA.crt # import JSON to certs/mqcerts in Vault
 ```
 8. Confirm Vault update, then delete certs directory and with that, any sensitive data
 ```
@@ -401,5 +401,10 @@ kubectl annotate es oidccreds force-sync=$(date +%s) --overwrite
 # query last refresh time
 kubectl get es oidccreds -o yaml | grep refreshTime
   refreshTime: "2026-07-02T13:37:00Z"
+
+# should the refresh not happen, perform a hard reset by deleting the secret
+# it should be automatically recreated with the most recent data from provider
+kubectl get secret oidccreds -o yaml > oidccreds-backup.yaml
+kubectl delete secret oidccreds
 ```
 

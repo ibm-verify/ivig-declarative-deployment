@@ -13,6 +13,9 @@ spec:
       labels:
         app: postgres
         replicationRole: primary
+        {{- include "extra" (list . "labels.pod.postgres") }}
+      annotations:
+        {{- include "extra" (list . "annotations.pod.postgres") }}
     spec:
       {{ if not .Values.isOpenShift }}securityContext:
         runAsUser: {{ .Values.services.postgres.user }}

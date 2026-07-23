@@ -12,6 +12,9 @@ spec:
     metadata:
       labels:
         app: isvgimconfig
+        {{- include "extra" (list . "labels.pod.isvgimconfig") }}
+      annotations:
+        {{- include "extra" (list . "annotations.pod.isvgimconfig") }}
     spec:
       imagePullSecrets:
       - name: regcred

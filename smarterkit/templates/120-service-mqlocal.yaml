@@ -5,6 +5,9 @@ metadata:
   namespace: {{ .Values.namespace }}
   labels:
     app: isvgim
+    {{- include "extra" (list . "labels.service.mq-headless" 4) }}
+  annotations:
+    {{- include "extra" (list . "annotations.service.mq-headless" 4) }}
 spec:
   clusterIP: None
   selector:

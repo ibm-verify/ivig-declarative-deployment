@@ -3,6 +3,10 @@ kind: Service
 metadata:
   name: isvgim
   namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "extra" (list . "labels.service.isvgim" 4) }}
+  annotations:
+    {{- include "extra" (list . "annotations.service.isvgim" 4) }}
 spec:
   type: NodePort
   sessionAffinity: ClientIP
