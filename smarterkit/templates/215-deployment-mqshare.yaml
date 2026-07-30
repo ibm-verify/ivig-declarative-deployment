@@ -19,8 +19,10 @@ spec:
         productMetric: "PROCESSOR_VALUE_UNIT"
         productChargedContainers: "All"
     spec:
-      {{ if not .Values.isOpenShift }}securityContext:
-        fsGroup: {{ .Values.services.mqshare.group }}{{end}}
+      {{- if not .Values.isOpenShift }}
+      securityContext:
+        fsGroup: {{ .Values.services.mqshare.group }}
+      {{- end }}
       volumes:
       - name: mqconfig
         configMap:

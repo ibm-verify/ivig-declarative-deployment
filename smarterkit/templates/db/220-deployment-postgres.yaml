@@ -17,9 +17,11 @@ spec:
       annotations:
         {{- include "extra" (list . "annotations.pod.postgres") }}
     spec:
-      {{ if not .Values.isOpenShift }}securityContext:
+      {{- if not .Values.isOpenShift }}
+      securityContext:
         runAsUser: {{ .Values.services.postgres.user }}
-        fsGroup: {{ .Values.services.postgres.group }}{{end}}
+        fsGroup: {{ .Values.services.postgres.group }}
+      {{- end }}
       volumes:
       - name: data-volume
         persistentVolumeClaim:

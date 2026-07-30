@@ -48,8 +48,9 @@ spec:
         # per-environment basis. This approach highly reduces redundancy.
         - values-override-DEV.yaml
       valuesObject:
-        # Insert the content of secrets.yaml for a dummy/DEV setup! Indent by 8
-        # spaces. Alternatively, leave this blank and source secrets from vault.
+        # For a demo or developer setup, insert the contents of secrets.yaml and
+        # regcred.yaml indented by 8 spaces!
+        # Alternatively, leave this section blank and source secrets from vault.
       parameters:
         # Annotating the k8s namespace with the git commit hash (or any other
         # revision identifier of your choice) allows to track what was deployed.
@@ -58,12 +59,13 @@ spec:
         # Instead of storing license keys in git (e.g. in values-config.yaml)
         # let ArgoCD dynamically inject these values during template rendering.
         # CHANGE DUMMY VALUES in this sample file to your actual license keys!
-        - name: general.install.license.activationKey
+        - name: general.license.activationKey
           value: XXAZ6-Z7O6E-H6DUA-Y1PBZ-5RS5X
-        - name: general.install.license.ldapKey
+        - name: general.license.ldapKey
           value: R2VuDGJSa0vqJH01+JKryHts2dRZy/8aCH0k2wq1Rxp3q/A36a5Uei4D...JWs=
-        - name: general.install.license.isvdiKey
+        - name: general.license.isvdiKey
           value: UmVCYBaU+QRpmAtuTNp2VaUACVH29SCmgHeR9YGanL9tyPRmzmMmHRbF...ATw=
   # Projects enable logical grouping of applications and enable access control.
   # Define the project to assign to, if omitted, the default project is used.
+  # If not using the default project, access control MUST be configured upfront.
   project: integrator

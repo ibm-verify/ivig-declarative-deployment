@@ -20,7 +20,7 @@ general:
       regcred: false
   license:
     activationKey:
-    accepted: true
+    accepted: false
     ldapKey:
     isvdiKey:
     isvartKey:

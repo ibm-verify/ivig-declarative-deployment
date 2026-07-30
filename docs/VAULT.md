@@ -4,7 +4,7 @@
 
 The [External Secrets Operator](https://external-secrets.io/) is a Kubernetes operator that synchronizes secrets from external secret management systems such as [Vault](https://developer.hashicorp.com/vault/docs) into Kubernetes Secret objects.
 
-With Vault Integration enabled, you can securely store all or a subset of the [credentials from `secrets.yaml`](../README.md#deploy) in Vault, which will be automatically propagated to the k8s cluster and exposed to the containers in a secure manner. Additionally, PKI related files, such as private keys and certificates can also be sourced from Vault and mounted to the containers in a similar way.
+With Vault Integration enabled, you can securely store all or a subset of the [credentials from `secrets.yaml`](PURE-HELM.md#deploy) in Vault, which will be automatically propagated to the k8s cluster and exposed to the containers in a secure manner. Additionally, PKI related files, such as private keys and certificates can also be sourced from Vault and mounted to the containers in a similar way.
 
 ```
                               +---------------------+
@@ -57,13 +57,13 @@ When using Vault in tandem with Argo CD, this recommended integration pattern ev
 - [Vault](https://developer.hashicorp.com/vault/docs/get-vault#install-options) up and running (tested on Vault Enterprise 1.15.4)
 - [External Secrets Operator](https://external-secrets.io/latest/introduction/getting-started/) running (0.16.2 or newer)
 
-There are two optional user convenience scripts for importing from and exporting to Vault, which require the following dependencies in addition to what is already documented under [System Requirements](../README.md#system-requirements):
+There are two optional user convenience scripts for importing from and exporting to Vault, which require the following dependencies in addition to what is already documented under [System Requirements](PURE-HELM.md#system-requirements):
 - `vault-json-pack.sh`: bash 3.2, jq 1.5
 - `vault-json-unpack.sh`: bash 3.2, jq 1.5
 
 ## Vault configuration
 
-The steps in this guide have been tested on Vault Enterprise. Integration with Vault Community Edition (Open Source) requires slight adjustments, specifically, because it does not support Vault namespaces (the root namespace is used implicitly).
+The steps in this guide have been tested on Vault Enterprise (the version listed above). Future versions might introduce changes to the web UI such as the labels and location of menu items and buttons, which could require some steps to be adjusted. Integration with Vault Community Edition (Open Source) requires slight adjustments as well, specifically, because it does not support Vault namespaces (the root namespace is used implicitly).
 
 Vault namespaces provide isolated environments within a single Vault cluster. Each namespace can have its own:
 - Secret engines
@@ -101,13 +101,14 @@ The following steps document how to link the Kubernetes Cluster with Vault by re
 
 4. Fill in the k8s API server endpoint in the **Kubernetes host** field
 
-     **Note:** Ensure that Vault can reach the Kubernetes API server. In general, the k8s API server URL can be retrieved via `kubectl cluster-info`. If Vault is running in the same Kubernetes cluster, you may need to use the internal API endpoint instead: `https://kubernetes.default.svc:6443`
+   **Note:** Ensure that Vault can reach the Kubernetes API server. In general, the k8s API server URL can be retrieved via `kubectl cluster-info`. If Vault is running in the same Kubernetes cluster, you may need to use the internal API endpoint instead: `https://kubernetes.default.svc:6443`
 
 5. Populate the **Kubernetes CA Certificate** field with the cluster CA certificate in PEM format
    ```bash
    kubectl get secret idm-vault-viewer-secret -n isvgim -o json | jq -r '.data["ca.crt"]' | base64 -d
    ```
-6. Populate the **Token Reviewer JWT** field with the service account token:
+   **Note:** Depending on your choice of deployment options, the service account may not exist yet at this point. Review the 3 options described below at the end of this section and chose your preferred option.
+6. Populate the **Token Reviewer JWT** field (also called **Kubernetes API JWT** in certain version) with the service account token:
    ```bash
    kubectl get secret idm-vault-viewer-secret -n isvgim -o json | jq -r '.data["token"]' | base64 -d
    ```
@@ -164,48 +165,85 @@ EOF
 
 ### Onboard Secrets
 
-Create Secret Engine "secrets" (type KV which stands for key-value store) and populate with secrets in the following structure. Copy over the secrets from `secrets.yaml` for any secret you marked as externally managed by setting `general.install.externalSecret.*creds` to `true` in `values-config.yaml`.
+Create Secret Engine "secrets" (section "Generic", type KV which stands for key-value store) and populate it with secrets. Create one secret for each item you marked as externally managed by setting `general.install.externalSecret.*{cred,creds}` to `true` in `values-config.yaml`, with exactly matching names and the structure shown below.
 
-Vault web UI allows you to specify keys and values one-by-one when creating secrets, but it is recommended to toggle the **JSON** switch on the top of the screen which allows you to paste all key-value pairs at once, increasing efficiency and decreasing the chance of human errors. Use the template below to create the secrets required.
+Vault web UI allows you to specify keys and values one-by-one when creating secrets, but it is recommended to toggle the **JSON** switch on the top of the screen which allows you to paste all key-value pairs at once, increasing efficiency and decreasing the chance of human errors. Use one of the options below to create the secrets required.
+
+#### Option A: Move exiting k8s secrets to Vault
+
+If the secrets have already been deployed to k8s without Vault integration enabled, there is a convenient way to move these secrets to Vault. The following command demonstrates how the content of `pgcreds` can be retreived from via `kubectl` in a JSON format suitable for Vault import.
+
+```
+kubectl get secret pgcreds --namespace ivig-argo -o json | jq '.data|map_values(@base64d)'
+{
+  "admpass": "********",
+  "admuser": "postgres",
+  "pgpass": "********",
+  "pguser": "postgres"
+}
+```
+
+Under Secret Engine "secrets", a secret with the name "pgcreds" needs to be created and filled with the JSON content resulting from the command above. The same process can be followed one-by-one for any other secret marked as externally managed, e.g. "extcreds", "isvdcred", "metricscreds", "mqcreds", "oidccreds", "regcred" set to `true` under `general.install.externalSecret`.
+
+#### Option B: Create secrets in Vault right away
+
+If one has not already deployed the secrets to the k8s cluster and would like to enter these in Vault right away, the following listing should serve as a reference. Secrets should be created just like described in the previous option, but the JSON content needs to be defined by the user.
+
+Assuming all sensitive data is already captured in `secrets.yaml`, just copy over individual values under the appropriate keys within the Vault secrets. The listing below provides guidance on how the names in `secrets.yaml` should be mapped to keys within Vault secrets, and in specific cases, which `values-config.yaml` keys should be looked up for less sensitive data such as usernames (these are the ones with all-lowercase letters).
 
 ```
 secrets/extcreds:
 {
-  "EXT_APPSERVER_PASSWORD": "********",
-  "EXT_DBADMIN_PASSWORD": "********",
-  "EXT_DB_PASSWORD": "********",
-  "EXT_ISIMSYSTEM_PASSWORD": "********",
-  "EXT_ITIMCIPHER_KEY": "********",
-  "EXT_LDAP_PASSWORD": "********",
-  "EXT_MAIL_PASSWORD": "********"
+  "EXT_APPSERVER_PASSWORD": "********  APPSERVER_PASSWORD",
+  "EXT_DBADMIN_PASSWORD": "********    DBADMIN_PASSWORD",
+  "EXT_DB_PASSWORD": "********         DB_PASSWORD",
+  "EXT_ISIMSYSTEM_PASSWORD": "******** ISIMSYSTEM_PASSWORD",
+  "EXT_ITIMCIPHER_KEY": "********      ITIMCIPHER_KEY",
+  "EXT_LDAP_PASSWORD": "********       LDAP_PASSWORD",
+  "EXT_MAIL_PASSWORD": "********       MAIL_PASSWORD"
 }
 
 secrets/metricscreds:
 {
-  "LIBERTYMETRICS_PASSWORD": "********",
-  "LIBERTYMETRICS_USERNAME": "********"
+  "LIBERTYMETRICS_USERNAME": "******** server.options[?(@.name=='libertyMetrics')].data[?(@.name=='userName')].value",
+  "LIBERTYMETRICS_PASSWORD": "******** LIBERTYMETRICS_PASSWORD"
 }
 
 secrets/mqcreds:
 {
-  "mqadmin": "********",
-  "mqlocal": "********",
-  "mqshare": "********"
+  "mqadmin": "******** MQADMIN_PASSWORD",
+  "mqlocal": "******** MQLOCAL_PASSWORD",
+  "mqshare": "******** MQSHARE_PASSWORD"
 }
 
 secrets/oidccreds:
 {
-  "adminConsolesecret": "********",
-  "adminConsoleuser": "********",
-  "iscsecret": "********",
-  "iscuser": "********",
-  "restsecret": "********",
-  "restuser": "********"
+  "adminConsoleuser": "********   OIDC_ADMINCONSOLE_CLIENTID",
+  "adminConsolesecret": "******** OIDC_ADMINCONSOLE_SECRET",
+  "iscuser": "********            OIDC_ISC_CLIENTID",
+  "iscsecret": "********          OIDC_ISC_SECRET",
+  "restuser": "********           OIDC_REST_CLIENTID",
+  "restsecret": "********         OIDC_REST_SECRET"
 }
 
 secrets/regcred:
 {
   ".dockerconfigjson": "{\"auths\":{\"xyz.artifacts.************ }"
+}
+
+
+secrets/isvdcred:
+{
+  "admindn": "********  ldap['security.principal']",
+  "adminpwd": "******** LDAP_PASSWORD"
+}
+
+secrets/pgcreds:
+{
+  "admuser": "******** db.admin",
+  "admpass": "******** DBADMIN_PASSWORD",
+  "pguser": "********  db.user",
+  "pgpass": "********  DB_PASSWORD"
 }
 ```
 

@@ -17,8 +17,10 @@ spec:
       annotations:
         {{- include "extra" (list . "annotations.pod.isvdi") }}
     spec:
-      {{ if not .Values.isOpenShift }}securityContext:
-        fsGroup: 0{{end}}
+      {{- if not .Values.isOpenShift }}
+      securityContext:
+        fsGroup: 0
+      {{- end }}
       volumes:
       - name: config
         projected:

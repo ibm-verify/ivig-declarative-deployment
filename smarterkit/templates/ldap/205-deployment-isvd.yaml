@@ -20,10 +20,12 @@ spec:
       # capabilities enabled for the isvd container.
       serviceAccountName: isvd
 
-      {{ if not .Values.isOpenShift}}# User and group information for the container.
+      {{- if not .Values.isOpenShift }}
+      # User and group information for the container.
       securityContext:
         runAsUser: {{ .Values.services.isvd.user }}
-        fsGroup: {{ .Values.services.isvd.group }}{{end}}
+        fsGroup: {{ .Values.services.isvd.group }}
+      {{- end }}
 
       # We use a volume to store the configuration for the
       # environment.

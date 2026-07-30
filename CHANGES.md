@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.4.6 (2026-07-30)
+
+This version ships restructured documentation and minor updates
+
+Documentation changes:
+- ARGO-CD: `general.install.license` corrected to `general.license` in doc
+- ARGO-CD: tell to include regcred on dev setup, point to Vault integration doc
+- VAULT: add notes and clarification, restructure
+- PURE-HELM: split pure helm standalone setup to separate file, tune README
+
+Minor updates:
+- change `general.license.accepted` to `false` by default
+- change misleading comment in `data-tpl/enRoleMail.properties`
+- add comment on comment on non-default project & access control in app manifest
+- explicitly mention regcred in sample app manifest
+- tidy up helm templates
+
 ## 2.4.5 (2026-07-23)
 
 This version adds the ability to dynamically add metadata to pods and services
