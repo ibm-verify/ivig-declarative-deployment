@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright IBM Corp. 2026
+# SPDX-License-Identifier: MIT
 
 # Enable debug mode
 DEBUG=${DEBUG_INIT:-"false"}

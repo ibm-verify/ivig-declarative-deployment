@@ -1,4 +1,10 @@
 #!/bin/bash
+# Copyright IBM Corp. 2026
+# SPDX-License-Identifier: MIT
+
+# This script generates and writes random secrets to the file secrets.yaml in a
+# format that can be directly consumed by the helm chart. The intended use is to
+# quickly initialize secrets for a new deployment.
 
 OUTPUT="./secrets.yaml"
 

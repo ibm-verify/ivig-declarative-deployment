@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright IBM Corp. 2026
+# SPDX-License-Identifier: MIT
 
 # This script expects a flat JSON dictionary to be passed via STDIN.
 # For each entry, a file with the name of key and content of value will be

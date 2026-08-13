@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright IBM Corp. 2026
+# SPDX-License-Identifier: MIT
 
 # This script expects a list of files provided as arguments, based on which it
 # writes a flat JSON dictionary to STDOUT you can import into Vault.

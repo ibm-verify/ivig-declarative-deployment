@@ -1,3 +1,7 @@
+{{/*
+Copyright IBM Corp. 2026
+SPDX-License-Identifier: MIT
+*/}}
 {{- if .Values.general.install.deployIsvdi }}
 apiVersion: apps/v1
 kind: Deployment
@@ -6,6 +10,10 @@ metadata:
   namespace: {{ .Values.namespace }}
 spec:
   replicas: {{ .Values.services.isvdi.replicas | default 1 }}
+  {{- if eq .Values.storage.mode "ReadWriteOnce" }}
+  strategy:
+    type: Recreate
+  {{- end }}
   selector:
     matchLabels:
       app: isvdi

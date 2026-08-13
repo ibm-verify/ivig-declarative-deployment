@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright IBM Corp. 2026
+# SPDX-License-Identifier: MIT
 
 HOST=$(echo $POD_IP | cut -d '=' -f 2 | tr '.' '-')
 sed -i "s/\(MIXEDMODE_FLAG\)/\1 -Djava.rmi.server.hostname=${HOST}.{{ .Values.namespace }}.pod.cluster.local/" /opt/IBM/TDI/ibmdisrv

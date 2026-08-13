@@ -27,15 +27,94 @@ Images referenced from **README.md** shall also be stored under `docs`.
 
 ### Source Code
 
-**TODO:** Add your project specific requirements on code style and commenting.
+#### General Formatting Rules
 
-If applicable, mention tools such as formatters and linters which can automate
-style checks and make sure you provide configuration and usage examples of such
-tools.
+**Readability is the top priority.** These guidelines exist to serve that goal,
+not the other way around. Any rule below may be bent when following it strictly
+would make the code harder to understand — use your judgement and leave a brief
+comment if the deviation is not self-evident.
+
+When editing an existing file, adapt to the style already present in that file
+rather than mechanically applying these rules. Consistency within a file
+outweighs project-wide uniformity.
+
+All source files must otherwise follow these baseline rules regardless of
+language:
+
+- **Encoding**: UTF-8 without byte order mark (BOM). Prefer plain ASCII
+  characters wherever possible; use Unicode only when the content genuinely
+  requires it (e.g. string literals containing non-Latin text).
+- **Indentation**: Two spaces per level. Tabs are not permitted anywhere in
+  source files.
+- **Line endings**: Unix-style line feed (`\n`). Do not commit files with
+  Windows-style CR/LF (`\r\n`) line endings.
+- **Trailing whitespace**: No trailing spaces or tabs at the end of any line.
+- **Final newline**: Every file must end with exactly one newline character.
+- **Line length**: There is no hard limit for code lines. Comments and inline
+  documentation must be hard-wrapped at 80 columns. Never break a code line
+  solely to meet a column count if doing so hurts readability. URLs, long string
+  literals, and generated or structured content are exempt from the 80-column
+  rule even inside comments.
+
+#### Bash
+
+- Follow the [Google Shell Style Guide](https://google.github.io/styleguide/shellguide.html)
+  as the baseline reference.
+- Use two-space indentation (consistent with the general rule above).
+- Always start scripts with a shebang.
+- **Bash 3.2 compatibility**: Do not use features introduced after Bash 3.2.
+- Do not introduce new dependencies, use bash built-ins rather than external
+  commands.
+- Maintain compatibility with GNU and BSD tools and respect the stated minimum
+  versions required, e.g. sed (GNU 4.2, BSD) and grep (GNU 3.6, BSD 2.6).
+- Prefer `[[ ]]` for conditionals rather than `[ ]`.
+- Quote all variable expansions (`"${VAR}"`) unless word-splitting or globbing
+  is explicitly intended.
+- Use `$()` for command substitution, never backticks.
+- **Variable naming**: All variables must use `UPPER_SNAKE_CASE`, including
+  local script variables.
+- **Script documentation**: Every script must include one of the following:
+  - A short comment block at the top of the file (after the shebang) describing
+    purpose, expected inputs, and any side-effects; or
+  - A `usage()` function that prints a description and at least one usage
+    example, called automatically when the script is invoked with `-h` or
+    `--help` or with invalid arguments.
+
+#### Helm
+
+- Use two-space indentation in all templates and plain YAML files.
+- Indent template actions to match the YAML structure they belong to,
+  regardless of whitespace trimming:
+  ```yaml
+  spec:
+    {{- if not .Values.isOpenShift }}
+    securityContext:
+      fsGroup: {{ .Values.services.mqshare.group }}
+    {{- end }}
+  ```
+- Use `nindent` (rather than `indent`) when piping multi-line values into a
+  template so that the leading newline is included and the YAML indentation
+  stays consistent:
+  ```yaml
+  {{- if .Values.oidc}}
+  oidc: {{- .Values.oidc | toYaml | nindent 2 }}
+  {{- end }}
+- Strip whitespace (`{{-` / `-}}`) deliberately and consistently. Prefer
+  trimming only the side that would otherwise produce a stray blank line;
+  do not strip both sides blindly, as this can collapse intentional blank
+  lines in the output.
+- Keep template expressions compact and readable.
+- Use named templates (`define`/`include`) to encapsulate complexity and avoid
+  duplicated logic. Every named template must have a comment directly above its
+  `{{- define ... }}` line describing what it renders and what context (`.`) it
+  expects, along with a usage example.
+- Provide reasonable defaults for values referenced in templates and ensure
+  proper error handling.
 
 ## Testing
 
-**TODO:** Add your project specific guidelines on testing.
+At minimum, manually verify your changes work as intended and briefly describe
+how you tested them in the pull request description.
 
 ## Git Commit Messages
 
@@ -71,8 +150,8 @@ Further paragraphs come after blank lines.
 Here are some of the reasons why wrapping your commit messages to 72 columns is
 preferred.
 
-- git log doesn’t do any special special wrapping of the commit messages. With
-  the default pager of less -S, this means your paragraphs flow far off the edge
+- git log doesn't perform any special wrapping of the commit messages. With the
+  default pager of `less -S`, this means your paragraphs flow far off the edge
   of the screen, making them difficult to read. On an 80 column terminal, if we
   subtract 4 columns for the indent on the left and 4 more for symmetry on the
   right, we’re left with 72 columns.

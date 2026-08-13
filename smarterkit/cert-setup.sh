@@ -1,4 +1,10 @@
 #!/bin/bash
+# Copyright IBM Corp. 2026
+# SPDX-License-Identifier: MIT
+
+# This script extracts configuration from values.yaml and values-config.yaml and
+# invokes cert-util.sh to create certificates based on discovered configuration,
+# specifically the k8s namespace, components to be deployed and hostnames set.
 
 cd $(dirname "${BASH_SOURCE[0]}" )
 

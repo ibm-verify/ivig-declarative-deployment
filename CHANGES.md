@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.4.7 (2026-08-13)
+
+This version eliminates deadlocks of ISVDI and MQ on restarts.
+
+With the original starterkit, a `rollout restart` causes a deadlock for ISVDI (when `storage.mode` is set to `ReadWriteOnce`) and MQ (always, with any value of `storage.mode` in `values.yaml`) when starting the new pod on a different node.
+
+This version eliminates these deadlocks via a clean approach, without workarounds or manual steps involved:
+- When `ReadWriteMany` (RWX) access mode is configured via `storage.mode` in `values.yaml`, ISVDI will use `RollingUpdate` deployment strategy with zero-downtime across multiple nodes. **Warning:** The configured storage class must support RWX access mode, otherwise PVC creation during initial deployment will remain in pending state and never complete. This might need infrastructure configuration changes.
+- When `ReadWriteOnce` access mode is configured via `storage.mode` in `values.yaml`, the helm template will automatically set the deployment strategy of ISVDI to `Recreate`. This forces k8s to terminate all existing pods and release the volume lock before creating new pods during restart. A few seconds of downtime is introduced during updates of ISVDI, but volume attach conflicts are completely eliminated allowing a clean `rollout update`. In practice, the downside is negligible, considering the case where RWX storage is not available or preferred.
+- IBM MQ can use RWX storage exclusively for a specific deployment architecture called a Multi-Instance Queue Manager. Otherwise, if one attempts to run multiple active IBM MQ pods simultaneously against the same RWX storage path, data corruption will occur immediately. Therefore, the `mqshare` deployment will always use `ReadWriteOnce` storage (regardless of `storage.mode` configured in `values.yaml`), but apply a deployment strategy of `Recreate` and set the number of replicas explicitly to `1`. There will be at most 1 active pod at any point in time and a clean `rollout restart` is enabled with a few seconds downtime.
+
+Further, a handful of updates to documentation are delivered:
+- VAULT: troubleshooting and early verification/debug
+- VAULT: a handful of clarifications for users not familiar with vault
+- PURE-HELM: advanced JDBC configuration
+- code style
+
 ## 2.4.6 (2026-07-30)
 
 This version ships restructured documentation and minor updates
@@ -15,7 +32,7 @@ Documentation changes:
 Minor updates:
 - change `general.license.accepted` to `false` by default
 - change misleading comment in `data-tpl/enRoleMail.properties`
-- add comment on comment on non-default project & access control in app manifest
+- add comment on non-default project & access control in app manifest
 - explicitly mention regcred in sample app manifest
 - tidy up helm templates
 

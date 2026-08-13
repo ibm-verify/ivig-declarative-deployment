@@ -1,4 +1,9 @@
 {{/*
+Copyright IBM Corp. 2026
+SPDX-License-Identifier: MIT
+*/}}
+
+{{/*
 Dictionary entries of files matching a pattern within the certificate directory
 Usage: include "certs" (list . "{mq.key,mq.crt,isvgimRootCA.crt}")
 */}}

@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright IBM Corp. 2026
+# SPDX-License-Identifier: MIT
 
 PREFIX="CALL ADAPTER INIT SCRIPTS:"
 DIR=/opt/IBM/svgadapters/timsol/scripts

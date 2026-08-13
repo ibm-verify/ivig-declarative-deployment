@@ -107,6 +107,8 @@ cd ivig-declarative-deployment
 git remote add upstream https://github.com/ibm-verify/ivig-declarative-deployment.git
 ```
 
+### Helm Values configuration
+
 Next, adjust `values.yaml` and `values-config.yaml` for your environment and store them to your git project. Users unfamiliar with the product may run `starterkit/bin/configure.sh -manual` after downloading an unpacking the original StarterKit bundled with the product. The command will generate `config.yaml` which may then be used as a baseline for `values-config.yaml`, as these files follow the same structure with minimal deviations. Keep the following in mind:
 
 - Adjust `values.yaml`:
@@ -121,6 +123,29 @@ Next, adjust `values.yaml` and `values-config.yaml` for your environment and sto
 - If you are familiar with the structure of `values-config.yaml`, edit it directly
     - `general.license`: as a minimum, fill in `activationKey` and set `accepted` to `true`; add license keys for LDAP and Directory Integrator if you wish to deploy these
     - the bundled file will deploy an internal data tier and Directory Integrator by default, adjust the file as required
+
+#### Optional advanced database configuration via explicit JDBC URL
+
+Declarative deployment increases flexibility and robustness of JDBC configuration beyond what the original product supports. It reads and writes the JDBC URL formats the core product supports with a compatible logic, and additionally offers a new configuration parameter `db.forcedJdbcUrl` in `values-config.yaml` to explicitly set a JDBC connection string rather then providing hostname, port and database name. This allows automated deployment with advanced database configuration (such as load balancing and failover) from scratch, which is not offered by the original product.
+
+Via `db.forcedJdbcUrl` one might specify the JDBC connection using the following formats and advanced features:
+- Oracle Thin Driver (basic SID style)
+- Oracle Thin-Style Service Name (preferred modern syntax)
+- Oracle Net Connection Descriptor - Full explicit descriptor
+    - with SID or Service Name
+    - explicit SSL configuration
+    - multiple addresses, RAC, load balancing and failover
+    - timeouts and other advances parameters
+- DB2 Type4 Driver extra parameters
+    - TLS version and cipher suite selection
+    - high availability (HADR), failover and client reroute (ACR)
+    - performance optimisation
+    - many more advanced parameters
+- Postgres Driver extra parameters
+    - multiple hosts, failover and load balancing, read scaling
+    - many more advanced parameters
+    
+### Bundled convenience scripts for x509 certificates
 
 The next step is to generate x509 certificates offline (or in another environment). Two openssl-based alternatives are bundled, but of course, one may use any other means to generate certificates.
 

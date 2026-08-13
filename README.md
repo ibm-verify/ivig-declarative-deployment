@@ -183,6 +183,7 @@ This project delivers many [extras not included in the original product](docs/EX
   - Improved protection of data encryption keys
   - Interoperability with external secret management systems such as HashiCorp Vault
 - Custom flags for selectively enabling general hardening measures
+- Measures to avoid deadlocks on restart
 - Fixes of bugs which impact security but have not been addressed in the original product yet
 
 ## Future plans

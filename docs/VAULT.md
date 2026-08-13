@@ -54,8 +54,11 @@ When using Vault in tandem with Argo CD, this recommended integration pattern ev
 
 ## Prerequisites
 
+The following components are assumed to be deployed and confgiured correctly for the target environment:
 - [Vault](https://developer.hashicorp.com/vault/docs/get-vault#install-options) up and running (tested on Vault Enterprise 1.15.4)
 - [External Secrets Operator](https://external-secrets.io/latest/introduction/getting-started/) running (0.16.2 or newer)
+
+**Note:** In productive environments, the two components above are typically deployed and managed by a dedicated team, tweaked and hardened to match client-specific requirements. There is no intention to cover all deployment options and topologies. This document includes [step-by-step guidance](#developer-setup-from-scratch-and-early-debug) for users who will need to setup their own development environment from scratch but are unfamiliar with Vault or External Secrets. This guide includes extra debugging steps to faciliate early detection of configuration errors.
 
 There are two optional user convenience scripts for importing from and exporting to Vault, which require the following dependencies in addition to what is already documented under [System Requirements](PURE-HELM.md#system-requirements):
 - `vault-json-pack.sh`: bash 3.2, jq 1.5
@@ -101,17 +104,20 @@ The following steps document how to link the Kubernetes Cluster with Vault by re
 
 4. Fill in the k8s API server endpoint in the **Kubernetes host** field
 
-   **Note:** Ensure that Vault can reach the Kubernetes API server. In general, the k8s API server URL can be retrieved via `kubectl cluster-info`. If Vault is running in the same Kubernetes cluster, you may need to use the internal API endpoint instead: `https://kubernetes.default.svc:6443`
+   **Note:** Ensure that Vault can reach the Kubernetes API server. In general, the k8s API server URL can be retrieved via `kubectl cluster-info`. If Vault is running in the same Kubernetes cluster, you should use the internal API endpoint instead: `https://kubernetes.default.svc`
 
 5. Populate the **Kubernetes CA Certificate** field with the cluster CA certificate in PEM format
    ```bash
-   kubectl get secret idm-vault-viewer-secret -n isvgim -o json | jq -r '.data["ca.crt"]' | base64 -d
+   kubectl get secret idm-vault-viewer-secret -n isvgim -o jsonpath='{.data.ca\.crt}' | base64 -d
    ```
    **Note:** Depending on your choice of deployment options, the service account may not exist yet at this point. Review the 3 options described below at the end of this section and chose your preferred option.
+   
+   **Note:** Depending on your Vault and Kubernetes configuration, you may leave this field empty if Vault is running in the same cluster. The Vault pod would see the same k8s CA in this case.
 6. Populate the **Token Reviewer JWT** field (also called **Kubernetes API JWT** in certain version) with the service account token:
    ```bash
-   kubectl get secret idm-vault-viewer-secret -n isvgim -o json | jq -r '.data["token"]' | base64 -d
+   kubectl get secret idm-vault-viewer-secret -n isvgim -o jsonpath='{.data.token}' | base64 -d
    ```
+   **Note:** Depending on your Vault and Kubernetes configuration, you may leave this field empty if Vault is running in the same cluster. in this case, Vault's default service account's JWT will be used.
 7. Click **Save**
 
 8. Create a Create a Kubernetes Authentication Role, Navigate to **Kubernetes** → **Roles**
@@ -120,12 +126,12 @@ The following steps document how to link the Kubernetes Cluster with Vault by re
 
 10. Configure the role with the following values:
 
-   | Field                                | Value              |
-   | ------------------------------------ | ------------------ |
-   | **Name**                             | `idm-app-role`     |
-   | **Bound service account names**      | `idm-vault-viewer` |
-   | **Bound service account namespaces** | `isvgim`           |
-   | **Generated Token's Policies**       | `read-secrets`     |
+   | Field                                | Value                          |
+   | ------------------------------------ | ------------------------------ |
+   | **Name**                             | `idm-app-role`                 |
+   | **Bound service account names**      | `idm-vault-viewer`             |
+   | **Bound service account namespaces** | namespace you are deploying to |
+   | **Generated Token's Policies**       | `read-secrets`                 |
 
 11. Click **Save**
 
@@ -313,7 +319,7 @@ If the ADM server has direct network access to Vault REST API, and the Vault com
 cd smarterkit/config/certs/UAT
 
 # login to Vault via CLI
-export VAULT_ADDR=https://vault.full-qualified-hostname.example.com/ # defaults to https:127.0.0.1:8200
+export VAULT_ADDR=https://vault.full-qualified-hostname.example.com/ # defaults to http://127.0.0.1:8200
 export VAULT_NAMESPACE=example.com/vault-enterprise-namespace        # only for Vault Enterprise
 vault login -method=ldap -username=xyz                               # adjust for your own Vault
 
@@ -415,6 +421,8 @@ vault:
     type: Secret
 ```
 
+**Note:** Vault server URL to be used may vary depending on deployment options and topology. If Vault is deployed into the same cluster, one could run `kubectl get svc -A | grep vault` to confirm the service and namespace to be used in a cluster-local URL `http://<SERVICE>.<NAMESPACE>.svc.cluster.local:8200` when running Vault in developer mode. In a more production-ready setup, HTTPS would be enabled, Vault might run in a different cluster, potentially only accessible via an Ingress on an different port such as 443. In any case, the user should make sure that the External System Operator can resolve and connect to the configured Vault server URL.
+
 **Note:** The `namespace` is mandatory when dealing with Vault Enterprise but must be omitted or left empty (null or empty string) when using Vault Community Edition. Both `secretStore` and `refreshInterval` can be omitted, but it is mandatory to specify `server`, otherwise this part of the integration will not be activated, and no ClusterSecretStore will be created. The bottom line is that the presence of `server` will activate this part of the integration.
 
 **Note:** The `caProvider` field in ClusterSecretStore is optional. If you don't specify it, the External Secrets Operator uses the system trust store (the CA certificates available in the operator's container). You will need to configure `caProvider` when Vault uses a certificate signed by an internal CA. Via `caProvider` you can reference a ConfigMap or Secret in a specific namespace, and a key within that Resource the operator should read the CA certificates from.
@@ -445,4 +453,200 @@ kubectl get es oidccreds -o yaml | grep refreshTime
 kubectl get secret oidccreds -o yaml > oidccreds-backup.yaml
 kubectl delete secret oidccreds
 ```
+
+## Troubleshooting
+
+**Note:** There is a multitude of possible deployment options and topologies each of which might require minor adjustments of configuration. There is no intention to provide a detailed Vault setup or integration guide for all posible scenarios. Users are welcome to customize and tailor these steps to their particular environments and recommended to consult [Vault documentation](https://developer.hashicorp.com/vault/docs).
+
+### Developer setup from scratch and early debug
+
+This section will assist users less familiar with Vault, External Secrets and Kubernetes to set up a quick development environment and include additional steps to diagnose configuration errors at an early stage.
+
+#### Setting up prerequisites
+
+The code listing below will deploy the latest version of Vault Community Edition in developer mode (no TLS, in-memory storage, unsealed), External Secrets Operator into their own namespaces and exposes Vault web UI so you can conveniently assess it with your web browser without having to setup a NodePort or Ingress. This port-forward only exists for the lifespan of your ssh session.
+
+```
+helm repo add hashicorp https://helm.releases.hashicorp.com
+helm repo add external-secrets https://charts.external-secrets.io
+helm repo update
+
+helm install vault hashicorp/vault --set "server.dev.enabled=true" --namespace vault --create-namespace
+helm install external-secrets external-secrets/external-secrets -n external-secrets --create-namespace --set installCRDs=true
+
+kubectl port-forward -n vault service/vault 8200:8200 --address 0.0.0.0 &
+```
+
+In this scenario, Vault is running in a namespace 'vault' within the same cluster we are deploying IVIG to, in developer mode. Therfore, the cluster-internal Vault server URL is `http://vault.vault.svc.cluster.local:8200`.
+
+#### Configuration process with early verification steps
+
+One should follow the documented process for [Vault configuration above](#vault-configuration). This guide will follow **Option B** documented at the bottom of section [Kubernetes Authentication](#kubernetes-authentication), with some extra steps. These extra steps, prefixed with "**DEBUG:**" below, will manually create some k8s resources which would be automatically deployed later, the goal is to facilitate the early detection of configuration issues, even before the helm chart would deploy IVIG.
+
+**Note:** While the helm templates would fill in the namespace dynamically based on configuration in `values.yaml`, the example code listings assume that the target namespace is `isvgim`, therefore, any manual step will have to be carefully and consistently adjusted if another namespace is used.
+
+As we are chosing **Option B**, we create the service account, token and role binding upfront. Run the command from **Option B** to create the namespace, service account and token first.
+
+**DEBUG:** We create ClusterRoleBinding now for early debugging (would be created by the helm chart)
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: idm-vault-viewer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+  - kind: ServiceAccount
+    name: idm-vault-viewer
+    namespace: isvgim
+```
+
+Execute all steps of [Vault configuration](#vault-configuration) up to **Step 4** of [Kubernetes Authentication](#kubernetes-authentication). As we are setting up cluster-internal connection to Vault, some additional explanation is provided on the steps 4 to 6.
+- Step 4: use the cluster-internal server API endpoint https://kubernetes.default.svc (we are running within the same cluster)
+- Step 5: for this particular setup, you can skip filling this field (the vault pod will default to the same CA becasue we are running in the same cluster) or just follow the step, both should work
+- Step 6: in this case, we could either skip proving a JWT (to use the default vault service account JWT, as we are running within the same cluster) or just follow the step and provide the JWT of our dedicated service account
+
+Next, start with [onboarding secrets](#onboard-secrets), but stop after creating the secret engine.
+
+**DEBUG:** After creating the secret engine, we create a single secret `metricscred` just for early debugging purposes (would be created by the helm chart at a later point automatically)
+
+**DEBUG:** In another terminal, we enable Vault audit logs and watch kubernetes authentication related entries:
+```
+kubectl exec -it vault-0 -n vault -- vault audit enable file file_path=stdout
+kubectl logs -f vault-0 -n vault | grep "auth/kubernetes/login"
+```
+
+**DEBUG:** We create ClusterSecretStore now, manually (would be created by the helm chart later on)
+- no namespace as we are using Vault Community Edition
+- no caProvider section as TLS is disabled in Vault developer mode
+```
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: "idm-vault-secret-store"
+spec:
+  provider:
+    vault:
+      auth:
+        kubernetes:
+          mountPath: kubernetes
+          role: idm-app-role
+          serviceAccountRef:
+            name: idm-vault-viewer
+            namespace: isvgim
+      server: http://vault.vault.svc.cluster.local:8200
+      version: v2
+```
+
+Confirm the ClusterSecretStore was created successfully, is valid and ready, if not, inspect Vault logs in the other terminal.
+```
+kubectl get css
+NAME                     AGE   STATUS   CAPABILITIES   READY
+idm-vault-secret-store   15s   Valid    ReadWrite      True
+```
+
+**DEBUG:** We create a single external secret for metricscreds now, manually (would be created by the helm chart)
+```
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: metricscreds
+  namespace: isvgim
+spec:
+  refreshInterval: "0"
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: "idm-vault-secret-store"
+  target:
+    name: metricscreds
+  dataFrom:
+    - extract:
+       key: secrets/metricscreds
+```
+Confirm the secret was successfully propagated from Vault to a k8s Secret witin the `isvgim` namespace.
+```
+kubectl get secret metricscreds -n isvgim
+NAME           TYPE     DATA   AGE
+metricscreds   Opaque   2      26s
+```
+
+At this point, we have confirmed the following:
+- Vault: configuration of Kubernetes authentication method is ok
+- Service account, token and authorization are configured properly
+- ClusterSecretStore is configured properly
+- ExternalSecret metricscred works, it correctly propagates a secret from Vault to a k8s secret within namespace isvgim
+
+We can proceed where we left off - continue following the steps for [onboarding secrets](#onboard-secrets).
+
+### Further Diagnostics
+
+This section captures a non-exhaustive list of helpful commands to diagnose Vault-Kubernetes communication issues.
+
+#### Enable Vault Audit and filter logs
+
+To enable Vault audit logs and watch kubernetes authentication related entries:
+
+```
+kubectl exec -it vault-0 -n vault -- vault audit enable file file_path=stdout
+kubectl logs -f vault-0 -n vault | grep "auth/kubernetes/login"
+```
+
+#### Restarting the External Secrets Operator
+
+In order for ClusterSecretStore changes to take effect immediately, one should restart the operator with the following command:
+
+```
+kubectl rollout restart deployment external-secrets -n external-secrets
+```
+
+Right after this command, all connections to Vault will be re-established which provides a good opportunity further analyse Vault logs and diagnose configuration errors.
+
+#### Reset kubernetes authentication method in Vault
+
+The following example demonstrates how one can re-initialize the authentication method without the Vault Web UI using mostly defaults and a wildcard setting for the bound service account and its namespace. The current configuration will be wiped and recreated based on the following:
+
+- The cluster-internal k8s server API endpoint is configured
+- The defaults are used, including vault service account JWT and k8s CA
+- A role is created granting read permissions to any service account in any namespace
+
+```
+kubectl exec -it vault-0 -n vault -- sh
+/ $ vault auth disable kubernetes
+Success! Disabled the auth method (if it existed) at: kubernetes/
+/ $ vault auth enable kubernetes
+Success! Enabled kubernetes auth method at: kubernetes/
+/ $ vault write auth/kubernetes/config kubernetes_host=https://kubernetes.default.svc.cluster.local
+Success! Data written to: auth/kubernetes/config
+/ $ vault read auth/kubernetes/config
+Key                                  Value
+---                                  -----
+disable_iss_validation               true
+disable_local_ca_jwt                 false
+issuer                               n/a
+kubernetes_ca_cert                   n/a
+kubernetes_host                      https://kubernetes.default.svc.cluster.local
+pem_keys                             []
+token_reviewer_jwt_set               false
+use_annotations_as_alias_metadata    false
+
+vault write auth/kubernetes/role/idm-app-role \
+    bound_service_account_names="*" \
+    bound_service_account_namespaces="*" \
+    policies="read-secrets" \
+    ttl="1h"
+```
+
+This configuration will bypass any subtle spelling or metadata mismatches between what service account the External Secrets operator uses and for Vault request and what Vault expects and allows. It is intended for debug purposes only.
+
+#### View raw token claims
+
+To debug "permission denied" errors, we can capture a token of the service account and decode it: `kubectl create token idm-vault-viewer -n isvgim --duration=10m`
+
+Copy that long token string, and paste it into the Encoded box [here](jwt.io). Look at the payload section on the right.
+
+You need to check two specific fields:
+- iss (Issuer): For example https://kubernetes.default.svc.cluster.local
+- kubernetes.io block: Verify the exact `serviceaccount.name` and `namespace` strings.
 
