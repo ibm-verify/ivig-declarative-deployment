@@ -1,7 +1,6 @@
-# Default values for IVIGChart.
-# This is a YAML-formatted file.
+# structure intentionally compatible with values.yaml of starterkit
 
-namespace: isvgim
+namespace: ivig-idm
 timezone: Europe/Budapest
 isOpenShift: false
 fips: false
@@ -10,18 +9,18 @@ clusterUrl: https://kubernetes.default.svc
 
 images:
   isvgim: icr.io/isvg/identity-manager:11.0.2.0
-  isvdi: icr.io/isvdi/verify-directory-integrator-dispatcher:11.0.0.0
-  isvd: icr.io/isvd/verify-directory-server:10.0.4.0_IF1
-  isvdproxy: icr.io/isvd/verify-directory-proxy:10.0.4.0_IF1
-  isvdseed: icr.io/isvd/verify-directory-seed:10.0.4.0_IF1
-  mq: icr.io/isvg/mq:9.4.0.21-CVE-2026-42508
-  postgres: postgres:15.14-bookworm
-  kuberbac: gcr.io/kubebuilder/kube-rbac-proxy:v0.16.0
+  isvdi: icr.io/isvdi/verify-directory-integrator-dispatcher:11.0.0.1
+  isvd: icr.io/isvd/verify-directory-server:11.0.1.0
+  isvdproxy: icr.io/isvd/verify-directory-proxy:11.0.1.0
+  isvdseed: icr.io/isvd/verify-directory-seed:11.0.1.0
+  mq: icr.io/isvg/mq:10.0.0.0
+  postgres: postgres:15.18-bookworm
+  kuberbac: icr.io/isvg/kube-rbac-proxy:v0.16.0
   kubegres: icr.io/isvg/kubegres:1.19
   riskengine: icr.io/isvg/ivig-ae:11.0.2.0
 
 storage:
-  className: vsan
+  className: local-path
   mode: ReadWriteOnce
   volumes:
     isvd: 1Gi

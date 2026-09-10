@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.4.8 (2026-09-10)
+
+This version includes updated base images, default settings and documentation.
+
+There are multiple updates to base images referenced from within `values.yaml`:
+- ISVDI to 11.0.0.1
+- ISVD components to 11.0.1.0
+- MQ to 10.0.0.0
+- postgres to 15.18-bookworm
+- kube-rbac-proxy from icr.io (instead of gcr.io)
+
+Prior to this version, the namespace in `values.yaml` was set to `isvgim` on the master branch to maintain parity with the official installer, but set to `ivig-argo` on the demo branch to avoid conflicts when deploying to a cluster where a classic deployment already existed. While Argo CD and pure helm related samples and listings used `ivig-argo`, the Vault integration guide included references to namespace `isvgim`, which carried the potential of confusing the users.
+
+The following changes to defaults are effective for consistency and ease of use:
+- change default namespace consistently to ivig-idm (code and all docs/samples)
+- change default storage class to a more reasonable value (local-path)
+
+Further, improvements to documentation are delivered:
+- README: correct data tier init command in high level overview
+- README: update future plans, further documentation and contacts sections
+- VAULT: warning about developer mode (data loss) and clarification on CLI login
+- ARGO-CD: explicitly remind the user not to forget data tier initialization
+- PURE-HELM: extend, improve and restructure the troubleshooting section
+- misc typos and rephrasing for clarity
+
 ## 2.4.7 (2026-08-13)
 
 This version eliminates deadlocks of ISVDI and MQ on restarts.

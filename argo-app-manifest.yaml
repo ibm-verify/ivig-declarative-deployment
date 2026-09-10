@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: ivig-argo
+  name: ivig-idm
 spec:
   # The destination defines the namespace and k8s cluster where to deploy to.
   destination:
     # Set the target namespace to the same value as defined in values.yaml. This
     # feels redundant, but Argo CD performs consistency validation and can be
     # configured to enforce allowed destinations via project restrictions.
-    namespace: ivig-argo
+    namespace: ivig-idm
     # Deploy to the local cluster (where Argo CD itself is running)
     server: https://kubernetes.default.svc
   # The source specifies the location and configuration of the helm chart.

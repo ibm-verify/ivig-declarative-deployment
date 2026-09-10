@@ -94,7 +94,7 @@ path "certs/data/*" {
 
 ### Kubernetes Authentication
 
-The following steps document how to link the Kubernetes Cluster with Vault by registering and authorizing an already existing k8s service account, the example uses `idm-vault-viewer` in namespace `isvgim`. The steps are carried out on Vault web UI.
+The following steps document how to link the Kubernetes Cluster with Vault by registering and authorizing an already existing k8s service account, the example uses `idm-vault-viewer` in namespace `ivig-idm`. The steps are carried out on Vault web UI.
 
 1. Using the main menu on the left, navigate to **Access** → **Authentication Methods**, select **Enable new method** and choose **Kubernetes**
 
@@ -108,19 +108,19 @@ The following steps document how to link the Kubernetes Cluster with Vault by re
 
 5. Populate the **Kubernetes CA Certificate** field with the cluster CA certificate in PEM format
    ```bash
-   kubectl get secret idm-vault-viewer-secret -n isvgim -o jsonpath='{.data.ca\.crt}' | base64 -d
+   kubectl get secret idm-vault-viewer-secret -n ivig-idm -o jsonpath='{.data.ca\.crt}' | base64 -d
    ```
    **Note:** Depending on your choice of deployment options, the service account may not exist yet at this point. Review the 3 options described below at the end of this section and chose your preferred option.
    
    **Note:** Depending on your Vault and Kubernetes configuration, you may leave this field empty if Vault is running in the same cluster. The Vault pod would see the same k8s CA in this case.
 6. Populate the **Token Reviewer JWT** field (also called **Kubernetes API JWT** in certain version) with the service account token:
    ```bash
-   kubectl get secret idm-vault-viewer-secret -n isvgim -o jsonpath='{.data.token}' | base64 -d
+   kubectl get secret idm-vault-viewer-secret -n ivig-idm -o jsonpath='{.data.token}' | base64 -d
    ```
    **Note:** Depending on your Vault and Kubernetes configuration, you may leave this field empty if Vault is running in the same cluster. in this case, Vault's default service account's JWT will be used.
 7. Click **Save**
 
-8. Create a Create a Kubernetes Authentication Role, Navigate to **Kubernetes** → **Roles**
+8. Create a Kubernetes Authentication Role, Navigate to **Kubernetes** → **Roles**
 
 9. Click **Create role**
 
@@ -150,19 +150,19 @@ cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: isvgim
+  name: ivig-idm
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: idm-vault-viewer
-  namespace: isvgim
+  namespace: ivig-idm
 ---
 apiVersion: v1
 kind: Secret
 metadata:
   name: idm-vault-viewer-secret
-  namespace: isvgim
+  namespace: ivig-idm
   annotations:
     kubernetes.io/service-account.name: idm-vault-viewer
 type: kubernetes.io/service-account-token
@@ -180,7 +180,7 @@ Vault web UI allows you to specify keys and values one-by-one when creating secr
 If the secrets have already been deployed to k8s without Vault integration enabled, there is a convenient way to move these secrets to Vault. The following command demonstrates how the content of `pgcreds` can be retreived from via `kubectl` in a JSON format suitable for Vault import.
 
 ```
-kubectl get secret pgcreds --namespace ivig-argo -o json | jq '.data|map_values(@base64d)'
+kubectl get secret pgcreds --namespace ivig-idm -o json | jq '.data|map_values(@base64d)'
 {
   "admpass": "********",
   "admuser": "postgres",
@@ -321,7 +321,10 @@ cd smarterkit/config/certs/UAT
 # login to Vault via CLI
 export VAULT_ADDR=https://vault.full-qualified-hostname.example.com/ # defaults to http://127.0.0.1:8200
 export VAULT_NAMESPACE=example.com/vault-enterprise-namespace        # only for Vault Enterprise
-vault login -method=ldap -username=xyz                               # adjust for your own Vault
+# if Vault is running in developer mode, login via root token
+vault login root
+# for a production grade Vault config, one would typically use LDAP authentication (requires setup)
+vault login -method=ldap -username=xyz
 
 # JSON payload created in the same way as during manual import, but output is piped directly to 'vault' command
 # The dash ('-') tells vault to read data from STDIN.
@@ -466,6 +469,8 @@ This section will assist users less familiar with Vault, External Secrets and Ku
 
 The code listing below will deploy the latest version of Vault Community Edition in developer mode (no TLS, in-memory storage, unsealed), External Secrets Operator into their own namespaces and exposes Vault web UI so you can conveniently assess it with your web browser without having to setup a NodePort or Ingress. This port-forward only exists for the lifespan of your ssh session.
 
+**Warning:** As noted above, Vault in developer mode uses in-memory storage. **All configuration data and secrets are lost once the Vault is stopped (or restarted).** One might prefer to deploy Vault in standalone mode rather than developer mode; it requires additional setup which is outside of the scope of this document.
+
 ```
 helm repo add hashicorp https://helm.releases.hashicorp.com
 helm repo add external-secrets https://charts.external-secrets.io
@@ -483,7 +488,7 @@ In this scenario, Vault is running in a namespace 'vault' within the same cluste
 
 One should follow the documented process for [Vault configuration above](#vault-configuration). This guide will follow **Option B** documented at the bottom of section [Kubernetes Authentication](#kubernetes-authentication), with some extra steps. These extra steps, prefixed with "**DEBUG:**" below, will manually create some k8s resources which would be automatically deployed later, the goal is to facilitate the early detection of configuration issues, even before the helm chart would deploy IVIG.
 
-**Note:** While the helm templates would fill in the namespace dynamically based on configuration in `values.yaml`, the example code listings assume that the target namespace is `isvgim`, therefore, any manual step will have to be carefully and consistently adjusted if another namespace is used.
+**Note:** While the helm templates would fill in the namespace dynamically based on configuration in `values.yaml`, the example code listings assume that the target namespace is `ivig-idm`, therefore, any manual step will have to be carefully and consistently adjusted if another namespace is used.
 
 As we are chosing **Option B**, we create the service account, token and role binding upfront. Run the command from **Option B** to create the namespace, service account and token first.
 
@@ -500,7 +505,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: idm-vault-viewer
-    namespace: isvgim
+    namespace: ivig-idm
 ```
 
 Execute all steps of [Vault configuration](#vault-configuration) up to **Step 4** of [Kubernetes Authentication](#kubernetes-authentication). As we are setting up cluster-internal connection to Vault, some additional explanation is provided on the steps 4 to 6.
@@ -535,17 +540,19 @@ spec:
           role: idm-app-role
           serviceAccountRef:
             name: idm-vault-viewer
-            namespace: isvgim
+            namespace: ivig-idm
       server: http://vault.vault.svc.cluster.local:8200
       version: v2
 ```
 
-Confirm the ClusterSecretStore was created successfully, is valid and ready, if not, inspect Vault logs in the other terminal.
+Confirm the ClusterSecretStore was created successfully, is valid and ready.
 ```
 kubectl get css
 NAME                     AGE   STATUS   CAPABILITIES   READY
 idm-vault-secret-store   15s   Valid    ReadWrite      True
 ```
+If not, run `kubectl describe css idm-vault-secret-store`, inspect the output and check Vault logs in the other terminal.
+
 
 **DEBUG:** We create a single external secret for metricscreds now, manually (would be created by the helm chart)
 ```
@@ -553,7 +560,7 @@ apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: metricscreds
-  namespace: isvgim
+  namespace: ivig-idm
 spec:
   refreshInterval: "0"
   secretStoreRef:
@@ -565,9 +572,9 @@ spec:
     - extract:
        key: secrets/metricscreds
 ```
-Confirm the secret was successfully propagated from Vault to a k8s Secret witin the `isvgim` namespace.
+Confirm the secret was successfully propagated from Vault to a k8s Secret witin the `ivig-idm` namespace.
 ```
-kubectl get secret metricscreds -n isvgim
+kubectl get secret metricscreds -n ivig-idm
 NAME           TYPE     DATA   AGE
 metricscreds   Opaque   2      26s
 ```
@@ -576,7 +583,7 @@ At this point, we have confirmed the following:
 - Vault: configuration of Kubernetes authentication method is ok
 - Service account, token and authorization are configured properly
 - ClusterSecretStore is configured properly
-- ExternalSecret metricscred works, it correctly propagates a secret from Vault to a k8s secret within namespace isvgim
+- ExternalSecret metricscred works, it correctly propagates a secret from Vault to a k8s secret within namespace ivig-idm
 
 We can proceed where we left off - continue following the steps for [onboarding secrets](#onboard-secrets).
 
@@ -642,7 +649,7 @@ This configuration will bypass any subtle spelling or metadata mismatches betwee
 
 #### View raw token claims
 
-To debug "permission denied" errors, we can capture a token of the service account and decode it: `kubectl create token idm-vault-viewer -n isvgim --duration=10m`
+To debug "permission denied" errors, we can capture a token of the service account and decode it: `kubectl create token idm-vault-viewer -n ivig-idm --duration=10m`
 
 Copy that long token string, and paste it into the Encoded box [here](jwt.io). Look at the payload section on the right.
 

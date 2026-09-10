@@ -84,7 +84,7 @@ The standalone setup is a viable option for both Developers/Integrators and for 
 
 ### TL;DR
 
-This section is intended for users intimately familiar with IVIG, kubernetes and helm. It provide quick-start instructions in a compact and minimalistic fashion. It is strongly recommended to read and understand the [complete setup guide](docs/PURE-HELM.md) which covers technical details and deployment options.
+This section is intended for users intimately familiar with IVIG, kubernetes and helm. It provides quick-start instructions in a compact and minimalistic fashion. It is strongly recommended to read and understand the [complete setup guide](docs/PURE-HELM.md) which covers technical details and deployment options.
 
 The code listing below covers a minimal setup from scratch, assuming the user already established `kubectl` connectivity to a k8s cluster which has a storage class called 'local-path':
 ```
@@ -92,15 +92,15 @@ git clone https://github.com/ibm-verify/ivig-declarative-deployment.git
 cd ivig-declarative-deployment/smarterkit && git checkout demo
 ./cert-setup.sh && ./secrets-setup.sh
 helm template --dry-run=client -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml . | kubectl apply -f -
-kubectl -n ivig-argo wait --for=condition=Ready --timeout=5m pod -l app=isvgim
-kubectl -n ivig-argo exec isvgim-0 -- /bin/bash -c "/work/util/extract-config-response.sh --install && /work/ldapConfig.sh install && /work/dbConfig.sh install"
-kubectl -n ivig-argo rollout restart sts/isvgim
+kubectl -n ivig-idm wait --for=condition=Ready --timeout=5m pod -l app=isvgim
+kubectl -n ivig-idm exec isvgim-0 -- /bin/bash -c "/work/util/extract-config-response.sh --install && /work/ldapConfig.sh install && /work/dbConfig.sh install"
+kubectl -n ivig-idm rollout restart sts/isvgim
 ```
 The following command will wait for the application to start and then print out the login URL. Note that this is a long chained command spread across multiple lines via line continuation (backslack immediately followed by newline).
 ```
-kubectl -n ivig-argo wait --for=condition=Ready --timeout=5m pod -l app=isvgim && \
-kubectl -n ivig-argo get pod/isvgim-0 -o jsonpath='Login at https://{.status.hostIP}:' && \
-kubectl -n ivig-argo get svc/isvgim -o jsonpath='{.spec.ports[?(@.name=="https")].nodePort}{"/itim/console\n"}'
+kubectl -n ivig-idm wait --for=condition=Ready --timeout=5m pod -l app=isvgim && \
+kubectl -n ivig-idm get pod/isvgim-0 -o jsonpath='Login at https://{.status.hostIP}:' && \
+kubectl -n ivig-idm get svc/isvgim -o jsonpath='{.spec.ports[?(@.name=="https")].nodePort}{"/itim/console\n"}'
 ```
 
 This minimal setup could deploy an ephemeral demo environment within minutes, but note that essential data is only stored locally, not committed to a git repository. The recommended pure helm approach requires setting up a git repository to persistently store configuration and provide version control for the deployment.
@@ -141,7 +141,7 @@ This section provides a concise but high level overview of the setup process lis
 
 6. **Initialize the Data Tier**
    - Wait for the `isvgim` pod[s] to become ready
-   - Execute inside the pod: `extract-config-response.sh --install && ldapConfig.sh install && dbConfig.sh install`
+   - Execute inside the pod: `/work/util/extract-config-response.sh --install && /work/ldapConfig.sh install && /work/dbConfig.sh install`
    - Restart the StatefulSet: `kubectl rollout restart sts/isvgim`
 
 7. **Enable Inbound Connections**
@@ -190,6 +190,12 @@ This project delivers many [extras not included in the original product](docs/EX
 
 This section contains near and mid term plans, uncommitted feature candidates and general information about the future of the project.
 
+### General information
+
+There is general intention to maintain compatibility with upcoming versions of the product. After the release of new product versions (including fixpacks and interim fixes), it will be analysed if any change would break functionality of the declarative deployment method implemented in this project. The required strategic changes should be implemented in a reasonably short timeframe in order to support the new product version. Each release of this project clearly mentions the target product version it can deploy.
+
+Based on severity, effort required and available capacity, some defects or weaknesses introduced in a future version of the product may be compensated in this project until an upstream fix is available. The dynamic patching capability allows applying small patches efficiently, and will be used in exceptional cases when waiting several weeks for an official product fix would have severe negative impact.
+
 ### Features under consideration
 
 - ~config property `general.install.externalSecret` to control if credentials will be managed via helm chart or externally~ DONE
@@ -203,20 +209,19 @@ This section contains near and mid term plans, uncommitted feature candidates an
 
 ## Further Documentation
 
-This section points the reader to further documentation within the repository (resources in the `docs` folder) or outside of the repository.
+This section points the reader to further documentation within the repository (resources in the `docs` folder) or outside the repository.
 
-- [Introductory Presentations](https://ibm.ent.box.com/folder/335821059835?s=gpwqalbj81ku5tc67rqdc6r2etqse862)
+- [Complete Guide - pure helm](docs/PURE-HELM.md)
+- [Recommended approach for a multi-stage project via Argo CD](docs/ARGO-CD.md)
+- [External Secrets and Vault Integration Guide](docs/VAULT.md)
 - [Guidelines for Contributors](CONTRIBUTING.md)
-- [Changelog](CHANGES.md) 
-- Marketing flyers, Offering and Asset Information
-- Demos: see the `demo` branch here in git (or any of the `demo-x.y.z` branches for particular versions).
+- [Changelog](CHANGES.md)
 
 ## Contacts
 
-Tibor Bősze <tibor.boesze@nospam.ibm.com>
+Design and implementation:
 
-*This project is supported on a best effort basis by the contributors in spare
-time. Issues should be reported via GitHub. Maintenance and development of
-enhancements may be provided on a commercial basis, depending on the
-availability of the project team.*
+| Name        | GitHub ID                        | Affiliation                |
+| ----------- | -------------------------------- | -------------------------- |
+| Tibor Bősze | [@tb00](https://github.com/tb00) | IBM Technology Expert Labs |
 

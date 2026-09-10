@@ -33,15 +33,15 @@ git clone https://github.com/ibm-verify/ivig-declarative-deployment.git
 cd ivig-declarative-deployment/smarterkit && git checkout demo
 ./cert-setup.sh && ./secrets-setup.sh
 helm template --dry-run=client -f values.yaml -f values-config.yaml -f secrets.yaml -f regcred.yaml . | kubectl apply -f -
-kubectl -n ivig-argo wait --for=condition=Ready --timeout=5m pod -l app=isvgim
-kubectl -n ivig-argo exec isvgim-0 -- /bin/bash -c "/work/util/extract-config-response.sh --install && /work/ldapConfig.sh install && /work/dbConfig.sh install"
-kubectl -n ivig-argo rollout restart sts/isvgim
+kubectl -n ivig-idm wait --for=condition=Ready --timeout=5m pod -l app=isvgim
+kubectl -n ivig-idm exec isvgim-0 -- /bin/bash -c "/work/util/extract-config-response.sh --install && /work/ldapConfig.sh install && /work/dbConfig.sh install"
+kubectl -n ivig-idm rollout restart sts/isvgim
 ```
 The following command will wait for the application to start and then print out the login URL. Note that this is a long chained command spread across multiple lines via line continuation (backslack immediately followed by newline).
 ```
-kubectl -n ivig-argo wait --for=condition=Ready --timeout=5m pod -l app=isvgim && \
-kubectl -n ivig-argo get pod/isvgim-0 -o jsonpath='Login at https://{.status.hostIP}:' && \
-kubectl -n ivig-argo get svc/isvgim -o jsonpath='{.spec.ports[?(@.name=="https")].nodePort}{"/itim/console\n"}'
+kubectl -n ivig-idm wait --for=condition=Ready --timeout=5m pod -l app=isvgim && \
+kubectl -n ivig-idm get pod/isvgim-0 -o jsonpath='Login at https://{.status.hostIP}:' && \
+kubectl -n ivig-idm get svc/isvgim -o jsonpath='{.spec.ports[?(@.name=="https")].nodePort}{"/itim/console\n"}'
 ```
 
 ### Recommended standalone setup
@@ -251,8 +251,8 @@ The following concept is implemented for all files related to x509 certificates:
 
 ## Deploy
 
-An image pull secret is needed with included connection parameters to the image repository to be used. This required information can be provided via one of the three options:
-- Pass parameters via a yaml file based on which the image pull secret will be generated and deployed (do not store this file in git)
+An image pull secret is needed, it includes connection parameters to the image repository to be used. This required information can be provided via one of the three options:
+- Pass parameters via yaml file `regcred.yaml` based on which the image pull secret will be generated and deployed (do not store this file in git if it contains sensitive data)
 - Use external secrets for Vault integration (see details below)
 - Set up manually in k8s and configure as externally managed (set `general.install.externalSecret.regcred` to `true` in `values-config.yaml`)
 
@@ -260,7 +260,7 @@ As the last step before deployment, additional sensitive data which should not b
 
 There are four alternative approaches to handling credentials:
 - Provide sensitive data in file `secrets.yaml` manually, use `secrets.yaml.envsubst` as template
-- Use a bundled script `secrets-setup.sh` to automatically generate `secrets.yaml` with random data
+- Use the bundled script `secrets-setup.sh` to automatically generate `secrets.yaml` with random data
 - Use external secrets for Vault integration
 - Set up manually in k8s and configure as externally managed (set `general.install.externalSecret.*creds` to `true` in `values-config.yaml`)
 
@@ -496,22 +496,99 @@ Execute smoke tests for your IVIG project as necessary. (Smoke tests are a subse
 
 ## Troubleshooting
 
-**Note:** While users are free to customize the helm templates and other resources in this project, it is the sole responsibility of the user to investigate and eliminate undesired side effects of any modification. For example, renaming containers or other k8s resources, rearranging the order of containers within pods will require adjustments to the commands listed in this guide or even the overall procedure described.
+Many errors stem from human factors such as providing wrong configuration and skipping over or inaccurately executing required steps. Some users will intentionally alter and tailor the deployment method to fit their specific needs but introduce inconsistencies by incomplete or flawed changes.
 
-~When using the demo setup script `secrets-setup.sh`, please note that GNU grep 3.6 (from 2020, shipped with CentOS 9) yields abnormal behavior. Use a more recent version of grep (see section [Components and Dependencies](#components-and-dependencies)).~ This issue is resolved with version 2.3.3.
+While users are free to customize the helm templates and other resources in this project, it is the sole responsibility of the user to investigate and eliminate undesired side effects of any modification. For example, renaming containers or other k8s resources, rearranging the order of containers within pods will require adjustments to the commands listed in this guide or even the overall procedure described.
+
+### General Diagnostics
 
 Should errors occur after deployment, review K8s events and IVIG application logs:
 ```
 kubectl events -n $NAMESPACE
-
 kubectl logs -n $NAMESPACE isvgim-0 -c logs-im
-
 kubectl logs -n $NAMESPACE sts/isvgim -c logs-im
 ```
 Check the availability and configuration of your database and LDAP instance.
 
+### Unable to login on a fresh deployment
+
+A typical reason for not being able to login is that the user forgot or failed to initialize the data tier.
+
+Symptoms:
+1. All the containers started without errors
+2. Login attempt to IVIG via the login URL fails with the following error displayed on the UI:
+   ```
+   CTGIMU534E
+   Login authentication failure occurred. The specified user ID and password are not valid, have expired, or have been disabled.
+   ```
+3. The applications logs (output of container `logs-im`) indicate missing objects in the directory server during an authentication attempt:
+   ```json
+   {
+    "type": "ivig_trace",
+    "level": "MIN",
+    "productId": "CTGIM",
+    "component": "com.ibm.itim.apps.challenge",
+    "productInstance": "defaultServer",
+    "sourceFileName": "com.ibm.itim.apps.challenge.ChallengeResponseHelper",
+    "sourceMethod": "getDirectorySystemEntity",
+    "exception": "com.ibm.itim.dataservices.model.ObjectNotFoundException: CTGIMF029E The specified object cannot be found in the directory server. The object might have been moved or deleted before your request completed. The following information was returned from the directory server: The dc=ivig object cannot be found with the specified name ivig. at com.ibm.itim.dataservices.model.domain.DirectorySystemSearch.searchById(DirectorySystemSearch.java:142) ..."
+   }
+   ```
+
+Solution: Make sure the data tier is successfully initialized, as described under [Post-deployment steps](#post-deployment-steps). If data tier initialization is correctly invoked but fails, confirm the availability and configuration of the database and LDAP instance, and verify that connection parameters are correct.
+
+### PVC stuck in pending state
+
+In order to scale up ISVDI to 2 or more replicas, a persistent volume with `ReadWriteMany` access mode is needed. If this access mode is configured via `storage.mode` (e.g. in `values.yaml`) but the configured storage class does not support this mode, the persistent volume claim will be stuck in pending state indefinitely. It is recommended to ensure in advance that access mode `ReadWriteMany` is supported by the selected storage class.
+
+A simple way to check if `ReadWriteMany` access mode is supported by a given storage class is to create a PVC (i.e. `test-rwx-pvc`) with such parameters. If the status changes to "Bound", `ReadWriteMany` is enabled for the storage class. If a status stuck in "Pending" state is observed, run `kubectl describe pvc test-rwx-pvc` and look for a provider specific `ProvisioningFailed` event to confirm the storage provider does not support `ReadWriteMany`. Do not forget to delete the PVC once done.
+
+**Note:** Even with `ReadWriteMany` supported, if the volume binding mode of the storage class is set to `WaitForFirstConsumer`, the PVC will remain in pending state until a pod references it. A temporary helper pod can be used to trigger volume creation.
+
+The snippet below demonstrates the check waiting up to 2 minutes for the PVC to bind. Make sure to substitute `$MY_STORAGE_CLASS` with the actual storage class name.
+```sh
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: test-rwx-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: $MY_STORAGE_CLASS
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-rwx-pvc-binder
+spec:
+  containers:
+  - name: alpine
+    image: alpine:latest
+    command: ["sleep", "30"]
+    volumeMounts:
+    - name: test-rwx
+      mountPath: /mnt/storage
+  volumes:
+  - name: test-rwx
+    persistentVolumeClaim:
+      claimName: test-rwx-pvc
+  restartPolicy: Never
+EOF
+
+kubectl wait --for=jsonpath='{.status.phase}'=Bound pvc/test-rwx-pvc --timeout=2m && echo "SUCCESS" \
+  || { echo "FAILED"; kubectl describe pvc test-rwx-pvc; }
+
+kubectl delete pod test-rwx-pvc-binder
+kubectl delete pvc test-rwx-pvc
+```
+
+### Further Hints
+
+~When using the demo setup script `secrets-setup.sh`, please note that GNU grep 3.6 (from 2020, shipped with CentOS 9) yields abnormal behavior. Use a more recent version of grep (see section [Components and Dependencies](#components-and-dependencies)).~ This issue is resolved with version 2.3.3.
+
 **Note:** There should not be any additional files under the certificate directory (`smarterkit/config/certs` by default), the presence of binary files is known to yield abnormal helm template rendering.
-
-**Warning:** In order to scale up ISVDI to 2 or more replicas, a persistent volume with `ReadWriteMany` access mode is needed. If this access mode is configured via `storage.mode` (e.g. in `values.yaml`) but the configured storage class does not support this mode, the persistent volume claim will be stuck in pending state indefinitely. It is recommended to ensure in advance that a access mode `ReadWriteMany` is supported by the selected storage class.
-
 

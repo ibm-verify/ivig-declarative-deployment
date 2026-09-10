@@ -15,9 +15,10 @@ Key Capabilities:
 - **Auditability and traceability** – Every deployment is tied to a Git commit, making it easy to track what was deployed and when.
 
 In a nutshell: Argo CD monitors a Git repository containing a Helm chart, renders the chart using environment-specific configuration, and deploys the resulting Kubernetes resources into the target namespace. Any changes committed to the configured Git branch can then be automatically synchronized to the cluster according to the application's sync policy. All one needs to do is:
-1. Create and populate your Git repository as described under [repo setup](PURE-HELM.md#repo-setup).
+1. Create and populate your Git repository as described under [repo setup](PURE-HELM.md#repo-setup)
 2. Configure a repository connection, tell Argo CD where your Git repo is located and how to access it (preferably use HTTPS and API key based authentication)
 3. Adjust the [application manifest](../argo-app-manifest.yaml) and import it to Argo CD
+4. Ensure data tier is initialized, see [post-deployment steps](PURE-HELM.md#post-deployment-steps)
 
 If unfamiliar but interested, feel free to [learn more about Argo CD](https://argo-cd.readthedocs.io/en/stable/).
 
