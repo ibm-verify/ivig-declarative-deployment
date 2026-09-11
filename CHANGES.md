@@ -13,7 +13,7 @@ There are multiple updates to base images referenced from within `values.yaml`:
 - postgres to 15.18-bookworm
 - kube-rbac-proxy from icr.io (instead of gcr.io)
 
-Prior to this version, the namespace in `values.yaml` was set to `isvgim` on the master branch to maintain parity with the official installer, but set to `ivig-argo` on the demo branch to avoid conflicts when deploying to a cluster where a classic deployment already existed. While Argo CD and pure helm related samples and listings used `ivig-argo`, the Vault integration guide included references to namespace `isvgim`, which carried the potential of confusing the users.
+Prior to this version, the namespace in `values.yaml` was set to `isvgim` on the master branch to maintain parity with the official installer, but set to `ivig-argo` on the demo branch to avoid conflicts when deploying to a cluster where a classic deployment already existed. While Argo CD and pure Helm related samples and listings used `ivig-argo`, the Vault integration guide included references to namespace `isvgim`, which carried the potential of confusing the users.
 
 The following changes to defaults are effective for consistency and ease of use:
 - change default namespace consistently to ivig-idm (code and all docs/samples)
@@ -35,7 +35,7 @@ With the original starterkit, a `rollout restart` causes a deadlock for ISVDI (w
 
 This version eliminates these deadlocks via a clean approach, without workarounds or manual steps involved:
 - When `ReadWriteMany` (RWX) access mode is configured via `storage.mode` in `values.yaml`, ISVDI will use `RollingUpdate` deployment strategy with zero-downtime across multiple nodes. **Warning:** The configured storage class must support RWX access mode, otherwise PVC creation during initial deployment will remain in pending state and never complete. This might need infrastructure configuration changes.
-- When `ReadWriteOnce` access mode is configured via `storage.mode` in `values.yaml`, the helm template will automatically set the deployment strategy of ISVDI to `Recreate`. This forces k8s to terminate all existing pods and release the volume lock before creating new pods during restart. A few seconds of downtime is introduced during updates of ISVDI, but volume attach conflicts are completely eliminated allowing a clean `rollout update`. In practice, the downside is negligible, considering the case where RWX storage is not available or preferred.
+- When `ReadWriteOnce` access mode is configured via `storage.mode` in `values.yaml`, the Helm template will automatically set the deployment strategy of ISVDI to `Recreate`. This forces k8s to terminate all existing pods and release the volume lock before creating new pods during restart. A few seconds of downtime is introduced during updates of ISVDI, but volume attach conflicts are completely eliminated allowing a clean `rollout update`. In practice, the downside is negligible, considering the case where RWX storage is not available or preferred.
 - IBM MQ can use RWX storage exclusively for a specific deployment architecture called a Multi-Instance Queue Manager. Otherwise, if one attempts to run multiple active IBM MQ pods simultaneously against the same RWX storage path, data corruption will occur immediately. Therefore, the `mqshare` deployment will always use `ReadWriteOnce` storage (regardless of `storage.mode` configured in `values.yaml`), but apply a deployment strategy of `Recreate` and set the number of replicas explicitly to `1`. There will be at most 1 active pod at any point in time and a clean `rollout restart` is enabled with a few seconds downtime.
 
 Further, a handful of updates to documentation are delivered:
@@ -52,20 +52,20 @@ Documentation changes:
 - ARGO-CD: `general.install.license` corrected to `general.license` in doc
 - ARGO-CD: tell to include regcred on dev setup, point to Vault integration doc
 - VAULT: add notes and clarification, restructure
-- PURE-HELM: split pure helm standalone setup to separate file, tune README
+- PURE-HELM: split pure Helm standalone setup to separate file, tune README
 
 Minor updates:
 - change `general.license.accepted` to `false` by default
 - change misleading comment in `data-tpl/enRoleMail.properties`
 - add comment on non-default project & access control in app manifest
 - explicitly mention regcred in sample app manifest
-- tidy up helm templates
+- tidy up Helm templates
 
 ## 2.4.5 (2026-07-23)
 
 This version adds the ability to dynamically add metadata to pods and services
 
-The ability to dynamically inject metadata into helm templates allows turning static templates into highly adaptable infrastructure. Label and annotation injection centralizes metadata management, ensuring environment consistency and driving cross-system automation without hardcoding project specific metadata in helm templates. Dynamically injecting these key-value pairs enables third-party tools to auto-discover resources, seamlessly route traffic via Ingress, or acts as the foundation for centralized log management by tagging log sources with environments, teams, or application names.
+The ability to dynamically inject metadata into Helm templates allows turning static templates into highly adaptable infrastructure. Label and annotation injection centralizes metadata management, ensuring environment consistency and driving cross-system automation without hardcoding project specific metadata in Helm templates. Dynamically injecting these key-value pairs enables third-party tools to auto-discover resources, seamlessly route traffic via Ingress, or acts as the foundation for centralized log management by tagging log sources with environments, teams, or application names.
 
 Further, this version includes the following documentation improvements:
 - clarification on and code sample for retrieving the login URL after deployment
@@ -89,7 +89,7 @@ Further changes:
 
 This version enhances Vault integration and restructures the repo for packaging.
 
-With this version, the repository structure is updated. The declarative deployment helm chart is moved to its own top level directory `smarterkit` and the few remaining symlinks pointing outside of that folder are dereferenced. This change is carried out to facilitate packaging and distributing declarative deployment as a first-class deployment method for IVIG.
+With this version, the repository structure is updated. The declarative deployment Helm chart is moved to its own top level directory `smarterkit` and the few remaining symlinks pointing outside of that folder are dereferenced. This change is carried out to facilitate packaging and distributing declarative deployment as a first-class deployment method for IVIG.
 
 Further improvements:
 - gracefully skip patching if no patch exists for given app version
@@ -191,7 +191,7 @@ This version improves ISVDI autodiscovery and liberty metrics configuration.
 
 ISVDI init script autodiscovery is run right after `initAdapterContainer.sh` so `setHostname.sh` would be executed after autodiscovered init scripts are run. This improvement avoids a potential issue where changes made by `setHostname.sh` could be overwritten by autodiscovered scripts on some setups, specifically by an ISVA adapter init script which replaces the original `ibmdisrv` script with an adjusted version, where the original at that point would have already been modified by `setHostname.sh`.
 
-A more secure way is implemented for handing over liberty metrics credentials, which does not require storing sensitive data in git (not even in encrypted form). Both username and password can be left blank (empty or null) in `values-config.yaml` in which case missing data will be read from a k8s secret. This secret by default will be populated based on username in `values-config.yaml` and password specified in `secrets.yaml`, however, the secret can be marked as externally managed in which case it will be assumed to pre-exist (e.g. created and updated by vault, see feature added in 2.1.2).
+A more secure way is implemented for handing over liberty metrics credentials, which does not require storing sensitive data in Git (not even in encrypted form). Both username and password can be left blank (empty or null) in `values-config.yaml` in which case missing data will be read from a k8s secret. This secret by default will be populated based on username in `values-config.yaml` and password specified in `secrets.yaml`, however, the secret can be marked as externally managed in which case it will be assumed to pre-exist (e.g. created and updated by vault, see feature added in 2.1.2).
 
 ## 2.3.6 (2026-03-26)
 
@@ -243,7 +243,7 @@ Minor documentation updates are also included, along with a section documenting 
 
 This version changes the approach how x509 certificates are passed to containers.
 
-Cryptographic keys clearly qualify as sensitive data. Certificates, Certificate Signing Requests and similar files are inherently environment specific, while application configuration is predominantly stage agnostic within the same project. Although certificates (public keys) could be stored within git without a security concern, it may be more manageable to handle private keys and certificates together, via Vault or a similar secret store. The same vehicle that can store private keys outside of git and inject these at runtime can also be used to store and inject certificates.
+Cryptographic keys clearly qualify as sensitive data. Certificates, Certificate Signing Requests and similar files are inherently environment specific, while application configuration is predominantly stage agnostic within the same project. Although certificates (public keys) could be stored within Git without a security concern, it may be more manageable to handle private keys and certificates together, via Vault or a similar secret store. The same vehicle that can store private keys outside of Git and inject these at runtime can also be used to store and inject certificates.
 
 The following concept is implemented for all files related to x509 certificates:
 - remove all certificates, key, CSRs etc. from configmaps
@@ -265,7 +265,7 @@ This clean separation enables vault integration for the following secrets which 
 
 Note:
 - configuring `isvdcerts` and `isvdcred` as external secrets only makes sense if `general.install.deployLdap` is enabled
-- similarly, enabling an external secret for `isvdicerts` is only effective if ISVDI is deployed by the helm chart (`general.install.deployIsvdi`)
+- similarly, enabling an external secret for `isvdicerts` is only effective if ISVDI is deployed by the Helm chart (`general.install.deployIsvdi`)
 - setting `pgcerts` and `pgcreds` to `true` will not have no effect unless `general.install.deployDb` is also enabled
 
 The following fixes and improvements are also included:
@@ -274,14 +274,14 @@ The following fixes and improvements are also included:
 
 ## 2.3.2 (2026-02-26)
 
-This version adds enhancements geared towards the ability to deploy multiple environments (such as DEV, TEST or PROD) from a single directory structure rather than having to use separate directories for each environment. Similarly, the divergence between environment specific git branches is also reduced.
+This version adds enhancements geared towards the ability to deploy multiple environments (such as DEV, TEST or PROD) from a single directory structure rather than having to use separate directories for each environment. Similarly, the divergence between environment specific Git branches is also reduced.
 
 Reworked logic for retrieving x509 certificates:
 - use optional setting `general.install.certDir` in `values-config.yaml` to override the certificate directory
 - default to `config/certs` if explicit setting is absent
 - consistently use a named template to create glob pattern for matching files within the certificate directory
 
-The ArgoCD application manifest sample has been updated to demonstrate how git commit hash can be injected by ArgoCD, in the same format `--set revision=$(git log -n 1 --pretty=format:%h)` would do when using `helm` from the command line (which is already documented in README). 
+The ArgoCD application manifest sample has been updated to demonstrate how Git commit hash can be injected by ArgoCD, in the same format `--set revision=$(git log -n 1 --pretty=format:%h)` would do when using `helm` from the command line (which is already documented in README).
 
 Minor fixes and documentation updates are also included.
 
@@ -297,12 +297,12 @@ This version adds chart and version control metadata to the k8s namespace and ad
 
 Following annotations are generated for the namespace during template rendering:
 - `helm.sh/chart`: chart name and version
-- `app.kubernetes.io/version`: version of the product the helm chart deploys
-- `version-control/revision`: revision deployed (e.g. git commit hash)
+- `app.kubernetes.io/version`: version of the product the Helm chart deploys
+- `version-control/revision`: revision deployed (e.g. Git commit hash)
 
 These annotations provide extra visibility into the last deployed desired state.
 
-Further, `config` and `data` symlinking is switched, that is, the real folders are now the ones within the `argo` directory and symlinks pointing to these are created under `starterkit`. The purpose of this change is compatibility with hardened ArgoCD/Helm where symlinks pointing outside the chart directory are not followed by `.Files.Glob` helm function.
+Further, `config` and `data` symlinking is switched, that is, the real folders are now the ones within the `argo` directory and symlinks pointing to these are created under `starterkit`. The purpose of this change is compatibility with hardened ArgoCD/Helm where symlinks pointing outside the chart directory are not followed by `.Files.Glob` Helm function.
 
 Additionally, minor fixes and documentation updates are included.
 
@@ -314,7 +314,7 @@ Prior to this version, the k8s namespace resource and the image pull secret `reg
 
 Helm templates will now deploy (create and sync) the namespace with all annotations required for pod security admission control.
 
-Image pull secret `regcred` is assumed to be present and externally managed when `general.install.externalSecret.regcred` is set to `true` in `values-config.yaml`, in this case, the templates will not create or alter this resource (also see Vault integration via External Secrets introduced in 2.1.2). Alternatively and by default, `regcred` is generated via a special helm template:
+Image pull secret `regcred` is assumed to be present and externally managed when `general.install.externalSecret.regcred` is set to `true` in `values-config.yaml`, in this case, the templates will not create or alter this resource (also see Vault integration via External Secrets introduced in 2.1.2). Alternatively and by default, `regcred` is generated via a special Helm template:
 - supports multiple repos in the same Secret with separate credentials for each
 - input uses the structure of dockerconfigjson, but without the redundant `auth`
 - `auth` properties will be dynamically injected for all repo entries
@@ -348,7 +348,7 @@ The utility `extract-config-response.sh` is added to both the main containers of
 Minor usability improvements and fixes:
 - fix `database.tablespace.location.indexes` in `enRoleDatabase.properties`
 - remove trailing whitespace at the end of lines in `data-tpl/*.properties`
-- remove trailing whitespace at the end of lines of some other helm templates
+- remove trailing whitespace at the end of lines of some other Helm templates
 - replace tabs by 4 spaces in `data-tpl/*.properties` so configmap can use block string
 - reorganize config maps storing extra logic for the init container and utility scripts
 
@@ -403,7 +403,7 @@ The original starterkit requires all these files and directories to be stored un
 Key benefits of the alternative approach implemented here:
 - eliminates the need to store `encryptionKey.properties` which contains the obfuscated keystore password
 - does not require KEK (`kek*/masterKey.key`) to be put under version control at all
-- does not even store the JCEKS keystore in git
+- does not even store the JCEKS keystore in Git
 - integrates well with an external vault for securely storing the actual data encryption key (DEK)
 - uses a dynamically generated random keystore password (which changes on each restart of the container)
 - encrypts DEK with a random KEK which also changes whenever the container is restarted
@@ -427,14 +427,14 @@ This encapsulation of the initialization logic serves two purposes: ease of main
 ## 2.1.2 (2025-09-16)
 
 This version introduces following features:
-- Vault integration via External Secrets (optional) 
+- Vault integration via External Secrets (optional)
 - Deployment of ISVDI optional, controlled via the same flag `general.install.deployIsvdi` the original starterkit uses
 
 Interoperability with Vault is achieved via the use of External Secrets. The External Secrets Operator interacts with [HashiCorp Vault](https://www.vaultproject.io/), [IBM Cloud Secrets Manager](https://www.ibm.com/cloud/secrets-manager) or external secret management systems like [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/), [Google Secrets Manager](https://cloud.google.com/secret-manager), [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/), [CyberArk Conjur](https://www.conjur.org/).
 
 The optional Vault integration can be configured via `general.install.externalSecret` selectively for MQ, OIDC and platform credentials, and is disabled by default.
 
-Making the deployment of ISVDI optional demonstrates how the chart's content can be modularized without the additional complexity of using helm subcharts. The flag controlling this option is intentionally kept compatible with the original starterkit.
+Making the deployment of ISVDI optional demonstrates how the chart's content can be modularized without the additional complexity of using Helm subcharts. The flag controlling this option is intentionally kept compatible with the original starterkit.
 
 This version also includes minor cosmetic changes to improve readability/user experience.
 
@@ -445,11 +445,11 @@ This version includes reworked logic for generating reduced (post-install) `conf
 - support for OICD via `oidc` section in `values-config.yaml`
 - support for liberty metrics, encryption flags, truststore and keystore via `server` section in `values-config.yaml`
 
-This version bases on helm templates of upstream version 11.0.0.1_IF1
+This version bases on Helm templates of upstream version 11.0.0.1_IF1
 
 ## 2.1.0 (2025-09-02)
 
-This version uses helm templates to dynamically render property files in the data folder:
+This version uses Helm templates to dynamically render property files in the data folder:
 - enRole.properties
 - enRoleDatabase.properties
 - enRoleLDAPConnection.properties
@@ -471,14 +471,14 @@ The file `config.yaml` needs to exist in its reduced form (post-installation for
 
 ## 2.0.2 (2025-08-15)
 
-This version attempts to be as close to the original StartetKit as possible, but provide the ability to deploy from Git, with helm only.
+This version attempts to be as close to the original StartetKit as possible, but provide the ability to deploy from Git, with Helm only.
 - uses the Starterkit as a starting point, maintaining as much compatibility as possible (a subset of the original folder structure is used)
 - all modifications are contained in a folder named `argo`
 - include the `config` and `data` folder as-is, via symlinks
 - reuse as many existing template as possible, via symlinks under `argo/templates`
-- eliminates tarballs hardcoded in helm templates e.g. configmaps isvgimks and isvgimdata
-- eliminate the usage of any script which generates helm templates 'on the fly' such as `createConfigs.sh`
+- eliminates tarballs hardcoded in Helm templates e.g. configmaps isvgimks and isvgimdata
+- eliminate the usage of any script which generates Helm templates 'on the fly' such as `createConfigs.sh`
 - eliminate the `yaml` folder completely
 - the `bin` folder is retained in its original version but is never used
 
-This version bases on helm templates of upstream version 11.0.0.1
+This version bases on Helm templates of upstream version 11.0.0.1

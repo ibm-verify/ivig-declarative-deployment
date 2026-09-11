@@ -65,7 +65,7 @@ services:
       replicas: 2
 ```
 
-In addition, a full `values-config.yaml` variant for each environment is provided, the format of which most users of the product are familiar with. 
+In addition, a full `values-config.yaml` variant for each environment is provided, the format of which most users of the product are familiar with.
 - `values-config-DEV.yaml`
 - `values-config-TEST.yaml`
 - `values-config-PROD.yaml`
@@ -113,9 +113,9 @@ Annotating the Kubernetes namespace with the Git commit hash (or another revisio
 
 Argo CD exposes an environment variable `$ARGO_APP_REVISION_SHORT` which the manifest binds to Helm parameter `revision` to expose the currently deployed Git commit hash during template rendering. It will be stored in form of an annotation on the K8s namespace.
 
-### Do not publicly disclose license keys 
+### Do not publicly disclose license keys
 
-While leaking license data and activation keys does not represent an inherent security risk and storing these in a private corporate Git repositor would be fine for many users, some might prefer to not store such information under version control at all (especially, when access to the repo is not restricted).
+While leaking license data and activation keys does not represent an inherent security risk and storing these in a private corporate Git repository would be fine for many users, some might prefer to not store such information under version control at all (especially, when access to the repo is not restricted).
 
 Instead of storing license keys in Git repositories (inside `values-config.yaml`), Argo CD can dynamically inject license values during Helm template rendering.  The [sample application manifest](../argo-app-manifest.yaml) demonstrates dynamic injection of the following licenses via Helm parameters:
 - `general.license.activationKey`

@@ -10,7 +10,7 @@
 #
 # Note: By default, there is a size limit of 1MiB for Vault secrets. This script
 # may produce larger JSON payload. Realistic usage scenarios are not affected.
-# 
+#
 # example: vault-json-pack.sh mq.* isvgim*CA.crt | vault kv put certs/mqcerts -
 
 ARGS=()
