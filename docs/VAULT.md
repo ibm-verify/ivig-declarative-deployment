@@ -111,7 +111,7 @@ The following steps document how to link the Kubernetes Cluster with Vault by re
    kubectl get secret idm-vault-viewer-secret -n ivig-idm -o jsonpath='{.data.ca\.crt}' | base64 -d
    ```
    **Note:** Depending on your choice of deployment options, the service account may not exist yet at this point. Review the 3 options described below at the end of this section and chose your preferred option.
-   
+
    **Note:** Depending on your Vault and Kubernetes configuration, you may leave this field empty if Vault is running in the same cluster. The Vault pod would see the same k8s CA in this case.
 6. Populate the **Token Reviewer JWT** field (also called **Kubernetes API JWT** in certain version) with the service account token:
    ```bash
@@ -139,7 +139,7 @@ The following steps document how to link the Kubernetes Cluster with Vault by re
 
 
 **Note:** Depending on your choice of deployment options, the service account may not exist yet at this point. In this case, you will have to revisit steps 5 and 6 once the service account and its secret holding the JSON Web Token and CA certificate becomes available. A non-exhaustive list of options:
-- **Option A:** Use the same namespace IVIG will be deployed to and automatically create the service account via the helm chart (revisit steps 5 and 6 after first run of helm/Argo CD)
+- **Option A:** Use the same namespace IVIG will be deployed to and automatically create the service account via the Helm chart (revisit steps 5 and 6 after first run of helm/Argo CD)
 - **Option B:** Use the same namespace IVIG will be deployed to but create the minimally required k8s resources upfront, manually (no need to revisit steps later on)
 - **Option C:** Create a service account in another namespace, e.g. 'external-secrets', manually - no overlap with the namespace IVIG will be deployed to, no need to revisit steps later, at the cost of scattering configuration across multiple namespaces which you may or may not prefer
 
@@ -383,7 +383,7 @@ External Secrets can be configured for this project in two variants:
 - Vendor agnostic way, where the **ClusterSecretStore** is expected to already exist and be configured against your choice of secret management platform
 - Vault-based where the ClusterSecretStore and service account is automatically created based on additional configuration provided by you
 
-### Adjusting the helm chart configuration (vendor agnostic)
+### Adjusting the Helm chart configuration (vendor agnostic)
 
 Make sure you already marked some of your secrets as externally managed by setting `general.install.externalSecret.*` to `true` in `values-config.yaml` (or an alternative values file specified for your deployment). Vault integration logic will read the same settings and only process the enabled items.
 
@@ -403,11 +403,11 @@ With this change, configuration is complete. Just run `helm` or commit your chan
 
 #### Under the hood
 
-Once Vault integration is enabled and a secretStore name is specified (or inferred), the helm chart will automatically create an ExternalSecret for all secrets you marked as externally managed by setting `general.install.externalSecret.*` to `true` in `values-config.yaml` (or an alternative values file specified for your deployment). The ExternalSecrets will reference the ClusterSecretStore with the configured name, which will trigger the External Secrets Operator to fetch sensitive date from Vault, using connection parameters as provided in the ClusterSecretStore, and then create (or update) a k8s Secret for each ExternalSecret resource.
+Once Vault integration is enabled and a secretStore name is specified (or inferred), the Helm chart will automatically create an ExternalSecret for all secrets you marked as externally managed by setting `general.install.externalSecret.*` to `true` in `values-config.yaml` (or an alternative values file specified for your deployment). The ExternalSecrets will reference the ClusterSecretStore with the configured name, which will trigger the External Secrets Operator to fetch sensitive date from Vault, using connection parameters as provided in the ClusterSecretStore, and then create (or update) a k8s Secret for each ExternalSecret resource.
 
-This heavy-lifting is achieved by a single helm template under `templates/vault/008-externalsecret-loop.yaml`, which is provider-agnostic as opposed to being specific to Vault.
+This heavy-lifting is achieved by a single Helm template under `templates/vault/008-externalsecret-loop.yaml`, which is provider-agnostic as opposed to being specific to Vault.
 
-### Adjusting the helm chart configuration (Vault-based)
+### Adjusting the Helm chart configuration (Vault-based)
 
 This variant extends the above by automatically deploying the CusterSecretStore and the required service account. For this, the vault server and namespace have to be configured via `values-config.yaml` (or an alternative values file specified for your deployment). Therefore, the shorthand configuration via `vault: true` described above will not work in this case.
 
@@ -486,13 +486,13 @@ In this scenario, Vault is running in a namespace 'vault' within the same cluste
 
 #### Configuration process with early verification steps
 
-One should follow the documented process for [Vault configuration above](#vault-configuration). This guide will follow **Option B** documented at the bottom of section [Kubernetes Authentication](#kubernetes-authentication), with some extra steps. These extra steps, prefixed with "**DEBUG:**" below, will manually create some k8s resources which would be automatically deployed later, the goal is to facilitate the early detection of configuration issues, even before the helm chart would deploy IVIG.
+One should follow the documented process for [Vault configuration above](#vault-configuration). This guide will follow **Option B** documented at the bottom of section [Kubernetes Authentication](#kubernetes-authentication), with some extra steps. These extra steps, prefixed with "**DEBUG:**" below, will manually create some k8s resources which would be automatically deployed later, the goal is to facilitate the early detection of configuration issues, even before the Helm chart would deploy IVIG.
 
-**Note:** While the helm templates would fill in the namespace dynamically based on configuration in `values.yaml`, the example code listings assume that the target namespace is `ivig-idm`, therefore, any manual step will have to be carefully and consistently adjusted if another namespace is used.
+**Note:** While the Helm templates would fill in the namespace dynamically based on configuration in `values.yaml`, the example code listings assume that the target namespace is `ivig-idm`, therefore, any manual step will have to be carefully and consistently adjusted if another namespace is used.
 
 As we are chosing **Option B**, we create the service account, token and role binding upfront. Run the command from **Option B** to create the namespace, service account and token first.
 
-**DEBUG:** We create ClusterRoleBinding now for early debugging (would be created by the helm chart)
+**DEBUG:** We create ClusterRoleBinding now for early debugging (would be created by the Helm chart)
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -515,7 +515,7 @@ Execute all steps of [Vault configuration](#vault-configuration) up to **Step 4*
 
 Next, start with [onboarding secrets](#onboard-secrets), but stop after creating the secret engine.
 
-**DEBUG:** After creating the secret engine, we create a single secret `metricscred` just for early debugging purposes (would be created by the helm chart at a later point automatically)
+**DEBUG:** After creating the secret engine, we create a single secret `metricscred` just for early debugging purposes (would be created by the Helm chart at a later point automatically)
 
 **DEBUG:** In another terminal, we enable Vault audit logs and watch kubernetes authentication related entries:
 ```
@@ -523,7 +523,7 @@ kubectl exec -it vault-0 -n vault -- vault audit enable file file_path=stdout
 kubectl logs -f vault-0 -n vault | grep "auth/kubernetes/login"
 ```
 
-**DEBUG:** We create ClusterSecretStore now, manually (would be created by the helm chart later on)
+**DEBUG:** We create ClusterSecretStore now, manually (would be created by the Helm chart later on)
 - no namespace as we are using Vault Community Edition
 - no caProvider section as TLS is disabled in Vault developer mode
 ```
@@ -554,7 +554,7 @@ idm-vault-secret-store   15s   Valid    ReadWrite      True
 If not, run `kubectl describe css idm-vault-secret-store`, inspect the output and check Vault logs in the other terminal.
 
 
-**DEBUG:** We create a single external secret for metricscreds now, manually (would be created by the helm chart)
+**DEBUG:** We create a single external secret for metricscreds now, manually (would be created by the Helm chart)
 ```
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret

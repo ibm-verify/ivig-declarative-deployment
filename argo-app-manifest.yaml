@@ -11,16 +11,16 @@ spec:
     namespace: ivig-idm
     # Deploy to the local cluster (where Argo CD itself is running)
     server: https://kubernetes.default.svc
-  # The source specifies the location and configuration of the helm chart.
+  # The source specifies the location and configuration of the Helm chart.
   source:
     # Location of the repository, matched against configured repo connections.
     # It is recommended to use HTTPS and API key based authentication.
     repoURL: https://git.example.com/foobar/myproject.git
-    # The path to the helm chart within the repository
+    # The path to the Helm chart within the repository
     path: smarterkit
     # Git tag, branch or commit hash which identifies the revision to deploy.
     targetRevision: develop
-    # This section controls how the helm chart is rendered.
+    # This section controls how the Helm chart is rendered.
     helm:
       # Values (configuration data) can be specified via a default/override
       # pattern where multiple sources of configuration are merged top-down.
