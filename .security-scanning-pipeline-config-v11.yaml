@@ -1,0 +1,18 @@
+version: '2'
+
+tasks:
+  security-scanning:
+    runtimeClassName: medium
+    steps:
+      - name: static-scan
+        when: true
+      - name: compliance-checks
+        when: true
+      - name: image-scan
+        when: true
+      - name: dynamic-scan
+        when: false
+      - name: detect-secrets
+        when: true
+      - name: scans-results-upload
+        when: true
