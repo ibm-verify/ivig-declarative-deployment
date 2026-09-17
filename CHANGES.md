@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.4.9 (2026-09-17)
+
+Updates to repo forking and storage of license data, new meta/supporting files.
+
+More detailed documentation is provided on advanced repository setup, specifically forking to destinations outside of the GitHub ecosystem (e.g. self-hosted GitLab or bare Git repo) which is a common case for real-life projects.
+
+It is described how leaking license keys can be avoided by not storing such information under version control when using public Git repositories. Public Git repositories and private or corporate Git repos with restricted read access call for different approaches for storing such data. A requirement for public Git repos to move license data to a separate file not stored in Git is explicitly documented and the steps involved are described in detail. Code snippets in the TL;DR sections are updated accordingly to make it less likely that passive readers who skim and skip details accidentally miss these steps.
+
+A general cleanup of code comments and documentation corrects typos, capitalization and trailing blanks.
+
+Further, this release introduces new supporting files:
+- `.secrets.baseline` to be used by `detect-secrets` to prevent secrets from entering the codebase
+- security scanning pipeline and whitesource configuration
+- `CODEOWNERS`, `SECURITY.md` and `CODE_OF_CONDUCT.md`
+
 ## 2.4.8 (2026-09-10)
 
 This version includes updated base images, default settings and documentation.
