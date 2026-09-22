@@ -35,7 +35,7 @@ The desired state is stored in Git and based on this, declarative deployment (di
 
 ## Components and Dependencies
 
-This project delivers a Helm chart that deploys IBM Verify Identity Governance. The chart versions required to install a specific IVIG versions are listes below:
+This project delivers a Helm chart that deploys IBM Verify Identity Governance. The chart versions required to install a specific IVIG versions are listed below:
 - 11.0.0.0 (as of chart 2.0.0)
 - 11.0.0.0_IF1
 - 11.0.0.0_IF2
@@ -46,7 +46,7 @@ This project delivers a Helm chart that deploys IBM Verify Identity Governance. 
 - 11.0.1.1_IF1 (as of chart 2.3.1)
 - 11.0.2.0 (as of chart 2.4.0)
 
-There is no intention to backport newer chart versions to support older IVIG versions. A version history including all notable changes is maintained in the [Changelog](CHANGES.md). This document covers the most recent version of the Helm chart. Older versions of documentation for older chart version can be retreived from Git history.
+There is no intention to backport newer chart versions to support older IVIG versions. A version history including all notable changes is maintained in the [Changelog](CHANGES.md). This document covers the most recent version of the Helm chart. Older versions of documentation for older chart version can be retrieved from Git history.
 
 ### The Big Picture
 
@@ -54,7 +54,7 @@ The declarative deployment method for IVIG follows a relaxed layered architectur
 
 0. GitOps is a concept that applies version control and CI/CD to infrastructure automation, ensuring consistent and repeatable deployment.
 1. At the core, a Helm chart implements the deployment logic. It can be deployed without using any third party component other than Helm - this approach is referred to as a [pure Helm standalone setup](docs/PURE-HELM.md) and described in detail. It is imperative to read this documentation as it serves as a foundation for subsequent layers as well.
-2. Argo CD is a higher-level GitOps-driven continuous delivery platform for k8s which supports Helm and Git and handles cluster synchronisation. This optional deployment appoach builds on the previous layer. Read the [recommended approach for a multi-stage project via Argo CD](docs/ARGO-CD.md) after processing the documentation of the previous layer.
+2. Argo CD is a higher-level GitOps-driven continuous delivery platform for k8s which supports Helm and Git and handles cluster synchronisation. This optional deployment approach builds on the previous layer. Read the [recommended approach for a multi-stage project via Argo CD](docs/ARGO-CD.md) after processing the documentation of the previous layer.
 3. External Secrets Operator is a k8s operator that syncs sensitive data from external secret management systems (such as HashiCorp Vault) into k8s Secrets. [Integration with Vault via External Secrets](docs/VAULT.md) is optional and can be used with [pure Helm](docs/PURE-HELM.md) as well as [Argo CD](docs/ARGO-CD.md).
 
 ### System Requirements
@@ -76,7 +76,7 @@ Optional Vault integration includes two further non-essential user convenience s
 - `vault-json-pack.sh`: bash 3.2, jq 1.5
 - `vault-json-unpack.sh`: bash 3.2, jq 1.5
 
-Note: Although GNU/Linux is the primary target platform, there are users of this project who runs MacOS. The current version of MacOS still ships with an extremely outdated bash version (3.2.57 from 2007) due to GPLv3 licensing issues. Convenience scripts of version 2.3.4 are compatible with this old bash version as well as BSD sed and grep.
+Note: Although GNU/Linux is the primary target platform, there are users of this project who run macOS. The current version of macOS still ships with an extremely outdated bash version (3.2.57 from 2007) due to GPLv3 licensing issues. Convenience scripts of version 2.3.4 are compatible with this old bash version as well as BSD sed and grep.
 
 ## Setup guide - pure Helm
 
@@ -100,7 +100,7 @@ kubectl -n ivig-idm wait --for=condition=Ready --timeout=5m pod -l app=isvgim
 kubectl -n ivig-idm exec isvgim-0 -- /bin/bash -c "/work/util/extract-config-response.sh --install && /work/ldapConfig.sh install && /work/dbConfig.sh install"
 kubectl -n ivig-idm rollout restart sts/isvgim
 ```
-The following command will wait for the application to start and then print out the login URL. Note that this is a long chained command spread across multiple lines via line continuation (backslack immediately followed by newline).
+The following command will wait for the application to start and then print out the login URL. Note that this is a long chained command spread across multiple lines via line continuation (backslash immediately followed by newline).
 ```
 kubectl -n ivig-idm wait --for=condition=Ready --timeout=5m pod -l app=isvgim && \
 kubectl -n ivig-idm get pod/isvgim-0 -o jsonpath='Login at https://{.status.hostIP}:' && \

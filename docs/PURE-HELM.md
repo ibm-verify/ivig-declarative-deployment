@@ -23,7 +23,7 @@ Note: Although GNU/Linux is the primary target platform, there is at least one u
 
 ## TL;DR
 
-This section is intended for users intimately familiar with IVIG, kubernetes and Helm. It provides quick-start instructions in a compact and minimalistic fashion. It is recommended to read and understand the the complete setup guide which covers technical details and deployment options.
+This section is intended for users intimately familiar with IVIG, kubernetes and Helm. It provides quick-start instructions in a compact and minimalistic fashion. It is recommended to read and understand the complete setup guide which covers technical details and deployment options.
 
 ### Quick demo
 
@@ -41,7 +41,7 @@ kubectl -n ivig-idm wait --for=condition=Ready --timeout=5m pod -l app=isvgim
 kubectl -n ivig-idm exec isvgim-0 -- /bin/bash -c "/work/util/extract-config-response.sh --install && /work/ldapConfig.sh install && /work/dbConfig.sh install"
 kubectl -n ivig-idm rollout restart sts/isvgim
 ```
-The following command will wait for the application to start and then print out the login URL. Note that this is a long chained command spread across multiple lines via line continuation (backslack immediately followed by newline).
+The following command will wait for the application to start and then print out the login URL. Note that this is a long chained command spread across multiple lines via line continuation (backslash immediately followed by newline).
 ```
 kubectl -n ivig-idm wait --for=condition=Ready --timeout=5m pod -l app=isvgim && \
 kubectl -n ivig-idm get pod/isvgim-0 -o jsonpath='Login at https://{.status.hostIP}:' && \
@@ -96,7 +96,7 @@ kubectl -n $NAMESPACE get pod/isvgim-0 -o jsonpath='Login at https://{.status.ho
 kubectl -n $NAMESPACE get svc/isvgim -o jsonpath='{.spec.ports[?(@.name=="https")].nodePort}{"/itim/console\n"}'
 ```
 
-The [section on troubeshooting](#troubleshooting) provides guidance on diagnosing and resolving errors.
+The [section on troubleshooting](#troubleshooting) provides guidance on diagnosing and resolving errors.
 
 ## Prerequisites
 - K8s cluster up and running
@@ -145,11 +145,11 @@ git push origin master
 
 ### Helm Values configuration
 
-Next, adjust `values.yaml` and `values-config.yaml` for your environment and store them to your Git project. Users unfamiliar with the product may run `starterkit/bin/configure.sh -manual` after downloading an unpacking the original StarterKit bundled with the product. The command will generate `config.yaml` which may then be used as a baseline for `values-config.yaml`, as these files follow the same structure with minimal deviations. Keep the following in mind:
+Next, adjust `values.yaml` and `values-config.yaml` for your environment and store them to your Git project. Users unfamiliar with the product may run `starterkit/bin/configure.sh -manual` after downloading and unpacking the original StarterKit bundled with the product. The command will generate `config.yaml` which may then be used as a baseline for `values-config.yaml`, as these files follow the same structure with minimal deviations. Keep the following in mind:
 
 - Adjust `values.yaml`:
     - `namespace`, `timezone`, `licenseType`, `storage.className` and `storage.mode` are only read from `smarterkit/values.yaml`, define them there!
-    - `clusterUrl` is set to the kubernets API server internal endpoint, leave it as-is!
+    - `clusterUrl` is set to the Kubernetes API server internal endpoint, leave it as-is!
 - If you decide to use `starterkit/bin/configure.sh -manual` to generate `config.yaml` then just copy the content to `values-config.yaml` and adjust as follows:
     - `general.install`: it is advised to only retain properties which are defined in the bundled `values-config.yaml`, others are not used
     - `general.install.externalSecret`: while it is not supported by the original StarterKit and therefore absent in `config.yaml`, use this to selectively mark MQ, OIDC or platform credentials as externally managed (requires manual setup of the secrets or Vault integration via External Secrets Operator)
@@ -162,7 +162,7 @@ Next, adjust `values.yaml` and `values-config.yaml` for your environment and sto
 
 #### Do not store license keys in public repositories
 
-While storing license data and activation keys in a private or tightly controlled corporate Git repository would be generally fine, some might prefer to not store such information under version control at all. When working with a publicly Git repository, ensure that licensing data and activation keys are not disclosed. This section describes how leaking license keys can be avoided by not storing such information under version control.
+While storing license data and activation keys in a private or tightly controlled corporate Git repository would be generally fine, some might prefer to not store such information under version control at all. When working with a publicly accessible Git repository, ensure that licensing data and activation keys are not disclosed. This section describes how leaking license keys can be avoided by not storing such information under version control.
 
 Instead of providing license keys in `values-config.yaml` which is stored in Git, one can leave all values under `general.license` in that file blank and specify these values in a separate file that will be passed to the `helm` command but not stored in Git. When migrating from a classic installation, move the `general.license` section of `config.yaml` to a separate file, do not include it in `values-config.yaml`.
 
@@ -191,7 +191,7 @@ Make sure these additional values are included when the `helm` command is run.
 
 #### Optional advanced database configuration via explicit JDBC URL
 
-Declarative deployment increases flexibility and robustness of JDBC configuration beyond what the original product supports. It reads and writes the JDBC URL formats the core product supports with a compatible logic, and additionally offers a new configuration parameter `db.forcedJdbcUrl` in `values-config.yaml` to explicitly set a JDBC connection string rather then providing hostname, port and database name. This allows automated deployment with advanced database configuration (such as load balancing and failover) from scratch, which is not offered by the original product.
+Declarative deployment increases flexibility and robustness of JDBC configuration beyond what the original product supports. It reads and writes the JDBC URL formats the core product supports with a compatible logic, and additionally offers a new configuration parameter `db.forcedJdbcUrl` in `values-config.yaml` to explicitly set a JDBC connection string rather than providing hostname, port and database name. This allows automated deployment with advanced database configuration (such as load balancing and failover) from scratch, which is not offered by the original product.
 
 Via `db.forcedJdbcUrl` one might specify the JDBC connection using the following formats and advanced features:
 - Oracle Thin Driver (basic SID style)
@@ -200,7 +200,7 @@ Via `db.forcedJdbcUrl` one might specify the JDBC connection using the following
     - with SID or Service Name
     - explicit SSL configuration
     - multiple addresses, RAC, load balancing and failover
-    - timeouts and other advances parameters
+    - timeouts and other advanced parameters
 - DB2 Type4 Driver extra parameters
     - TLS version and cipher suite selection
     - high availability (HADR), failover and client reroute (ACR)
@@ -214,11 +214,11 @@ Via `db.forcedJdbcUrl` one might specify the JDBC connection using the following
 
 The next step is to generate x509 certificates offline (or in another environment). Two openssl-based alternatives are bundled, but of course, one may use any other means to generate certificates.
 
-The `cert-util.sh` script is added to create, renew and list certificates for a configurable set of components. The structure of the certificates is intentionally kept compatible with the original starterkit, but the logic for managing certificates has been externalized, it does not run within the container.
+The `cert-util.sh` script is added to create, renew and list certificates for a configurable set of components. The structure of the certificates is intentionally kept compatible with the original StarterKit, but the logic for managing certificates has been externalized, it does not run within the container.
 
 The logic is implemented such that existing cryptographic keys and certificate signing requests are reused when creating or renewing certificates.
 
-Subject alternate names (domain names) are configured according to the requirements of each component, inline with how the original startetkit would create certificates.
+Subject alternate names (domain names) are configured according to the requirements of each component, inline with how the original StarterKit would create certificates.
 
 This script is intentionally de-coupled and self-contained, it does not have dependencies other than `bash` and `openssl`.
 
@@ -261,7 +261,7 @@ While `cert-setup.sh` is intended to be a convenient "one-click" tool to setup a
 
 ### Tips and tricks for certificate creation
 
-One can use `cert-util.sh` to conveniently create additional certificates with arbitrary subject alternate names, signed by `isvgimRootCA`. This is useful when additional certificates need to be created for external data tier components or other components of the target environment, where typically finer grained control over subjectAltNames is also required. The example below demonstrated, how to create a certificate for `foo` and control subject alternative names via the environment variable `FOO_ALTNAME`.
+One can use `cert-util.sh` to conveniently create additional certificates with arbitrary subject alternate names, signed by `isvgimRootCA`. This is useful when additional certificates need to be created for external data tier components or other components of the target environment, where typically finer grained control over subjectAltNames is also required. The example below demonstrates, how to create a certificate for `foo` and control subject alternative names via the environment variable `FOO_ALTNAME`.
 
 ```
 $ export FOO_ALTNAME="DNS: foo.com, DNS:*.foo.com"
@@ -396,7 +396,7 @@ While configuration of an Ingress Controller is outside of the scope of this doc
 - Session affinity via a properly secured and automatically managed HTTP cookie
 - Traefik reverse proxy will skip backend certificate checks such as CA and hostname verification (it uses the cluster-internal hostname to access the backend which would typically not be registered in the certificate as a subject alternate name)
 - Automatic creation of SSL/TLS certificate for the hostname configured
-- Routes inbould HTTPS traffic based on hostname (Server Name Indication during SSL handshake) to the right service
+- Routes inbound HTTPS traffic based on hostname (Server Name Indication during SSL handshake) to the right service
 
 ```yaml
 apiVersion: traefik.io/v1alpha1
@@ -471,10 +471,10 @@ One can select any of the following kubernetes resources and define extra annota
     - isvdi
     - mqshare
 
-The following example would be appended to `values-config.yaml` to enable the discovery of monitoring endpoints by the popular monitoring tool prometheus and to hint centralized log managemnet to correctly tag and parse log sources (assuming prometheus and fluentbit are up and running and configured for this use case).
+The following example would be appended to `values-config.yaml` to enable the discovery of monitoring endpoints by the popular monitoring tool prometheus and to hint centralized log management to correctly tag and parse log sources (assuming prometheus and fluentbit are up and running and configured for this use case).
 
 This is achieved by defining
-- static annotations to be added to the pod templates of `deployment isvdi` and `statulset isvgim`
+- static annotations to be added to the pod templates of `deployment isvdi` and `statefulset isvgim`
 - string template for rendering annotations for the service `isvgim`, and reference the port number from within the template
 - string template to add pod labels for `isvdi` in this specific case including the environments name dynamically, along with a static label `app.kubernetes.io/component`
 
@@ -517,7 +517,7 @@ Similarly, version upgrades (fixpacks, but not interim fixes) may include schema
 
 Therefore, version 2.2.3 and newer provides tooling for automation, but does not unconditionally invoke `dbConfig.sh` and `ldapConfig.sh` within the container.
 
-On a fresh install, one could trigger DB and LDAP schmema and data setup as soon as `isvgim` is up and running, then restart:
+On a fresh install, one could trigger DB and LDAP schema and data setup as soon as `isvgim` is up and running, then restart:
 ```
 kubectl -n $NAMESPACE wait --for=condition=Ready --timeout=5m pod -l app=isvgim
 kubectl -n $NAMESPACE exec isvgim-0 -- /bin/bash -c "/work/util/extract-config-response.sh --install && /work/ldapConfig.sh install && /work/dbConfig.sh install"
@@ -535,7 +535,7 @@ kubectl -n $NAMESPACE scale sts/isvgim --replicas 1
 
 ### Common tasks
 
-When working directly with `helm` rather than via Argo CD (which is a viable option for both Developers/Integrators and for team who have not adopted a full CI/CD solution for GitOps-driven Kubernetes) see the following list of commands which illustrate various DevOps tasks.
+When working directly with `helm` rather than via Argo CD (which is a viable option for both Developers/Integrators and for teams who have not adopted a full CI/CD solution for GitOps-driven Kubernetes) see the following list of commands which illustrate various DevOps tasks.
 
 ```
 # Development/integration

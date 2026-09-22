@@ -213,8 +213,8 @@ This process will continue until the code is finally accepted.
 
 Once your code is accepted, it will be integrated with the master branch.
 Typically it will be squash merged, which combines all commits from your feature
-branch into a single commit in the base branch keep a clean commit history over
-a tangled weave of merge commits.  However, regardless of the specific merge
-method used, the code will be integrated with the master branch and the pull
-request will be closed.
+branch into a single commit in the base branch to keep a clean commit history
+over a tangled weave of merge commits.  Regardless of the specific merge method
+used, the code will be integrated with the master branch and the pull request
+will be closed.
 

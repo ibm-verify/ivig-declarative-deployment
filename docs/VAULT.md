@@ -54,11 +54,11 @@ When using Vault in tandem with Argo CD, this recommended integration pattern ev
 
 ## Prerequisites
 
-The following components are assumed to be deployed and confgiured correctly for the target environment:
+The following components are assumed to be deployed and configured correctly for the target environment:
 - [Vault](https://developer.hashicorp.com/vault/docs/get-vault#install-options) up and running (tested on Vault Enterprise 1.15.4)
 - [External Secrets Operator](https://external-secrets.io/latest/introduction/getting-started/) running (0.16.2 or newer)
 
-**Note:** In productive environments, the two components above are typically deployed and managed by a dedicated team, tweaked and hardened to match client-specific requirements. There is no intention to cover all deployment options and topologies. This document includes [step-by-step guidance](#developer-setup-from-scratch-and-early-debug) for users who will need to setup their own development environment from scratch but are unfamiliar with Vault or External Secrets. This guide includes extra debugging steps to faciliate early detection of configuration errors.
+**Note:** In productive environments, the two components above are typically deployed and managed by a dedicated team, tweaked and hardened to match client-specific requirements. There is no intention to cover all deployment options and topologies. This document includes [step-by-step guidance](#developer-setup-from-scratch-and-early-debug) for users who will need to setup their own development environment from scratch but are unfamiliar with Vault or External Secrets. This guide includes extra debugging steps to facilitate early detection of configuration errors.
 
 There are two optional user convenience scripts for importing from and exporting to Vault, which require the following dependencies in addition to what is already documented under [System Requirements](PURE-HELM.md#system-requirements):
 - `vault-json-pack.sh`: bash 3.2, jq 1.5
@@ -80,7 +80,7 @@ Vault configuration instructions, unless specifically noted otherwise, are carri
 
 ### Access Controls
 
-On the Vault web UI, navigate via the main menu to **Policies / ACL Policies**. Create Policy "read-secrets" with the content below which will grant read access to sensitive date stored under `secrets` and `certs`.
+On the Vault web UI, navigate via the main menu to **Policies / ACL Policies**. Create Policy "read-secrets" with the content below which will grant read access to sensitive data stored under `secrets` and `certs`.
 
 ```
 # Read secret values
@@ -177,7 +177,7 @@ Vault web UI allows you to specify keys and values one-by-one when creating secr
 
 #### Option A: Move exiting k8s secrets to Vault
 
-If the secrets have already been deployed to k8s without Vault integration enabled, there is a convenient way to move these secrets to Vault. The following command demonstrates how the content of `pgcreds` can be retreived from via `kubectl` in a JSON format suitable for Vault import.
+If the secrets have already been deployed to k8s without Vault integration enabled, there is a convenient way to move these secrets to Vault. The following command demonstrates how the content of `pgcreds` can be retrieved from via `kubectl` in a JSON format suitable for Vault import.
 
 ```
 kubectl get secret pgcreds --namespace ivig-idm -o json | jq '.data|map_values(@base64d)'
@@ -266,7 +266,7 @@ Specific subsets of the PKI related files are defined for each purpose, on a nee
 The following subsets are defined:
 - **isvdicerts** includes certificates of the components Directory Integrator needs to communicate with, or the signers of these certificates, plus the PEM file holding Directory Integrator's private key and certificate
 - **isvgimcerts** includes the private key and certificate used by the IVIG application, the certificate of the local CA plus the CA bundle/truststore used to verify connections external components (i.e. when using an external data tier or SMTP server)
-- **mqcerts** includes the private key and certicate for MQ along with the certificate of the local CA
+- **mqcerts** includes the private key and certificate for MQ along with the certificate of the local CA
 - **isvdcerts** applies when internal LDAP is used, it includes certificates of components communicating with LDAP or the signers of such certificates, plus the PEM file holding Directory Integrator's private key and certificate
 - **pgcerts** is only relevant if the internal DB is used, it includes the private key and certificate used by the database
 - **all** includes the full set of files including certificate signing requests and the CA serial file for certificate management purposes only, it is not exposed to any container
@@ -459,7 +459,7 @@ kubectl delete secret oidccreds
 
 ## Troubleshooting
 
-**Note:** There is a multitude of possible deployment options and topologies each of which might require minor adjustments of configuration. There is no intention to provide a detailed Vault setup or integration guide for all posible scenarios. Users are welcome to customize and tailor these steps to their particular environments and recommended to consult [Vault documentation](https://developer.hashicorp.com/vault/docs).
+**Note:** There is a multitude of possible deployment options and topologies each of which might require minor adjustments of configuration. There is no intention to provide a detailed Vault setup or integration guide for all possible scenarios. Users are welcome to customize and tailor these steps to their particular environments and recommended to consult [Vault documentation](https://developer.hashicorp.com/vault/docs).
 
 ### Developer setup from scratch and early debug
 
@@ -482,7 +482,7 @@ helm install external-secrets external-secrets/external-secrets -n external-secr
 kubectl port-forward -n vault service/vault 8200:8200 --address 0.0.0.0 &
 ```
 
-In this scenario, Vault is running in a namespace 'vault' within the same cluster we are deploying IVIG to, in developer mode. Therfore, the cluster-internal Vault server URL is `http://vault.vault.svc.cluster.local:8200`.
+In this scenario, Vault is running in a namespace 'vault' within the same cluster we are deploying IVIG to, in developer mode. Therefore, the cluster-internal Vault server URL is `http://vault.vault.svc.cluster.local:8200`.
 
 #### Configuration process with early verification steps
 
@@ -490,7 +490,7 @@ One should follow the documented process for [Vault configuration above](#vault-
 
 **Note:** While the Helm templates would fill in the namespace dynamically based on configuration in `values.yaml`, the example code listings assume that the target namespace is `ivig-idm`, therefore, any manual step will have to be carefully and consistently adjusted if another namespace is used.
 
-As we are chosing **Option B**, we create the service account, token and role binding upfront. Run the command from **Option B** to create the namespace, service account and token first.
+As we are choosing **Option B**, we create the service account, token and role binding upfront. Run the command from **Option B** to create the namespace, service account and token first.
 
 **DEBUG:** We create ClusterRoleBinding now for early debugging (would be created by the Helm chart)
 ```yaml
@@ -510,7 +510,7 @@ subjects:
 
 Execute all steps of [Vault configuration](#vault-configuration) up to **Step 4** of [Kubernetes Authentication](#kubernetes-authentication). As we are setting up cluster-internal connection to Vault, some additional explanation is provided on the steps 4 to 6.
 - Step 4: use the cluster-internal server API endpoint https://kubernetes.default.svc (we are running within the same cluster)
-- Step 5: for this particular setup, you can skip filling this field (the vault pod will default to the same CA becasue we are running in the same cluster) or just follow the step, both should work
+- Step 5: for this particular setup, you can skip filling this field (the vault pod will default to the same CA because we are running in the same cluster) or just follow the step, both should work
 - Step 6: in this case, we could either skip proving a JWT (to use the default vault service account JWT, as we are running within the same cluster) or just follow the step and provide the JWT of our dedicated service account
 
 Next, start with [onboarding secrets](#onboard-secrets), but stop after creating the secret engine.
