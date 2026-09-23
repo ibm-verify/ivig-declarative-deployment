@@ -487,7 +487,7 @@ The file `config.yaml` needs to exist in its reduced form (post-installation for
 ## 2.0.2 (2025-08-15)
 
 This version attempts to be as close to the original StartetKit as possible, but provide the ability to deploy from Git, with Helm only.
-- uses the Starterkit as a starting point, maintaining as much compatibility as possible (a subset of the original folder structure is used)
+- uses the starterkit as a starting point, maintaining as much compatibility as possible (a subset of the original folder structure is used)
 - all modifications are contained in a folder named `argo`
 - include the `config` and `data` folder as-is, via symlinks
 - reuse as many existing template as possible, via symlinks under `argo/templates`

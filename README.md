@@ -6,7 +6,7 @@ Alternative deployment method for IBM Verify Identity Governance for GitOps-driv
 
 The goal of the project is to provide an alternative deployment concept which allows deploying IVIG from scratch via GitOps-driven continuous delivery - which is standard in cloud native environments.
 
-The desired state is stored in Git and based on this, declarative deployment (diff/sync) happens via K8s native tools as an alternative to the current StarterKit Linux scripts. The approach itself is tool agnostic, the "reference implementation" was tested with Argo CD which has become a standard for GitOps-driven continuous delivery for K8s and was chosen for the particular client project.
+The desired state is stored in Git and based on this, declarative deployment (diff/sync) happens via K8s native tools as an alternative to the current starterkit Linux scripts. The approach itself is tool agnostic, the "reference implementation" was tested with Argo CD which has become a standard for GitOps-driven continuous delivery for K8s and was chosen for the particular client project.
 
 ### High level goals
 - Minimal amount of human actions (low effort and low risk of human errors)
@@ -21,7 +21,7 @@ The desired state is stored in Git and based on this, declarative deployment (di
 - Clean separation of sensitive and non-sensitive configuration data
 - Deployment from Git with environment specific variables
 - Deployment using externally managed secrets (Vault)
-- No extra dependencies (vs Starterkit) but integrate with cloud native CD tools e.g. Argo CD (whereas Starterkit does not).
+- No extra dependencies (vs starterkit) but integrate with cloud native CD tools e.g. Argo CD (whereas starterkit does not).
 - Observability/visibility increased due to "normalized" repo structure
 - Detect and remediate configuration shift, rollback, central desired state in Git
 - Avoid chicken-egg problem, enable creation of desired state before containers are deployed to cluster (crucial for air-gapped environment)
@@ -120,7 +120,7 @@ This section provides a concise but high level overview of the setup process lis
 2. **Configure Values Files**
    - Adjust `values.yaml`: configure `namespace`, `timezone`, `storage.className`, `storage.mode` etc. for the target environment
    - *Option A:* Edit `values-config.yaml` manually: fill in `general.license` section, choose components to deploy (`deployLdap`, `deployDb`, `deployIsvdi`), configure credentials strategy
-   - *Option B:* Convert `config.yaml` created with StarterKit `configure.sh` to `values-config.yaml`
+   - *Option B:* Convert `config.yaml` created with starterkit `configure.sh` to `values-config.yaml`
    - *Alternative:* For multi-env projects, adopt a [configuration strategy](docs/ARGO-CD.md#recommended-configuration-strategy), where multiple sources of configuration are merged in a top-down order
    - *Option A:* Decide to store license keys in Git (suitable for private or corporate Git repos with restricted read access)
    - *Option B:* Move [license data to a separate file](docs/PURE-HELM.md#do-not-store-license-keys-in-public-repositories) which will not be stored in Git (required for public Git repos)
