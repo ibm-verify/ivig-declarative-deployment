@@ -189,6 +189,7 @@ This project delivers many [extras not included in the original product](docs/EX
   - Improved protection of data encryption keys
   - Interoperability with external secret management systems such as HashiCorp Vault
 - Custom flags for selectively enabling general hardening measures
+- Autodiscovery of adapter initialization scripts on startup
 - Measures to avoid deadlocks on restart
 - Fixes of bugs which impact security but have not been addressed in the original product yet
 
@@ -224,6 +225,12 @@ This section points the reader to further documentation within the repository (r
 - [Changelog](CHANGES.md)
 
 ## Contacts
+
+To ensure all technical issues and questions are handled efficiently, please do not contact individuals directly with general support requests. For support inquiries, open a case through [IBM Support](https://ibm.com/support) for the IBM Verify Identity Governance product with the repository name, a description of the issue, steps to recreate the issue and exact versions involved.
+
+When you use the proper channels, your requests are triaged and routed to the right peers, ensuring a faster response time and better tracking. If you contact individuals directly for support, you might be kindly redirected to open a case.
+
+For responsibly reporting vulnerabilities, please refer to the [security policy](SECURITY.md).
 
 Design and implementation:
 

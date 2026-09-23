@@ -98,6 +98,20 @@ Note that this flag is not available in the original product.
 
 ## Further improvements
 
+### Find and call adapter initialization scripts on startup
+
+Verify Directory Integrator allows additional configuration scripts to be specified via yaml configuration, but the absence of such scripts causes a crash loop by default. For some adapters, including the ISVA adapter, to function properly, additional initialization logic is needed, which is typically implemented via scripts in the solution directory, stored on the PVC of ISVDI. The original initialization process consists of multiple steps:
+1. Start ISVDI without config scripts required by the adapter
+2. Use the bundled `adapterUtils` scripts to copy required files to PVC (which requires a running ISVDI container)
+3. Amend yaml configuration to reference the custom init script on the PVC
+4. Restart the container for the updated init logic to take effect
+
+This creates a chicken and egg problem which does not play well with declarative deployment, as initialization requires a phased approach and deploying the final desired state right away would not yield a correctly functioning environment. This flaw is fixed in version 2.3.6 by adding logic that finds and calls adapter initialization scripts on startup and with that, avoids crash loops caused by missing scripts.
+
+Specifically, at startup of the ISVDI pod, the directory `scripts` within the ISVDI solution directory (located on the PVC) is scanned for files matching the patterns `override-*.sh` and `init-*.sh`, which then are called in lexicographic order. It is advised to implement these script with the order of precedence in mind to avoid overwriting changes made by other init scripts already called.
+
+ISVDI init script autodiscovery is intentionally run right after `initAdapterContainer.sh` so `setHostname.sh` would be executed after autodiscovered init scripts are run. This avoids a potential issue where changes made by `setHostname.sh` could be overwritten by autodiscovered scripts on some setups, specifically by an ISVA adapter init script which replaces the original `ibmdisrv` script with an adjusted version, where the original at that point would have already been modified by `setHostname.sh`.
+
 ### Avoid deadlocks on restart
 
 With the original starterkit, a `rollout restart` causes a deadlock for ISVDI (when `storage.mode` is set to `ReadWriteOnce`) and MQ (always, with any value of `storage.mode` in `values.yaml`) when starting the new pod on a different node. A known workaround is to manually scale the deployments down to `0` replicas, wait for the old pods to die and release the volume, and then scale back up.
