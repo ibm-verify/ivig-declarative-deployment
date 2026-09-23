@@ -8,7 +8,7 @@ The pure Helm setup is a viable option for both Developers/Integrators and for t
 
 Strictly speaking, the only third party dependency is Helm, version 3.18 or newer. Therefore any continuous delivery platform which supports Helm should be supported but explicit testing was done on Argo CD only.
 
-There are no specific system requirements other than [those of the IVIG version, which will be deployed](https://www.ibm.com/software/reports/compatibility/clarity/index.html?name=IBM%20Verify%20Identity%20Governance). Use a kubernetes release which has not reached end-of-life yet.
+There are no specific system requirements other than [those of the IVIG version, which will be deployed](https://www.ibm.com/software/reports/compatibility/clarity/index.html?name=IBM%20Verify%20Identity%20Governance). Use a Kubernetes release which has not reached end-of-life yet.
 
 Optional [Integration with Vault via External Secrets](VAULT.md) has additional dependencies [documented separately](VAULT.md#prerequisites).
 
@@ -23,11 +23,11 @@ Note: Although GNU/Linux is the primary target platform, there is at least one u
 
 ## TL;DR
 
-This section is intended for users intimately familiar with IVIG, kubernetes and Helm. It provides quick-start instructions in a compact and minimalistic fashion. It is recommended to read and understand the complete setup guide which covers technical details and deployment options.
+This section is intended for users intimately familiar with IVIG, Kubernetes and Helm. It provides quick-start instructions in a compact and minimalistic fashion. It is recommended to read and understand the complete setup guide which covers technical details and deployment options.
 
 ### Quick demo
 
-The code listing below covers a minimal setup from scratch, assuming the user already established `kubectl` connectivity to a k8s cluster which has a storage class called 'local-path'.
+The code listing below covers a minimal setup from scratch, assuming the user already established `kubectl` connectivity to a K8s cluster which has a storage class called 'local-path'.
 
 **Note:** Due to legal restrictions, no license keys are distributed in this repo. The user has to accept the license and provide activation/license keys for the IBM products to be deployed.
 
@@ -76,7 +76,7 @@ git commit -m "quick demo certs"
 # option B: do not store certs to Git, maybe import to vault later (more secure)
 ```
 
-Generate secrets (not to be stored in Git), then deploy to k8s and initialize data tier:
+Generate secrets (not to be stored in Git), then deploy to K8s and initialize data tier:
 ```
 # autogenerate random secrets
 ./secrets-setup.sh
@@ -242,7 +242,7 @@ Additional options:
 $ ./cert-util.sh --create
 ```
 
-As an alternative, another script, `cert-setup.sh` is included to auto-detects the part of configuration that is relevant for certificates, once `values.yaml` and `values-config.yaml` have already been adjusted. In particular, it will retrieve the k8s namespace from `values.yaml`, collect extra hostnames (which should be added to the certificate of IVIG server) and the list of optional components to be deployed from `values-config.yaml`. This script, after collecting the information required, will invoke `cert-util.sh` to create certificates, and after that, to list the details of the certificates created.
+As an alternative, another script, `cert-setup.sh` is included to auto-detects the part of configuration that is relevant for certificates, once `values.yaml` and `values-config.yaml` have already been adjusted. In particular, it will retrieve the K8s namespace from `values.yaml`, collect extra hostnames (which should be added to the certificate of IVIG server) and the list of optional components to be deployed from `values-config.yaml`. This script, after collecting the information required, will invoke `cert-util.sh` to create certificates, and after that, to list the details of the certificates created.
 
 ```
 $ cd smarterkit
@@ -309,7 +309,7 @@ Cryptographic keys clearly qualify as sensitive data. Certificates, Certificate 
 The following concept is implemented for all files related to x509 certificates:
 - it is supported, but not required to store certificates (and keys) in Git
 - no certificates, key, CSRs etc. are included in configmaps
-- certificates and related files are stored to dedicated k8s secrets (opaque cert-secrets)
+- certificates and related files are stored to dedicated K8s secrets (opaque cert-secrets)
 - projected volumes are used to merge the contents of cert-secrets and configmaps
 - projected volumes mounted to existing directories to maintain compatibility
 - conditional template rendering allows to selectively enable external secrets for such cert-secrets
@@ -319,7 +319,7 @@ The following concept is implemented for all files related to x509 certificates:
 An image pull secret is needed, it includes connection parameters to the image repository to be used. This required information can be provided via one of the three options:
 - Pass parameters via yaml file `regcred.yaml` based on which the image pull secret will be generated and deployed (do not store this file in Git if it contains sensitive data)
 - Use external secrets for Vault integration (see details below)
-- Set up manually in k8s and configure as externally managed (set `general.install.externalSecret.regcred` to `true` in `values-config.yaml`)
+- Set up manually in K8s and configure as externally managed (set `general.install.externalSecret.regcred` to `true` in `values-config.yaml`)
 
 As the last step before deployment, additional sensitive data which should not be put under version control needs to be dealt with. This includes middleware and platform credentials and may also include the cipher key used for encrypting sensitive data in files and LDAP, which can be dynamically injected by version 2.2.0 or later.
 
@@ -327,7 +327,7 @@ There are four alternative approaches to handling credentials:
 - Provide sensitive data in file `secrets.yaml` manually, use `secrets.yaml.envsubst` as template
 - Use the bundled script `secrets-setup.sh` to automatically generate `secrets.yaml` with random data
 - Use external secrets for Vault integration
-- Set up manually in k8s and configure as externally managed (set `general.install.externalSecret.*creds` to `true` in `values-config.yaml`)
+- Set up manually in K8s and configure as externally managed (set `general.install.externalSecret.*creds` to `true` in `values-config.yaml`)
 
 ### Deploying the image pull secret
 
@@ -369,7 +369,7 @@ Integration with Vault or another secret management system is documented in deta
 
 ### Enabling inbound connections from the outside
 
-There are different ways one can expose a k8s service to the outside world, using a NodePort is one of them, which is fine for a demo/simple setup, but defining an Ingress would be a more typical way for a real-life production deployment.
+There are different ways one can expose a K8s service to the outside world, using a NodePort is one of them, which is fine for a demo/simple setup, but defining an Ingress would be a more typical way for a real-life production deployment.
 
 #### Via NodePort by default
 
@@ -457,9 +457,9 @@ spec:
 
 The ability to dynamically inject metadata into Helm templates allows turning static templates into highly adaptable infrastructure. Label and annotation injection centralizes metadata management, ensuring environment consistency and driving cross-system automation without hardcoding project specific metadata in Helm templates. Dynamically injecting these key-value pairs enables third-party tools to auto-discover resources, seamlessly route traffic via Ingress, or acts as the foundation for centralized log management by tagging log sources with environments, teams, or application names.
 
-Dynamic injection of kubernetes labels and annotations is supported into both pods and services and can be configured via `extra.annotations` and `extra.labels` in `values-config.yaml` (or any Values file included in your setup).
+Dynamic injection of Kubernetes labels and annotations is supported into both pods and services and can be configured via `extra.annotations` and `extra.labels` in `values-config.yaml` (or any Values file included in your setup).
 
-One can select any of the following kubernetes resources and define extra annotations and labels to be injected without modifying the Helm templates.
+One can select any of the following Kubernetes resources and define extra annotations and labels to be injected without modifying the Helm templates.
 - Services
     - hazelcast-headless
     - isvdi
@@ -513,7 +513,7 @@ extra:
 
 When installing from scratch, schema and initial data have to be loaded to both DB and LDAP, with external data tier as well as data tier deployed via the Helm chart. This is not seen as a responsibility or an integral step of the Helm chart itself, as there are valid scenarios where IVIG has to be deployed or redeployed with an existing data tier containing data which must not be erased (migration, disaster recovery, upgrade scenarios). This requires finer grained control over the data initialization process.
 
-Similarly, version upgrades (fixpacks, but not interim fixes) may include schema extensions and specific logic to convert from the existing to the new data formats. Experience has shown that the automated DB or LDAP schema and data upgrade logic shipped with the fixpacks of the product is often incomplete and requires manual actions to successfully finish the upgrade.
+Similarly, version upgrades (Fixpacks, but not Interim Fixes) may include schema extensions and specific logic to convert from the existing to the new data formats. Experience has shown that the automated DB or LDAP schema and data upgrade logic shipped with the Fixpacks of the product is often incomplete and requires manual actions to successfully finish the upgrade.
 
 Therefore, version 2.2.3 and newer provides tooling for automation, but does not unconditionally invoke `dbConfig.sh` and `ldapConfig.sh` within the container.
 
@@ -563,7 +563,7 @@ Execute smoke tests for your IVIG project as necessary. (Smoke tests are a subse
 
 Many errors stem from human factors such as providing wrong configuration and skipping over or inaccurately executing required steps. Some users will intentionally alter and tailor the deployment method to fit their specific needs but introduce inconsistencies by incomplete or flawed changes.
 
-While users are free to customize the Helm templates and other resources in this project, it is the sole responsibility of the user to investigate and eliminate undesired side effects of any modification. For example, renaming containers or other k8s resources, rearranging the order of containers within pods will require adjustments to the commands listed in this guide or even the overall procedure described.
+While users are free to customize the Helm templates and other resources in this project, it is the sole responsibility of the user to investigate and eliminate undesired side effects of any modification. For example, renaming containers or other K8s resources, rearranging the order of containers within pods will require adjustments to the commands listed in this guide or even the overall procedure described.
 
 ### General Diagnostics
 

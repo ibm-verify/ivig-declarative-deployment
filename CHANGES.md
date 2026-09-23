@@ -50,12 +50,12 @@ With the original starterkit, a `rollout restart` causes a deadlock for ISVDI (w
 
 This version eliminates these deadlocks via a clean approach, without workarounds or manual steps involved:
 - When `ReadWriteMany` (RWX) access mode is configured via `storage.mode` in `values.yaml`, ISVDI will use `RollingUpdate` deployment strategy with zero-downtime across multiple nodes. **Warning:** The configured storage class must support RWX access mode, otherwise PVC creation during initial deployment will remain in pending state and never complete. This might need infrastructure configuration changes.
-- When `ReadWriteOnce` access mode is configured via `storage.mode` in `values.yaml`, the Helm template will automatically set the deployment strategy of ISVDI to `Recreate`. This forces k8s to terminate all existing pods and release the volume lock before creating new pods during restart. A few seconds of downtime is introduced during updates of ISVDI, but volume attach conflicts are completely eliminated allowing a clean `rollout update`. In practice, the downside is negligible, considering the case where RWX storage is not available or preferred.
+- When `ReadWriteOnce` access mode is configured via `storage.mode` in `values.yaml`, the Helm template will automatically set the deployment strategy of ISVDI to `Recreate`. This forces K8s to terminate all existing pods and release the volume lock before creating new pods during restart. A few seconds of downtime is introduced during updates of ISVDI, but volume attach conflicts are completely eliminated allowing a clean `rollout update`. In practice, the downside is negligible, considering the case where RWX storage is not available or preferred.
 - IBM MQ can use RWX storage exclusively for a specific deployment architecture called a Multi-Instance Queue Manager. Otherwise, if one attempts to run multiple active IBM MQ pods simultaneously against the same RWX storage path, data corruption will occur immediately. Therefore, the `mqshare` deployment will always use `ReadWriteOnce` storage (regardless of `storage.mode` configured in `values.yaml`), but apply a deployment strategy of `Recreate` and set the number of replicas explicitly to `1`. There will be at most 1 active pod at any point in time and a clean `rollout restart` is enabled with a few seconds downtime.
 
 Further, a handful of updates to documentation are delivered:
 - VAULT: troubleshooting and early verification/debug
-- VAULT: a handful of clarifications for users not familiar with vault
+- VAULT: a handful of clarifications for users not familiar with Vault
 - PURE-HELM: advanced JDBC configuration
 - code style
 
@@ -127,7 +127,7 @@ Detailed step-by-step guidance is provided for both variants.
 
 This version delivers a patching mechanism and uses it to alter files on startup rather than storing complete files to replace the original counterparts with. The patching mechanism features integrity checking and makes changes only if all files match, no fuzz factor and no heuristics are applied which is a conscious design decision when operating in a containerized environment. Patches are compact and efficiently deal with small changes in many large text files. A patch is specifically built for a certain image version and provides:
 - new features/enhancements that extend the capabilities of the original product
-- fixes to upstream bugs before product fixpack is publishes (could take months)
+- fixes to upstream bugs before product fix is publishes (could take months)
 - field customizable, project specific tuning such as JVM heap size adjustment
 
 The bundled `11.0.2.0-tweaks.patch` includes changes from all of these 3 categories.
@@ -171,7 +171,7 @@ New JDBC options one might use with this release:
 
 This version proactively supports configuration properties and certificate generation for `isvart`, the Node-based adapter component. The original starterkit currently does not.
 
-Further, minor improvements to the original k8s templates and scripts are cascaded to the enhanced counterparts in this project as well.
+Further, minor improvements to the original K8s templates and scripts are cascaded to the enhanced counterparts in this project as well.
 
 With this version, the repository structure is also updated. The `config` and `data` directories are no longer shared between starterkit and declarative deployment. The `config` folder under starterkit, hosts the original content and is not a symlink to `config` under `argo` any longer. Similarly, the `data` symlink is also deleted.
 
@@ -206,7 +206,7 @@ This version improves ISVDI autodiscovery and liberty metrics configuration.
 
 ISVDI init script autodiscovery is run right after `initAdapterContainer.sh` so `setHostname.sh` would be executed after autodiscovered init scripts are run. This improvement avoids a potential issue where changes made by `setHostname.sh` could be overwritten by autodiscovered scripts on some setups, specifically by an ISVA adapter init script which replaces the original `ibmdisrv` script with an adjusted version, where the original at that point would have already been modified by `setHostname.sh`.
 
-A more secure way is implemented for handing over liberty metrics credentials, which does not require storing sensitive data in Git (not even in encrypted form). Both username and password can be left blank (empty or null) in `values-config.yaml` in which case missing data will be read from a k8s secret. This secret by default will be populated based on username in `values-config.yaml` and password specified in `secrets.yaml`, however, the secret can be marked as externally managed in which case it will be assumed to pre-exist (e.g. created and updated by vault, see feature added in 2.1.2).
+A more secure way is implemented for handing over liberty metrics credentials, which does not require storing sensitive data in Git (not even in encrypted form). Both username and password can be left blank (empty or null) in `values-config.yaml` in which case missing data will be read from a K8s secret. This secret by default will be populated based on username in `values-config.yaml` and password specified in `secrets.yaml`, however, the secret can be marked as externally managed in which case it will be assumed to pre-exist (e.g. created and updated by Vault, see feature added in 2.1.2).
 
 ## 2.3.6 (2026-03-26)
 
@@ -262,18 +262,18 @@ Cryptographic keys clearly qualify as sensitive data. Certificates, Certificate 
 
 The following concept is implemented for all files related to x509 certificates:
 - remove all certificates, key, CSRs etc. from configmaps
-- store certificates and related files to dedicated k8s secrets (opaque cert-secrets)
+- store certificates and related files to dedicated K8s secrets (opaque cert-secrets)
 - define projected volumes to merge the contents of cert-secrets and configmaps
 - mount projected volumes to existing directories to maintain compatibility
 - apply conditional template rendering to selectively enable external secrets for such cert-secrets
 
-This clean separation enables vault integration for the following secrets which can be individually toggled via `general.install.externalSecret.*`:
+This clean separation enables Vault integration for the following secrets which can be individually toggled via `general.install.externalSecret.*`:
 - `mqcreds`, `oidccreds` and `extcreds`: MQ, OIDC and platform credentials, support external secrets since 2.1.2
 - `regcred`: image pull secret, supports external secrets since 2.1.2, can be actively managed since 2.2.5
 - `isvdcerts`: new, enables externalization of LDAP key and certificate along with trusted certificates
 - `isvdcred`: stores LDAP admin credentials, can now be configured as external secret
 - `isvdicerts`: new, enables externalization of ISVDI key and certificate along with trusted certificates
-- `isvgimcerts`: new, includes all files under the cert directory, which can now be sourced from vault
+- `isvgimcerts`: new, includes all files under the cert directory, which can now be sourced from Vault
 - `mqcerts`: new, allows the use of external secrets for MQ key and certificate plus trusted CA certs
 - `pgcerts`: new, allows the use of external secrets for Postgres key and certificate
 - `pgcreds`: new, enables externalisation of DB and DB Admin credentials
@@ -308,7 +308,7 @@ Additionally, minor fixes and documentation updates are included.
 
 ## 2.3.0 (2026-02-12)
 
-This version adds chart and version control metadata to the k8s namespace and addresses a compatibility issue with symlinks.
+This version adds chart and version control metadata to the K8s namespace and addresses a compatibility issue with symlinks.
 
 Following annotations are generated for the namespace during template rendering:
 - `helm.sh/chart`: chart name and version
@@ -323,9 +323,9 @@ Additionally, minor fixes and documentation updates are included.
 
 ## 2.2.5 (2026-01-28)
 
-This version enables deployment of the k8s namespace and the image pull secret.
+This version enables deployment of the K8s namespace and the image pull secret.
 
-Prior to this version, the k8s namespace resource and the image pull secret `regcred` had to be created manually, upfront.
+Prior to this version, the K8s namespace resource and the image pull secret `regcred` had to be created manually, upfront.
 
 Helm templates will now deploy (create and sync) the namespace with all annotations required for pod security admission control.
 
@@ -379,7 +379,7 @@ Subject alternate names (domain names) are configured according to the requireme
 
 This script is intentionally de-couple and self-contained, it does not have dependencies other than `bash` and `openssl`.
 
-Another script, `cert-setup.sh` is included to auto-detects the part of configuration that is relevant for certificates, once `values.yaml` and `values-config.yaml` have already been adjusted. In particular, it will retrieve the k8s namespace from `values.yaml`, collect extra hostnames (which should be added to the certificate of IVIG server) and the list of optional components to be deployed from `values-config.yaml`. This script, after collecting the information required, will invoke `cert-util.sh` to create certificates, and after that, to list the details of the certificates created.
+Another script, `cert-setup.sh` is included to auto-detects the part of configuration that is relevant for certificates, once `values.yaml` and `values-config.yaml` have already been adjusted. In particular, it will retrieve the K8s namespace from `values.yaml`, collect extra hostnames (which should be added to the certificate of IVIG server) and the list of optional components to be deployed from `values-config.yaml`. This script, after collecting the information required, will invoke `cert-util.sh` to create certificates, and after that, to list the details of the certificates created.
 
 Elliptic Curve prime256v1 keys and certificates are created for the following when `cert-setup.sh` is run:
 - `isvgimRootCA`
@@ -423,7 +423,7 @@ Key benefits of the alternative approach implemented here:
 - uses a dynamically generated random keystore password (which changes on each restart of the container)
 - encrypts DEK with a random KEK which also changes whenever the container is restarted
 - securely injects the DEK dynamically into the keystore, in a well isolated manner before the main container starts
-- ensures backward compatibility: if a keystore is supplied via a k8s secret, it is used in the traditional way along with the master key and `encryptionKey.properties` stored in the same k8s secret
+- ensures backward compatibility: if a keystore is supplied via a K8s secret, it is used in the traditional way along with the master key and `encryptionKey.properties` stored in the same K8s secret
 
 Further, this version also delivers minor optimizations and enhancements to init containers.
 

@@ -2,11 +2,11 @@
 
 ## Enhanced approach to securing sensitive data
 
-Sensitive data such as passwords or encryption keys should not be hardcoded in source code or built into container images. While storing clear text sensitive data is strictly prohibited, it is even discouraged to store sensitive data in Git or other source control repositories in encrypted form. Further, passing sensitive data to containers via k8s configmaps is also deemed inappropriate.
+Sensitive data such as passwords or encryption keys should not be hardcoded in source code or built into container images. While storing clear text sensitive data is strictly prohibited, it is even discouraged to store sensitive data in Git or other source control repositories in encrypted form. Further, passing sensitive data to containers via K8s configmaps is also deemed inappropriate.
 
 ### Proper separation of sensitive and non-sensitive data
 
-Proper separation of sensitive and non-sensitive data is a security measure in itself and a prerequisite to enabling additional layers of data protection. All sensitive data is encapsulated in k8s Secrets.
+Proper separation of sensitive and non-sensitive data is a security measure in itself and a prerequisite to enabling additional layers of data protection. All sensitive data is encapsulated in K8s Secrets.
 
 ### Dynamic credential injection
 
@@ -32,7 +32,7 @@ Key benefits of the alternative approach implemented here:
 - uses a dynamically generated random keystore password (which changes on each restart of the container)
 - encrypts DEK with a random KEK which also changes whenever the container is restarted
 - securely injects the DEK dynamically into the keystore, in a well isolated manner before the main container starts
-- ensures backward compatibility: if a keystore is supplied via a k8s secret, it is used in the traditional way along with the master key and `encryptionKey.properties` stored in the same k8s secret
+- ensures backward compatibility: if a keystore is supplied via a K8s secret, it is used in the traditional way along with the master key and `encryptionKey.properties` stored in the same K8s secret
 
 ### Interoperability with external secret management systems such as HashiCorp Vault
 
@@ -102,14 +102,14 @@ Note that this flag is not available in the original product.
 
 With the original starterkit, a `rollout restart` causes a deadlock for ISVDI (when `storage.mode` is set to `ReadWriteOnce`) and MQ (always, with any value of `storage.mode` in `values.yaml`) when starting the new pod on a different node. A known workaround is to manually scale the deployments down to `0` replicas, wait for the old pods to die and release the volume, and then scale back up.
 
-When running a `kubectl rollout restart deployment` on a k8s deployment that utilizes a ReadWriteOnce (RWO) PersistentVolumeClaim, the rolling update can become permanently deadlocked:
+When running a `kubectl rollout restart deployment` on a K8s deployment that utilizes a ReadWriteOnce (RWO) PersistentVolumeClaim, the rolling update can become permanently deadlocked:
 - access mode `ReadWriteOnce` specifies that a volume can only be mounted as read-write by a single worker node at a time
-- during a default `RollingUpdate`, k8s attempts to spin up a new pod before terminating the old one
+- during a default `RollingUpdate`, K8s attempts to spin up a new pod before terminating the old one
 - if the scheduler places the new pod on a **different node**, that node cannot attach the volume and hangs indefinitely in `ContainerCreating` state preventing the rollout from ever completing
 
 This project eliminates the deadlocks of ISVDI and MQ on restart via a cleaner approach without manual steps involved:
 - When `ReadWriteMany` (RWX) access mode is configured via `storage.mode` in `values.yaml`, ISVDI will use `RollingUpdate` deployment strategy with zero-downtime across multiple nodes. **Warning:** The configured storage class must support RWX access mode, otherwise PVC creation during initial deployment will remain in pending state and never complete. This might need infrastructure configuration changes.
-- When `ReadWriteOnce` access mode is configured via `storage.mode` in `values.yaml`, the Helm template will automatically set the deployment strategy of ISVDI to `Recreate`. This forces k8s to terminate all existing pods and release the volume lock before creating new pods during restart. A few seconds of downtime is introduced during updates of ISVDI, but volume attach conflicts are completely eliminated allowing a clean `rollout update`. In practice, the downside is negligible, considering the case where RWX storage is not available or preferred.
+- When `ReadWriteOnce` access mode is configured via `storage.mode` in `values.yaml`, the Helm template will automatically set the deployment strategy of ISVDI to `Recreate`. This forces K8s to terminate all existing pods and release the volume lock before creating new pods during restart. A few seconds of downtime is introduced during updates of ISVDI, but volume attach conflicts are completely eliminated allowing a clean `rollout update`. In practice, the downside is negligible, considering the case where RWX storage is not available or preferred.
 - IBM MQ can use RWX storage exclusively for a specific deployment architecture called a Multi-Instance Queue Manager. Otherwise, if one attempts to run multiple active IBM MQ pods simultaneously against the same RWX storage path, data corruption will occur immediately. Therefore, the `mqshare` deployment will always use `ReadWriteOnce` storage (regardless of `storage.mode` configured in `values.yaml`), but apply a deployment strategy of `Recreate` and set the number of replicas explicitly to `1`. There will be at most 1 active pod at any point in time and a clean `rollout restart` is enabled with a few seconds downtime.
 
 ## Bugfixes

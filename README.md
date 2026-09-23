@@ -20,12 +20,12 @@ The desired state is stored in Git and based on this, declarative deployment (di
 - Move as much as possible to pure declarative deployment
 - Clean separation of sensitive and non-sensitive configuration data
 - Deployment from Git with environment specific variables
-- Deployment using externally managed secrets (vault)
+- Deployment using externally managed secrets (Vault)
 - No extra dependencies (vs Starterkit) but integrate with cloud native CD tools e.g. Argo CD (whereas Starterkit does not).
 - Observability/visibility increased due to "normalized" repo structure
 - Detect and remediate configuration shift, rollback, central desired state in Git
 - Avoid chicken-egg problem, enable creation of desired state before containers are deployed to cluster (crucial for air-gapped environment)
-- Ability to deploy any Fixpack or Interim Fix version right away, without installing 11.0.0.0 and then sequentially updating to each FixPack or Interim Fix
+- Ability to deploy any Fixpack or Interim Fix version right away, without installing 11.0.0.0 and then sequentially updating to each Fixpack or Interim Fix
 
 ### Out of Scope
 - ~deployment of data tier (expected to be present as prerequisite)~(chart 2.2.1 enables optional deployment of DB and LDAP intended for non-production use)
@@ -54,14 +54,14 @@ The declarative deployment method for IVIG follows a relaxed layered architectur
 
 0. GitOps is a concept that applies version control and CI/CD to infrastructure automation, ensuring consistent and repeatable deployment.
 1. At the core, a Helm chart implements the deployment logic. It can be deployed without using any third party component other than Helm - this approach is referred to as a [pure Helm standalone setup](docs/PURE-HELM.md) and described in detail. It is imperative to read this documentation as it serves as a foundation for subsequent layers as well.
-2. Argo CD is a higher-level GitOps-driven continuous delivery platform for k8s which supports Helm and Git and handles cluster synchronisation. This optional deployment approach builds on the previous layer. Read the [recommended approach for a multi-stage project via Argo CD](docs/ARGO-CD.md) after processing the documentation of the previous layer.
-3. External Secrets Operator is a k8s operator that syncs sensitive data from external secret management systems (such as HashiCorp Vault) into k8s Secrets. [Integration with Vault via External Secrets](docs/VAULT.md) is optional and can be used with [pure Helm](docs/PURE-HELM.md) as well as [Argo CD](docs/ARGO-CD.md).
+2. Argo CD is a higher-level GitOps-driven continuous delivery platform for K8s which supports Helm and Git and handles cluster synchronisation. This optional deployment approach builds on the previous layer. Read the [recommended approach for a multi-stage project via Argo CD](docs/ARGO-CD.md) after processing the documentation of the previous layer.
+3. External Secrets Operator is a K8s operator that syncs sensitive data from external secret management systems (such as HashiCorp Vault) into K8s Secrets. [Integration with Vault via External Secrets](docs/VAULT.md) is optional and can be used with [pure Helm](docs/PURE-HELM.md) as well as [Argo CD](docs/ARGO-CD.md).
 
 ### System Requirements
 
 Strictly speaking, the only third party dependency is Helm, version 3.18 or newer. Therefore any continuous delivery platform which supports Helm should be supported but explicit testing was done on Argo CD only.
 
-There are no specific system requirements other than [those of the IVIG version, which will be deployed](https://www.ibm.com/software/reports/compatibility/clarity/index.html?name=IBM%20Verify%20Identity%20Governance). The product documentation boldly states that all versions of kubernetes are supported, but it is encouraged to use a kubernetes release which has not reached end-of-life yet.
+There are no specific system requirements other than [those of the IVIG version, which will be deployed](https://www.ibm.com/software/reports/compatibility/clarity/index.html?name=IBM%20Verify%20Identity%20Governance). The product documentation boldly states that all versions of Kubernetes are supported, but it is encouraged to use a Kubernetes release which has not reached end-of-life yet.
 
 Optional [Integration with Vault via External Secrets](docs/VAULT.md) has additional dependencies [documented separately](docs/VAULT.md#prerequisites).
 
@@ -84,9 +84,9 @@ The standalone setup is a viable option for both Developers/Integrators and for 
 
 ### TL;DR
 
-This section is intended for users intimately familiar with IVIG, kubernetes and Helm. It provides quick-start instructions in a compact and minimalistic fashion. It is strongly recommended to read and understand the [complete setup guide](docs/PURE-HELM.md) which covers technical details and deployment options.
+This section is intended for users intimately familiar with IVIG, Kubernetes and Helm. It provides quick-start instructions in a compact and minimalistic fashion. It is strongly recommended to read and understand the [complete setup guide](docs/PURE-HELM.md) which covers technical details and deployment options.
 
-The code listing below covers a minimal setup from scratch, assuming the user already established `kubectl` connectivity to a k8s cluster which has a storage class called 'local-path'.
+The code listing below covers a minimal setup from scratch, assuming the user already established `kubectl` connectivity to a K8s cluster which has a storage class called 'local-path'.
 
 **Note:** Due to legal restrictions, no license keys are distributed in this repo. The user has to accept the license and provide activation/license keys for the IBM products to be deployed.
 
@@ -166,15 +166,15 @@ The repository setup and configuration steps described in the standalone setup g
 
 On high level, the following sequence of steps should be followed to quickly bootstrap your deployment via Argo CD:
 - Check out this project, adjust `values.yaml` and `values-config.yaml` for your environment and check into your Git
-- Generate x509 certificates offline (or in another environment) and store these to Git (or optionally, store these in vault)
-- Adjust the application manifest sample in the root directory of this project (optionally use external secrets from vault)
+- Generate x509 certificates offline (or in another environment) and store these to Git (or optionally, store these in Vault)
+- Adjust the application manifest sample in the root directory of this project (optionally use external secrets from Vault)
 - Enable automatic sync or sync manually via Argo CD
 
 In a real-life setup, the typical pattern is to deploy multiple environments (such as development, test and production) from a single Git repository. A separate guide describes the [recommended approach for a multi-stage project via Argo CD](docs/ARGO-CD.md).
 
 ## External Secrets and Vault Integration
 
-With Vault Integration enabled, you can securely store all or a subset of the [credentials from `secrets.yaml`](docs/PURE-HELM.md#deploy) in Vault, which will be automatically propagated to the k8s cluster and exposed to the containers in a secure manner. Additionally, PKI related files, such as private keys and certificates can also be sourced from Vault and mounted to the containers in a similar way.
+With Vault Integration enabled, you can securely store all or a subset of the [credentials from `secrets.yaml`](docs/PURE-HELM.md#deploy) in Vault, which will be automatically propagated to the K8s cluster and exposed to the containers in a secure manner. Additionally, PKI related files, such as private keys and certificates can also be sourced from Vault and mounted to the containers in a similar way.
 
 Interoperability with Vault is achieved via the use of External Secrets. The External Secrets Operator interacts with [HashiCorp Vault](https://www.vaultproject.io/), [IBM Cloud Secrets Manager](https://www.ibm.com/cloud/secrets-manager) or external secret management systems like [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/), [Google Secrets Manager](https://cloud.google.com/secret-manager), [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/), [CyberArk Conjur](https://www.conjur.org/).
 
@@ -198,7 +198,7 @@ This section contains near and mid term plans, uncommitted feature candidates an
 
 ### General information
 
-There is general intention to maintain compatibility with upcoming versions of the product. After the release of new product versions (including fixpacks and interim fixes), it will be analysed if any change would break functionality of the declarative deployment method implemented in this project. The required strategic changes should be implemented in a reasonably short timeframe in order to support the new product version. Each release of this project clearly mentions the target product version it can deploy.
+There is general intention to maintain compatibility with upcoming versions of the product. After the release of new product versions (including Fixpacks and Interim Fixes), it will be analysed if any change would break functionality of the declarative deployment method implemented in this project. The required strategic changes should be implemented in a reasonably short timeframe in order to support the new product version. Each release of this project clearly mentions the target product version it can deploy.
 
 Based on severity, effort required and available capacity, some defects or weaknesses introduced in a future version of the product may be compensated in this project until an upstream fix is available. The dynamic patching capability allows applying small patches efficiently, and will be used in exceptional cases when waiting several weeks for an official product fix would have severe negative impact.
 
