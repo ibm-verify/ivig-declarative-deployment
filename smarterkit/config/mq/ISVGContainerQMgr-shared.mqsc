@@ -1,17 +1,5 @@
-* © Copyright IBM Corporation 2018
-*
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
+* Copyright IBM Corp. 2026
+* SPDX-License-Identifier: MIT
 
 *STOP LISTENER('SYSTEM.DEFAULT.LISTENER.TCP') IGNSTATE(YES)
 
@@ -36,8 +24,8 @@ REFRESH SECURITY(*) TYPE(CONNAUTH)
 
 * Developer channels (Application + Admin)
 DEFINE CHANNEL('DEV.ADMIN.SVRCONN') CHLTYPE(SVRCONN) REPLACE
-DEFINE CHANNEL('DEV.SHARED.SVRCONN') CHLTYPE(SVRCONN) MCAUSER('app') SSLCIPH(ANY_TLS12) SSLCAUTH(OPTIONAL) REPLACE
-ALTER QMGR SSLFIPS(NO)
+DEFINE CHANNEL('DEV.SHARED.SVRCONN') CHLTYPE(SVRCONN) MCAUSER('app') SSLCIPH(ANY_TLS12_OR_HIGHER) SSLCAUTH(OPTIONAL) REPLACE
+ALTER QMGR SSLFIPS({{ ternary "YES" "NO" .Values.fips }})
 
 * Developer channel authentication rules
 SET CHLAUTH('*') TYPE(ADDRESSMAP) ADDRESS('*') USERSRC(NOACCESS) DESCR('Back-stop rule - Blocks everyone') ACTION(REPLACE)
