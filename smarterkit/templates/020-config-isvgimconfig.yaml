@@ -8,6 +8,8 @@ metadata:
   name: isvgimconfig
   namespace: {{ .Values.namespace }}
 data:
+  {{- $server := deepCopy .Values.server                                  }}
+  {{- $_ := set $server.flags "enableFIPS" (.Values.fips | default false) }}
   config.yaml: |
     version: '24.12'
     general:
@@ -17,7 +19,7 @@ data:
         activationKey: {{ .Values.general.license.activationKey | default "null" }}
         accepted: {{ .Values.general.license.accepted }}
         riskKey: {{ .Values.general.license.riskKey | default "null" }}
-    server: {{- .Values.server | toYaml | nindent 6 }}
+    server: {{- $server | toYaml | nindent 6 }}
     {{- if .Values.oidc}}
     oidc: {{- .Values.oidc | toYaml | nindent 6 }}
     {{- end }}

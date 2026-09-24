@@ -27,20 +27,23 @@ general:
     riskKey:
 db:
   user: postgres
-  password:
+  # DO NOT STORE sensitive data here! See documentation for secure alternatives!
+  # password:
   dbtype:
   ip:
   port:
   name: ivig
   admin: postgres
-  adminPwd:
+  # DO NOT STORE sensitive data here! See documentation for secure alternatives!
+  # adminPwd:
   isOracleServiceName: true
   security.protocol: ssl
   tablespace.location.data: /var/lib/postgresql/data/isvgimdata
   tablespace.location.indexes: /var/lib/postgresql/data/isvgimindexes
 ldap:
   security.principal: cn=root
-  security.credentials:
+  # DO NOT STORE sensitive data here! See documentation for secure alternatives!
+  # security.credentials:
   defaulttenant.id: demo
   organization.name: Demo
   ldapserver.ip:
@@ -56,7 +59,8 @@ mail:
   smtp.starttls.enable: false
   smtp.auth: true
   smtp.auth.user: ivig
-  smtp.auth.password:
+  # DO NOT STORE sensitive data here! See documentation for secure alternatives!
+  # smtp.auth.password:
 office365:
   monitoring.enabled: false
   user.id:
@@ -75,10 +79,12 @@ server:
     - name: userName
       value: null
     - name: password
+      # LEAVE IT SET TO null to use more secure alternatives!
       value: null
   flags:
     disableTLSv12: false
-    enableFIPS: false
+    # DO NOT USE `enableFIPS` here. Use `fips` in `values.yaml`!
+    # enableFIPS: false
     secureSessionCookies: true
     globalHSTS: true
     hideServerVersion: false
