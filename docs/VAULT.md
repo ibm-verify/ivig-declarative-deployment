@@ -4,7 +4,7 @@
 
 The [External Secrets Operator](https://external-secrets.io/) is a Kubernetes operator that synchronizes secrets from external secret management systems such as [Vault](https://developer.hashicorp.com/vault/docs) into Kubernetes Secret objects.
 
-With Vault Integration enabled, you can securely store all or a subset of the [credentials from `secrets.yaml`](PURE-HELM.md#deploy) in Vault, which will be automatically propagated to the k8s cluster and exposed to the containers in a secure manner. Additionally, PKI related files, such as private keys and certificates can also be sourced from Vault and mounted to the containers in a similar way.
+With Vault Integration enabled, you can securely store all or a subset of the [credentials from `secrets.yaml`](PURE-HELM.md#deploy) in Vault, which will be automatically propagated to the K8s cluster and exposed to the containers in a secure manner. Additionally, PKI related files, such as private keys and certificates can also be sourced from Vault and mounted to the containers in a similar way.
 
 ```
                               +---------------------+
@@ -54,11 +54,11 @@ When using Vault in tandem with Argo CD, this recommended integration pattern ev
 
 ## Prerequisites
 
-The following components are assumed to be deployed and confgiured correctly for the target environment:
+The following components are assumed to be deployed and configured correctly for the target environment:
 - [Vault](https://developer.hashicorp.com/vault/docs/get-vault#install-options) up and running (tested on Vault Enterprise 1.15.4)
 - [External Secrets Operator](https://external-secrets.io/latest/introduction/getting-started/) running (0.16.2 or newer)
 
-**Note:** In productive environments, the two components above are typically deployed and managed by a dedicated team, tweaked and hardened to match client-specific requirements. There is no intention to cover all deployment options and topologies. This document includes [step-by-step guidance](#developer-setup-from-scratch-and-early-debug) for users who will need to setup their own development environment from scratch but are unfamiliar with Vault or External Secrets. This guide includes extra debugging steps to faciliate early detection of configuration errors.
+**Note:** In productive environments, the two components above are typically deployed and managed by a dedicated team, tweaked and hardened to match client-specific requirements. There is no intention to cover all deployment options and topologies. This document includes [step-by-step guidance](#developer-setup-from-scratch-and-early-debug) for users who will need to setup their own development environment from scratch but are unfamiliar with Vault or External Secrets. This guide includes extra debugging steps to facilitate early detection of configuration errors.
 
 There are two optional user convenience scripts for importing from and exporting to Vault, which require the following dependencies in addition to what is already documented under [System Requirements](PURE-HELM.md#system-requirements):
 - `vault-json-pack.sh`: bash 3.2, jq 1.5
@@ -80,7 +80,7 @@ Vault configuration instructions, unless specifically noted otherwise, are carri
 
 ### Access Controls
 
-On the Vault web UI, navigate via the main menu to **Policies / ACL Policies**. Create Policy "read-secrets" with the content below which will grant read access to sensitive date stored under `secrets` and `certs`.
+On the Vault web UI, navigate via the main menu to **Policies / ACL Policies**. Create Policy "read-secrets" with the content below which will grant read access to sensitive data stored under `secrets` and `certs`.
 
 ```
 # Read secret values
@@ -94,7 +94,7 @@ path "certs/data/*" {
 
 ### Kubernetes Authentication
 
-The following steps document how to link the Kubernetes Cluster with Vault by registering and authorizing an already existing k8s service account, the example uses `idm-vault-viewer` in namespace `ivig-idm`. The steps are carried out on Vault web UI.
+The following steps document how to link the Kubernetes Cluster with Vault by registering and authorizing an already existing K8s service account, the example uses `idm-vault-viewer` in namespace `ivig-idm`. The steps are carried out on Vault web UI.
 
 1. Using the main menu on the left, navigate to **Access** → **Authentication Methods**, select **Enable new method** and choose **Kubernetes**
 
@@ -102,9 +102,9 @@ The following steps document how to link the Kubernetes Cluster with Vault by re
 
 3. Click **Enable Method**
 
-4. Fill in the k8s API server endpoint in the **Kubernetes host** field
+4. Fill in the K8s API server endpoint in the **Kubernetes host** field
 
-   **Note:** Ensure that Vault can reach the Kubernetes API server. In general, the k8s API server URL can be retrieved via `kubectl cluster-info`. If Vault is running in the same Kubernetes cluster, you should use the internal API endpoint instead: `https://kubernetes.default.svc`
+   **Note:** Ensure that Vault can reach the Kubernetes API server. In general, the K8s API server URL can be retrieved via `kubectl cluster-info`. If Vault is running in the same Kubernetes cluster, you should use the internal API endpoint instead: `https://kubernetes.default.svc`
 
 5. Populate the **Kubernetes CA Certificate** field with the cluster CA certificate in PEM format
    ```bash
@@ -112,7 +112,7 @@ The following steps document how to link the Kubernetes Cluster with Vault by re
    ```
    **Note:** Depending on your choice of deployment options, the service account may not exist yet at this point. Review the 3 options described below at the end of this section and chose your preferred option.
 
-   **Note:** Depending on your Vault and Kubernetes configuration, you may leave this field empty if Vault is running in the same cluster. The Vault pod would see the same k8s CA in this case.
+   **Note:** Depending on your Vault and Kubernetes configuration, you may leave this field empty if Vault is running in the same cluster. The Vault pod would see the same K8s CA in this case.
 6. Populate the **Token Reviewer JWT** field (also called **Kubernetes API JWT** in certain version) with the service account token:
    ```bash
    kubectl get secret idm-vault-viewer-secret -n ivig-idm -o jsonpath='{.data.token}' | base64 -d
@@ -140,10 +140,10 @@ The following steps document how to link the Kubernetes Cluster with Vault by re
 
 **Note:** Depending on your choice of deployment options, the service account may not exist yet at this point. In this case, you will have to revisit steps 5 and 6 once the service account and its secret holding the JSON Web Token and CA certificate becomes available. A non-exhaustive list of options:
 - **Option A:** Use the same namespace IVIG will be deployed to and automatically create the service account via the Helm chart (revisit steps 5 and 6 after first run of helm/Argo CD)
-- **Option B:** Use the same namespace IVIG will be deployed to but create the minimally required k8s resources upfront, manually (no need to revisit steps later on)
+- **Option B:** Use the same namespace IVIG will be deployed to but create the minimally required K8s resources upfront, manually (no need to revisit steps later on)
 - **Option C:** Create a service account in another namespace, e.g. 'external-secrets', manually - no overlap with the namespace IVIG will be deployed to, no need to revisit steps later, at the cost of scattering configuration across multiple namespaces which you may or may not prefer
 
-For **Option B**, execute the following on your k8s cluster before executing the steps above. For **Option C** adjust namespace and service account and secret names according to your preference.
+For **Option B**, execute the following on your K8s cluster before executing the steps above. For **Option C** adjust namespace and service account and secret names according to your preference.
 
 ```sh
 cat <<EOF | kubectl apply -f -
@@ -175,9 +175,9 @@ Create Secret Engine "secrets" (section "Generic", type KV which stands for key-
 
 Vault web UI allows you to specify keys and values one-by-one when creating secrets, but it is recommended to toggle the **JSON** switch on the top of the screen which allows you to paste all key-value pairs at once, increasing efficiency and decreasing the chance of human errors. Use one of the options below to create the secrets required.
 
-#### Option A: Move exiting k8s secrets to Vault
+#### Option A: Move exiting K8s secrets to Vault
 
-If the secrets have already been deployed to k8s without Vault integration enabled, there is a convenient way to move these secrets to Vault. The following command demonstrates how the content of `pgcreds` can be retreived from via `kubectl` in a JSON format suitable for Vault import.
+If the secrets have already been deployed to K8s without Vault integration enabled, there is a convenient way to move these secrets to Vault. The following command demonstrates how the content of `pgcreds` can be retrieved from via `kubectl` in a JSON format suitable for Vault import.
 
 ```
 kubectl get secret pgcreds --namespace ivig-idm -o json | jq '.data|map_values(@base64d)'
@@ -193,7 +193,7 @@ Under Secret Engine "secrets", a secret with the name "pgcreds" needs to be crea
 
 #### Option B: Create secrets in Vault right away
 
-If one has not already deployed the secrets to the k8s cluster and would like to enter these in Vault right away, the following listing should serve as a reference. Secrets should be created just like described in the previous option, but the JSON content needs to be defined by the user.
+If one has not already deployed the secrets to the K8s cluster and would like to enter these in Vault right away, the following listing should serve as a reference. Secrets should be created just like described in the previous option, but the JSON content needs to be defined by the user.
 
 Assuming all sensitive data is already captured in `secrets.yaml`, just copy over individual values under the appropriate keys within the Vault secrets. The listing below provides guidance on how the names in `secrets.yaml` should be mapped to keys within Vault secrets, and in specific cases, which `values-config.yaml` keys should be looked up for less sensitive data such as usernames (these are the ones with all-lowercase letters).
 
@@ -261,12 +261,12 @@ The original starterkit performs certificate management within the container, th
 
 This project enforces a stricter approach to exposing sensitive data where each container has access to certificates and more importantly private keys on a need-to-know basis. The CA private key is not exposed to any of the containers as certificate management is expected to happen in the admin domain (which can be isolated, offline or airgapped), and not within the application/runtime domain.
 
-Specific subsets of the PKI related files are defined for each purpose, on a need-to-know-basis for ISVDI, ISVGIM and MQ. These subsets are exposed to the respective containers via k8s Secrets. Even without Vault integration this already increases the level of security. As an additional security measure, these subsets can be stored in Vault, in which case these will be exposed as external secrets to the respective containers, mounted in a similar manner to configmaps, but providing a significantly higher level of security.
+Specific subsets of the PKI related files are defined for each purpose, on a need-to-know-basis for ISVDI, ISVGIM and MQ. These subsets are exposed to the respective containers via K8s Secrets. Even without Vault integration this already increases the level of security. As an additional security measure, these subsets can be stored in Vault, in which case these will be exposed as external secrets to the respective containers, mounted in a similar manner to configmaps, but providing a significantly higher level of security.
 
 The following subsets are defined:
 - **isvdicerts** includes certificates of the components Directory Integrator needs to communicate with, or the signers of these certificates, plus the PEM file holding Directory Integrator's private key and certificate
 - **isvgimcerts** includes the private key and certificate used by the IVIG application, the certificate of the local CA plus the CA bundle/truststore used to verify connections external components (i.e. when using an external data tier or SMTP server)
-- **mqcerts** includes the private key and certicate for MQ along with the certificate of the local CA
+- **mqcerts** includes the private key and certificate for MQ along with the certificate of the local CA
 - **isvdcerts** applies when internal LDAP is used, it includes certificates of components communicating with LDAP or the signers of such certificates, plus the PEM file holding Directory Integrator's private key and certificate
 - **pgcerts** is only relevant if the internal DB is used, it includes the private key and certificate used by the database
 - **all** includes the full set of files including certificate signing requests and the CA serial file for certificate management purposes only, it is not exposed to any container
@@ -377,7 +377,7 @@ rm -r ../../certs/UAT
 
 ## External Secrets
 
-External Secrets provide a vendor agnostic uniform interface to expose secrets to k8s from a variety of secret management platforms. The External Secrets Operator communicates with the secret management provider (e.g. [HashiCorp Vault](https://www.vaultproject.io/), [IBM Cloud Secrets Manager](https://www.ibm.com/cloud/secrets-manager) or external secret management systems like [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/), [Google Secrets Manager](https://cloud.google.com/secret-manager), [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/), [CyberArk Conjur](https://www.conjur.org/)) via product specific APIs and exposes the secrets in a uniform way. Provider-specific details such as connection parameters and configuration properties are encapsulated in **ClusterSecretStore** (or SecretStore) resources, used by the Operator to establish communication with the provider (see the diagram above in the introduction).
+External Secrets provide a vendor agnostic uniform interface to expose secrets to K8s from a variety of secret management platforms. The External Secrets Operator communicates with the secret management provider (e.g. [HashiCorp Vault](https://www.vaultproject.io/), [IBM Cloud Secrets Manager](https://www.ibm.com/cloud/secrets-manager) or external secret management systems like [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/), [Google Secrets Manager](https://cloud.google.com/secret-manager), [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/), [CyberArk Conjur](https://www.conjur.org/)) via product specific APIs and exposes the secrets in a uniform way. Provider-specific details such as connection parameters and configuration properties are encapsulated in **ClusterSecretStore** (or SecretStore) resources, used by the Operator to establish communication with the provider (see the diagram above in the introduction).
 
 External Secrets can be configured for this project in two variants:
 - Vendor agnostic way, where the **ClusterSecretStore** is expected to already exist and be configured against your choice of secret management platform
@@ -403,7 +403,7 @@ With this change, configuration is complete. Just run `helm` or commit your chan
 
 #### Under the hood
 
-Once Vault integration is enabled and a secretStore name is specified (or inferred), the Helm chart will automatically create an ExternalSecret for all secrets you marked as externally managed by setting `general.install.externalSecret.*` to `true` in `values-config.yaml` (or an alternative values file specified for your deployment). The ExternalSecrets will reference the ClusterSecretStore with the configured name, which will trigger the External Secrets Operator to fetch sensitive date from Vault, using connection parameters as provided in the ClusterSecretStore, and then create (or update) a k8s Secret for each ExternalSecret resource.
+Once Vault integration is enabled and a secretStore name is specified (or inferred), the Helm chart will automatically create an ExternalSecret for all secrets you marked as externally managed by setting `general.install.externalSecret.*` to `true` in `values-config.yaml` (or an alternative values file specified for your deployment). The ExternalSecrets will reference the ClusterSecretStore with the configured name, which will trigger the External Secrets Operator to fetch sensitive date from Vault, using connection parameters as provided in the ClusterSecretStore, and then create (or update) a K8s Secret for each ExternalSecret resource.
 
 This heavy-lifting is achieved by a single Helm template under `templates/vault/008-externalsecret-loop.yaml`, which is provider-agnostic as opposed to being specific to Vault.
 
@@ -432,7 +432,7 @@ vault:
 
 ### Tips and Tricks
 
-The k8s Secrets are automatically refreshed by the operator if the owning ExternalSecrets (k8s resource) is updated. In addition, Secrets are periodically refreshed by the operator as specified via `refreshInterval` where the value `"0"` disables periodic refresh. More precisely, the operator will:
+The K8s Secrets are automatically refreshed by the operator if the owning ExternalSecrets (K8s resource) is updated. In addition, Secrets are periodically refreshed by the operator as specified via `refreshInterval` where the value `"0"` disables periodic refresh. More precisely, the operator will:
 
 - Create the Secret if it doesn't exist
 - Update the Secret when the ExternalSecret specification changes
@@ -459,7 +459,7 @@ kubectl delete secret oidccreds
 
 ## Troubleshooting
 
-**Note:** There is a multitude of possible deployment options and topologies each of which might require minor adjustments of configuration. There is no intention to provide a detailed Vault setup or integration guide for all posible scenarios. Users are welcome to customize and tailor these steps to their particular environments and recommended to consult [Vault documentation](https://developer.hashicorp.com/vault/docs).
+**Note:** There is a multitude of possible deployment options and topologies each of which might require minor adjustments of configuration. There is no intention to provide a detailed Vault setup or integration guide for all possible scenarios. Users are welcome to customize and tailor these steps to their particular environments and recommended to consult [Vault documentation](https://developer.hashicorp.com/vault/docs).
 
 ### Developer setup from scratch and early debug
 
@@ -482,15 +482,15 @@ helm install external-secrets external-secrets/external-secrets -n external-secr
 kubectl port-forward -n vault service/vault 8200:8200 --address 0.0.0.0 &
 ```
 
-In this scenario, Vault is running in a namespace 'vault' within the same cluster we are deploying IVIG to, in developer mode. Therfore, the cluster-internal Vault server URL is `http://vault.vault.svc.cluster.local:8200`.
+In this scenario, Vault is running in a namespace 'vault' within the same cluster we are deploying IVIG to, in developer mode. Therefore, the cluster-internal Vault server URL is `http://vault.vault.svc.cluster.local:8200`.
 
 #### Configuration process with early verification steps
 
-One should follow the documented process for [Vault configuration above](#vault-configuration). This guide will follow **Option B** documented at the bottom of section [Kubernetes Authentication](#kubernetes-authentication), with some extra steps. These extra steps, prefixed with "**DEBUG:**" below, will manually create some k8s resources which would be automatically deployed later, the goal is to facilitate the early detection of configuration issues, even before the Helm chart would deploy IVIG.
+One should follow the documented process for [Vault configuration above](#vault-configuration). This guide will follow **Option B** documented at the bottom of section [Kubernetes Authentication](#kubernetes-authentication), with some extra steps. These extra steps, prefixed with "**DEBUG:**" below, will manually create some K8s resources which would be automatically deployed later, the goal is to facilitate the early detection of configuration issues, even before the Helm chart would deploy IVIG.
 
 **Note:** While the Helm templates would fill in the namespace dynamically based on configuration in `values.yaml`, the example code listings assume that the target namespace is `ivig-idm`, therefore, any manual step will have to be carefully and consistently adjusted if another namespace is used.
 
-As we are chosing **Option B**, we create the service account, token and role binding upfront. Run the command from **Option B** to create the namespace, service account and token first.
+As we are choosing **Option B**, we create the service account, token and role binding upfront. Run the command from **Option B** to create the namespace, service account and token first.
 
 **DEBUG:** We create ClusterRoleBinding now for early debugging (would be created by the Helm chart)
 ```yaml
@@ -510,14 +510,14 @@ subjects:
 
 Execute all steps of [Vault configuration](#vault-configuration) up to **Step 4** of [Kubernetes Authentication](#kubernetes-authentication). As we are setting up cluster-internal connection to Vault, some additional explanation is provided on the steps 4 to 6.
 - Step 4: use the cluster-internal server API endpoint https://kubernetes.default.svc (we are running within the same cluster)
-- Step 5: for this particular setup, you can skip filling this field (the vault pod will default to the same CA becasue we are running in the same cluster) or just follow the step, both should work
+- Step 5: for this particular setup, you can skip filling this field (the vault pod will default to the same CA because we are running in the same cluster) or just follow the step, both should work
 - Step 6: in this case, we could either skip proving a JWT (to use the default vault service account JWT, as we are running within the same cluster) or just follow the step and provide the JWT of our dedicated service account
 
 Next, start with [onboarding secrets](#onboard-secrets), but stop after creating the secret engine.
 
 **DEBUG:** After creating the secret engine, we create a single secret `metricscred` just for early debugging purposes (would be created by the Helm chart at a later point automatically)
 
-**DEBUG:** In another terminal, we enable Vault audit logs and watch kubernetes authentication related entries:
+**DEBUG:** In another terminal, we enable Vault audit logs and watch Kubernetes authentication related entries:
 ```
 kubectl exec -it vault-0 -n vault -- vault audit enable file file_path=stdout
 kubectl logs -f vault-0 -n vault | grep "auth/kubernetes/login"
@@ -572,7 +572,7 @@ spec:
     - extract:
        key: secrets/metricscreds
 ```
-Confirm the secret was successfully propagated from Vault to a k8s Secret witin the `ivig-idm` namespace.
+Confirm the secret was successfully propagated from Vault to a K8s Secret witin the `ivig-idm` namespace.
 ```
 kubectl get secret metricscreds -n ivig-idm
 NAME           TYPE     DATA   AGE
@@ -583,7 +583,7 @@ At this point, we have confirmed the following:
 - Vault: configuration of Kubernetes authentication method is ok
 - Service account, token and authorization are configured properly
 - ClusterSecretStore is configured properly
-- ExternalSecret metricscred works, it correctly propagates a secret from Vault to a k8s secret within namespace ivig-idm
+- ExternalSecret metricscred works, it correctly propagates a secret from Vault to a K8s secret within namespace ivig-idm
 
 We can proceed where we left off - continue following the steps for [onboarding secrets](#onboard-secrets).
 
@@ -593,7 +593,7 @@ This section captures a non-exhaustive list of helpful commands to diagnose Vaul
 
 #### Enable Vault Audit and filter logs
 
-To enable Vault audit logs and watch kubernetes authentication related entries:
+To enable Vault audit logs and watch Kubernetes authentication related entries:
 
 ```
 kubectl exec -it vault-0 -n vault -- vault audit enable file file_path=stdout
@@ -610,12 +610,12 @@ kubectl rollout restart deployment external-secrets -n external-secrets
 
 Right after this command, all connections to Vault will be re-established which provides a good opportunity further analyse Vault logs and diagnose configuration errors.
 
-#### Reset kubernetes authentication method in Vault
+#### Reset Kubernetes authentication method in Vault
 
 The following example demonstrates how one can re-initialize the authentication method without the Vault Web UI using mostly defaults and a wildcard setting for the bound service account and its namespace. The current configuration will be wiped and recreated based on the following:
 
-- The cluster-internal k8s server API endpoint is configured
-- The defaults are used, including vault service account JWT and k8s CA
+- The cluster-internal K8s server API endpoint is configured
+- The defaults are used, including vault service account JWT and K8s CA
 - A role is created granting read permissions to any service account in any namespace
 
 ```

@@ -2,11 +2,11 @@
 
 ## Enhanced approach to securing sensitive data
 
-Sensitive data such as passwords or encryption keys should not be hardcoded in source code or built into container images. While storing clear text sensitive date is strictly prohibited, it is even discouraged to stored sensitive data in Git or other source control repositories in encrypted form. Further, passing sensitive data to containers via k8s configmaps is also deemed inappropriate.
+Sensitive data such as passwords or encryption keys should not be hardcoded in source code or built into container images. While storing clear text sensitive data is strictly prohibited, it is even discouraged to store sensitive data in Git or other source control repositories in encrypted form. Further, passing sensitive data to containers via K8s configmaps is also deemed inappropriate.
 
 ### Proper separation of sensitive and non-sensitive data
 
-Proper separation of sensitive and non-sensitive data is a security measure in itself and a prerequisite to enabling additional layers of data protection. All sensitive data is encapsulated in k8s Secrets.
+Proper separation of sensitive and non-sensitive data is a security measure in itself and a prerequisite to enabling additional layers of data protection. All sensitive data is encapsulated in K8s Secrets.
 
 ### Dynamic credential injection
 
@@ -20,7 +20,7 @@ This encapsulation of the initialization logic serves two purposes: ease of main
 
 This enhancement implements a more secure but at the same time also more convenient approach to protecting sensitive data.
 
-IVIG encrypts sensitive data in property files and also in LDAP via AES, the key used for data encryption is stored in a JCEKS keystore, which is password protected. (Technically, both the keystore and the key entry within it is protected with the same password.) After initial configuration, this password is stored in obfuscated from in the binary file `encryptionKey.properties`. Version 11 introduces another level of encryption - the data encryption key itself is randomly generated during initial configuration and before being stored to the keystore, another randomly generated AES key is used to encrypt the data encryption key. This key encrypting key (KEK) is stored in an obscurely named subdirectory in a file named `masterKey.key`.
+IVIG encrypts sensitive data in property files and also in LDAP via AES, the key used for data encryption is stored in a JCEKS keystore, which is password protected. (Technically, both the keystore and the key entry within it is protected with the same password.) After initial configuration, this password is stored in obfuscated form in the binary file `encryptionKey.properties`. Version 11 introduces another level of encryption - the data encryption key itself is randomly generated during initial configuration and before being stored to the keystore, another randomly generated AES key is used to encrypt the data encryption key. This key encrypting key (KEK) is stored in an obscurely named subdirectory in a file named `masterKey.key`.
 
 The original starterkit requires all these files and directories to be stored under the `data` directory, which would be typically put under version control...
 
@@ -32,7 +32,7 @@ Key benefits of the alternative approach implemented here:
 - uses a dynamically generated random keystore password (which changes on each restart of the container)
 - encrypts DEK with a random KEK which also changes whenever the container is restarted
 - securely injects the DEK dynamically into the keystore, in a well isolated manner before the main container starts
-- ensures backward compatibility: if a keystore is supplied via a k8s secret, it is used in the traditional way along with the master key and `encryptionKey.properties` stored in the same k8s secret
+- ensures backward compatibility: if a keystore is supplied via a K8s secret, it is used in the traditional way along with the master key and `encryptionKey.properties` stored in the same K8s secret
 
 ### Interoperability with external secret management systems such as HashiCorp Vault
 
@@ -55,7 +55,7 @@ The following secrets can be individually toggled via `general.install.externalS
 Note:
 - configuring `isvdcerts` and `isvdcred` as external secrets only makes sense if `general.install.deployLdap` is enabled
 - similarly, enabling an external secret for `isvdicerts` is only effective if ISVDI is deployed by the Helm chart (`general.install.deployIsvdi`)
-- setting `pgcerts` and `pgcreds` to `true` will not have no effect unless `general.install.deployDb` is also enabled
+- setting `pgcerts` and `pgcreds` to `true` will not have any effect unless `general.install.deployDb` is also enabled
 
 ## Enhancements for General Hardening
 
@@ -79,7 +79,7 @@ Note that this flag is not available in the original product.
 
 HTTP Strict Transport Security (HSTS) is a security policy mechanism that forces web browsers to interact with websites exclusively through secure HTTPS connections. It prevents attackers from downgrading connections to insecure HTTP, protecting against man-in-the-middle attacks and cookie hijacking by ensuring all traffic is encrypted. The server sends a Strict-Transport-Security header to the browser, instructing it to only use HTTPS for a specified time (via max-age).
 
-By default, HSTS header is set for any URL under `/itim`, but endpoints outside of this context (such as `openapi`, `enrole` or `metrics`) are not protected. To globally active this security measure, set `server.flags.globalHSTS` to `true` in `values-config.yaml`.
+By default, HSTS header is set for any URL under `/itim`, but endpoints outside of this context (such as `openapi`, `enrole` or `metrics`) are not protected. To globally activate this security measure, set `server.flags.globalHSTS` to `true` in `values-config.yaml`.
 
 When this flag is set, Liberty Application Server configuration is amended during initialization with `webContainer` property `addStrictTransportSecurityHeader` to globally enable the HTTP Strict Transport Security (HSTS) header for HTTPS responses and set value  `"max-age=31536000;includeSubDomains"` for that header.
 
@@ -98,18 +98,32 @@ Note that this flag is not available in the original product.
 
 ## Further improvements
 
+### Find and call adapter initialization scripts on startup
+
+Verify Directory Integrator allows additional configuration scripts to be specified via yaml configuration, but the absence of such scripts causes a crash loop by default. For some adapters, including the ISVA adapter, to function properly, additional initialization logic is needed, which is typically implemented via scripts in the solution directory, stored on the PVC of ISVDI. The original initialization process consists of multiple steps:
+1. Start ISVDI without config scripts required by the adapter
+2. Use the bundled `adapterUtils` scripts to copy required files to PVC (which requires a running ISVDI container)
+3. Amend yaml configuration to reference the custom init script on the PVC
+4. Restart the container for the updated init logic to take effect
+
+This creates a chicken and egg problem which does not play well with declarative deployment, as initialization requires a phased approach and deploying the final desired state right away would not yield a correctly functioning environment. This flaw is fixed in version 2.3.6 by adding logic that finds and calls adapter initialization scripts on startup and with that, avoids crash loops caused by missing scripts.
+
+Specifically, at startup of the ISVDI pod, the directory `scripts` within the ISVDI solution directory (located on the PVC) is scanned for files matching the patterns `override-*.sh` and `init-*.sh`, which then are called in lexicographic order. It is advised to implement these script with the order of precedence in mind to avoid overwriting changes made by other init scripts already called.
+
+ISVDI init script autodiscovery is intentionally run right after `initAdapterContainer.sh` so `setHostname.sh` would be executed after autodiscovered init scripts are run. This avoids a potential issue where changes made by `setHostname.sh` could be overwritten by autodiscovered scripts on some setups, specifically by an ISVA adapter init script which replaces the original `ibmdisrv` script with an adjusted version, where the original at that point would have already been modified by `setHostname.sh`.
+
 ### Avoid deadlocks on restart
 
 With the original starterkit, a `rollout restart` causes a deadlock for ISVDI (when `storage.mode` is set to `ReadWriteOnce`) and MQ (always, with any value of `storage.mode` in `values.yaml`) when starting the new pod on a different node. A known workaround is to manually scale the deployments down to `0` replicas, wait for the old pods to die and release the volume, and then scale back up.
 
-When running a `kubectl rollout restart deployment` on a k8s deployment that utilizes a ReadWriteOnce (RWO) PersistentVolumeClaim, the rolling update can become permanently deadlocked:
+When running a `kubectl rollout restart deployment` on a K8s deployment that utilizes a ReadWriteOnce (RWO) PersistentVolumeClaim, the rolling update can become permanently deadlocked:
 - access mode `ReadWriteOnce` specifies that a volume can only be mounted as read-write by a single worker node at a time
-- during a default `RollingUpdate`, k8s attempts to spin up a new pod before terminating the old one
+- during a default `RollingUpdate`, K8s attempts to spin up a new pod before terminating the old one
 - if the scheduler places the new pod on a **different node**, that node cannot attach the volume and hangs indefinitely in `ContainerCreating` state preventing the rollout from ever completing
 
 This project eliminates the deadlocks of ISVDI and MQ on restart via a cleaner approach without manual steps involved:
 - When `ReadWriteMany` (RWX) access mode is configured via `storage.mode` in `values.yaml`, ISVDI will use `RollingUpdate` deployment strategy with zero-downtime across multiple nodes. **Warning:** The configured storage class must support RWX access mode, otherwise PVC creation during initial deployment will remain in pending state and never complete. This might need infrastructure configuration changes.
-- When `ReadWriteOnce` access mode is configured via `storage.mode` in `values.yaml`, the Helm template will automatically set the deployment strategy of ISVDI to `Recreate`. This forces k8s to terminate all existing pods and release the volume lock before creating new pods during restart. A few seconds of downtime is introduced during updates of ISVDI, but volume attach conflicts are completely eliminated allowing a clean `rollout update`. In practice, the downside is negligible, considering the case where RWX storage is not available or preferred.
+- When `ReadWriteOnce` access mode is configured via `storage.mode` in `values.yaml`, the Helm template will automatically set the deployment strategy of ISVDI to `Recreate`. This forces K8s to terminate all existing pods and release the volume lock before creating new pods during restart. A few seconds of downtime is introduced during updates of ISVDI, but volume attach conflicts are completely eliminated allowing a clean `rollout update`. In practice, the downside is negligible, considering the case where RWX storage is not available or preferred.
 - IBM MQ can use RWX storage exclusively for a specific deployment architecture called a Multi-Instance Queue Manager. Otherwise, if one attempts to run multiple active IBM MQ pods simultaneously against the same RWX storage path, data corruption will occur immediately. Therefore, the `mqshare` deployment will always use `ReadWriteOnce` storage (regardless of `storage.mode` configured in `values.yaml`), but apply a deployment strategy of `Recreate` and set the number of replicas explicitly to `1`. There will be at most 1 active pod at any point in time and a clean `rollout restart` is enabled with a few seconds downtime.
 
 ## Bugfixes
@@ -128,5 +142,5 @@ A bug inherited from the original product is corrected. Platform credentials (sp
 
 Multiple bugs were introduced in 11.0.2.0 with the common root cause of improper quoting preventing wildcard expansion in shell scripts and thereby breaking functionality that used to work in earlier versions.
 - Custom java extensions such as workflow, script or REST, are not loaded
-- Broken keystore migration (superseded in this project, bit fixing anyway)
+- Broken keystore migration (superseded in this project, but fixing anyway)
 - Broken certificate renewal (obsoleted by this project, but fixing anyway)
