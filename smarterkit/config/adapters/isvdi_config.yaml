@@ -30,6 +30,9 @@ server:
 
 init:
   aux-config-programs:
+    {{- if .Values.fips }}
+    - command: /home/isvdi/patch-java.security-for-fips_{{ splitList ":" .Values.images.isvdi | last }}.sh
+    {{- end }}
     - command: /home/isvdi/adapterContainerScripts/initAdapterContainer.sh
     - command: /home/isvdi/call-adapter-init-scripts.sh
     - command: /home/isvdi/setHostname.sh

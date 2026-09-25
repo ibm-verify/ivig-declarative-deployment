@@ -49,6 +49,8 @@ spec:
                   path: setHostname.sh
                 - key: call-adapter-init-scripts.sh
                   path: call-adapter-init-scripts.sh
+                - key: patch-java.security-for-fips_11.0.0.1.sh
+                  path: patch-java.security-for-fips_11.0.0.1.sh
       - name: adapters
         persistentVolumeClaim:
           claimName: isvdi-pvc
@@ -86,4 +88,7 @@ spec:
         - name: init-script
           mountPath: /home/isvdi/call-adapter-init-scripts.sh
           subPath: call-adapter-init-scripts.sh
+        - name: init-script
+          mountPath: /home/isvdi/patch-java.security-for-fips_11.0.0.1.sh
+          subPath: patch-java.security-for-fips_11.0.0.1.sh
 {{- end }}
