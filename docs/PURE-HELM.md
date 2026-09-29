@@ -71,7 +71,9 @@ git commit -m "init quick demo"
 # generate certs
 ./cert-setup.sh
 # option A: store certs to Git for a developer setup (simpler)
-git add config/certs/*
+git add --force config/certs
+# NOTE: you can avoid --force by commenting out the relevant line of .gitignore:
+# sed -i.bak '\|^smarterkit/config/certs/$|s|^|# |' ../.gitignore
 git commit -m "quick demo certs"
 # option B: do not store certs to Git, maybe import to vault later (more secure)
 ```
@@ -303,6 +305,8 @@ notAfter=Mar 10 18:39:28 2031 GMT
 ### Storing certificates and related files
 
 One may store the certificates, CSRs and keys generated above to Git for non-production purposes if a quick standalone setup is preferred. Alternatively, one may store these to an external secret store such as Vault, and get these dynamically injected during runtime. See optional Vault integration below.
+
+**Note:** The bundled `.gitignore` file is aligned with the more secure option and marks the certificate directory to be excluded from version control by default. To store certificates and related files in Git, adjust `.gitignore` by removing or commenting the line which includes the certificate directory. Alternatively, use `git add --force config/certs` to bypass the ignore rules.
 
 Background:
 

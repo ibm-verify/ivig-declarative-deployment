@@ -1,0 +1,4 @@
+smarterkit/secrets.yaml
+smarterkit/lic*.yaml
+smarterkit/out*/
+smarterkit/config/certs/
