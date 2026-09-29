@@ -1,0 +1,8 @@
+*.jar binary
+* text=auto eol=lf
+
+smarterkit/templates/**/*.yaml   linguist-language=Go-Template
+smarterkit/templates/**/*.tpl    linguist-language=Go-Template
+smarterkit/config/**/*.yaml      linguist-language=Go-Template
+smarterkit/config/mq/*           linguist-language=Go-Template
+smarterkit/data-tpl/*.properties linguist-language=Go-Template
