@@ -10,9 +10,9 @@ clusterUrl: https://kubernetes.default.svc
 images:
   isvgim: icr.io/isvg/identity-manager:11.0.2.0
   isvdi: icr.io/isvdi/verify-directory-integrator-dispatcher:11.0.0.1
-  isvd: icr.io/isvd/verify-directory-server:11.0.1.0
-  isvdproxy: icr.io/isvd/verify-directory-proxy:11.0.1.0
-  isvdseed: icr.io/isvd/verify-directory-seed:11.0.1.0
+  isvd: icr.io/isvd/verify-directory-server:11.0.0.1
+  isvdproxy: icr.io/isvd/verify-directory-proxy:11.0.0.1
+  isvdseed: icr.io/isvd/verify-directory-seed:11.0.0.1
   mq: icr.io/isvg/mq:10.0.0.0
   postgres: postgres:15.18-bookworm
   kuberbac: icr.io/isvg/kube-rbac-proxy:v0.16.0
