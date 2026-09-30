@@ -581,6 +581,30 @@ kubectl logs -n $NAMESPACE sts/isvgim -c logs-im
 ```
 Check the availability and configuration of your database and LDAP instance.
 
+### StatefulSet keeps restarting, never reaches ready state
+
+A common cause for a restart loop is insufficient time for the application to start up: K8s prematurely identifies the container as unhealthy and therefore restarts it forcefully.
+
+Symptoms:
+1. Data tier components started without errors, deloyment `mqshare` is running without errors
+2. StatefulSet `isvgim` keeps restarting, but no errors are shown in container logs (e.g. `logs-im`)
+3. Within the StatefulSet, all containers except `isvgim` start without errors, but container `isvgim` never reaches ready state
+4. The startup probe of container `isvgim` fails 3 times, then the container is forcefully restarted (the behavior loops)
+   ```console
+   $ kubectl get pod isvgim-0
+   NAME       READY   STATUS    RESTARTS     AGE
+   isvgim-0   3/4     Running   2 (7s ago)   4m48s
+   $ kubectl describe pod isvgim-0
+   ...
+     Warning  Unhealthy  52s (x6 over 3m47s)  kubelet            spec.containers{isvgim}: Startup probe failed: Get "https://10.42.0.249:9443/healthcheck": dial tcp 10.42.0.249:9443: connect: connection refused
+     Normal   Killing    52s (x2 over 2m57s)  kubelet            spec.containers{isvgim}: Container isvgim failed startup probe, will be restarted
+
+   ```
+
+Solution: Make sure there is sufficient time for the application to start up in the given target environment. As a quick remedy, increase (e.g. double) the value of `services.isvgim.probe.initialDelaySeconds` in `values.yaml`, scale down the StatefulSet to 0 replicas and then back again. If needed, increase further until there is sufficient time for the container to start up.
+
+**Note:** While the above mentioned approach provides a quick way to eliminate the error itself, performance bottlenecks of the underlying K8s infrastructure should be identified and resolved. Further, a significant increase of the `initialDelaySeconds` configuration key may not be the best choice for all environments. It is advised to understand what distinct purposes startup, readiness and liveness probes serve in a K8s environment, when these are triggered and which actions are yielded by failed probes. The parameters of all 3 probe types should be carefully tuned to match workload characteristics and the capacities of the target environment.
+
 ### Unable to login on a fresh deployment
 
 A typical reason for not being able to login is that the user forgot or failed to initialize the data tier.
