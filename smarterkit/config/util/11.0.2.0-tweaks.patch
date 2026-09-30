@@ -37,6 +37,9 @@ handle_hideServerVersion() {
 .
 w
 e work/processOptions.sh "42e413107b50953b6c764c944a0a6162dd77865f
+50c
+		PASSWORD=$(/opt/ibm/wlp/bin/securityUtility encode --encoding=aes "$PASSWORD" | grep -v IBMJCEPlusFIPS)
+.
 36c
 				PASSWORD="${VALUE:-$LIBERTYMETRICS_PASSWORD}"
 .
