@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.4.10 (2026-10-01)
+
+This version delivers multiple improvements around FIPS compliance normalizing redundant configuration and enabling stricter security settings. Changes are grouped along the components they affect: global, Liberty, MQ and ISVDI.
+
+1. Normalize redundant FIPS and auditLog flags, add warnings to config file
+   - Resolve redundant FIPS flags, use `values.yaml` as the single source. Dynamically initialize `server.flags.enableFIPS`  based on key `fips` defined in `smarterkit/values.yaml`, and clearly document that setting `server.flags.enableFIPS` in `values-config.yaml` has no effect.
+   - Additionally, clarify that `general.install.enableAuditLog` is not read from `values-config.yaml`, and `services.isvd.auditlog` defined in `smarterkit/values.yaml` is used as the single source. This was already documented implicitly, but mention it explicitly to help user new to the project.
+   - Add comments in `values-config.yaml` to warn users transitioning from starterkit to not include sensitive data in this file.
+
+2. Fix liberty metrics password encryption when FIPS is already enabled
+   - The out-of-the-box `processOptions.sh` script fails to correctly setup liberty metrics when FIPS has already been enabled. The root cause is that with FIPS already enabled, an IBMJCEPlusFIPS 140-2 deprecation warning message is prepended to the AES-encrypted password. This value is then used instead of just the encrypted password when generating the liberty metrics configuration file, yielding unusable liberty metrics user definition.
+   - Although the default initialization logic invokes `processOptions.sh` before calling `enableFIPS.sh`, the liberty metrics configuration logic is patched to correctly function with and without FIPS already enabled.
+
+3. Adjust MQ for FIPS and TLS 1.3
+   - Set `SSLFIPS` to YES/NO via Helm template based on FIPS setting defined in `values.yaml`. This additional step ensures that FIPS activated on container startup via the `MQ_ENABLE_FIPS` environment variable is not overridden via a subsequent `ALTER QMGR SSLFIPS(NO)` command in the bundled MQSC scripts.
+   - Additionally, enable TLS 1.3 (1.2 and higher) for MQ.
+
+4. Fix Directory Integrator JVM security for FIPS
+   - If FIPS is enabled via `values.yaml`, dynamically patch `java.security` file of Directory Integrator to configure FIPS compliant security provider, secure random number generator and disable non-compliant TLS ciphers.
+   - On ISVDI container startup `patch-java.security-for-fips_${VERSION}.sh` is called via `aux-config-programs` in `isvdi_config.yaml` if and only if FIPS is enalbed. The version in the script name is dynamically substituted based on the ISVD version (read from `images.isvdi`) and a patch is provided for ISVDI version 11.0.0.1. **Warning:** If another version is deployed, the user MUST ensure a patching script following the naming convention above is available for the specific ISVDI version. An empty file will allow the container to start but not change the `java.security` file. A missing file will cause a crash loop.
+
+Further, improvements are included to avoid deadlocks on restart of internal data tier deployments. Version 2.4.7 delivered changes to avoid deadlocks of ISVDI and MQ on restart. Deadlock elimination is extended to the optional internal data tier components, in particular the LDAP (`isvd-replica-1`) and DB (`postgres`) deployments in the same way already implemented for MQ.
+
+**Warning:** The version of Directory Server components is set to 11.0.0.1. Although there are known issues when upgrading from older versions to this version, currently available 11.0.1.* versions where the upgrade issue is resolved intoduce compatibility issues with IVIG. Therefore it is currently not feasible to move to 11.0.1.* without breaking product functionality.
+
+In terms of documentation, new content is available on the following topics:
+- PURE-HELM: document how to troubleshoot a restart loop of the isvgim StatefulSet
+- EXTRAS: autodiscovery of adapter init scripts
+- README: how to request support
+- SECURITY: disclosure timeline of vulnerabilities reported
+
+General documentation cleanup:
+- Across all documentation, consistently capitalize the terms Kubernetes and K8s, Fixpack, Interim Fix and starterkit. References to directory names or commands are not affected. Code listings, verbatim output an source code in general is also left intact.
+- Correct typos.
+
+Additionally, this version introduces new Git dotfiles:
+- `.gitattributes` to control line endings and hint on Helm templates
+- `.gitignore` to help prevent unintended leak of sensitive data to Git
+- document how certificate directory can be stored to Git if required
+
 ## 2.4.9 (2026-09-17)
 
 Updates to repo forking and storage of license data, new meta/supporting files.
