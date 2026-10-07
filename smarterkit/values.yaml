@@ -1,4 +1,4 @@
-# structure intentionally compatible with values.yaml of starterkit
+# structure compatible with values.yaml of starterkit unless explicitly noted
 
 namespace: ivig-idm
 timezone: Europe/Budapest
@@ -8,6 +8,7 @@ licenseType: PROCESSOR
 clusterUrl: https://kubernetes.default.svc
 
 images:
+  isvart: icr.io/isvg/adapter-runtime:11.0.3.0
   isvgim: icr.io/isvg/identity-manager:11.0.2.0
   isvdi: icr.io/isvdi/verify-directory-integrator-dispatcher:11.0.0.1
   isvd: icr.io/isvd/verify-directory-server:11.0.0.1
@@ -23,6 +24,7 @@ storage:
   className: local-path
   mode: ReadWriteOnce
   volumes:
+    isvart: 1Gi
     isvd: 1Gi
     isvdproxy: 200Mi
     isvdi: 1Gi
@@ -33,7 +35,21 @@ storage:
     riskengine: 10Gi
 
 services:
+  isvart:
+    # EXTRA: configure number of replicas the deployment will be scaled up to
+    #replicas: 1
+    handle409: true
+    # BANNED: redundant, use values-config.yaml general.license.isvartKey
+    #isvartKey:
+    ports:
+      external: 30555
+      http: 8001
+      https: 9471
+    # BANNED: passwords MUST NOT be stored here, replaced by a superior approach
+    #storePassword: ART_STORE_PW
   isvdi:
+    # EXTRA: configure number of replicas the deployment will be scaled up to
+    #replicas: 1
     ports:
       api: 1099
       object: 42001

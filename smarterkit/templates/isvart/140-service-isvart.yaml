@@ -1,0 +1,35 @@
+{{/*
+Copyright IBM Corp. 2026
+SPDX-License-Identifier: MIT
+*/}}
+{{- if .Values.general.install.deployIsvart }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: isvart
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: isvart
+spec:
+  selector:
+    app: isvart
+  ports:
+    - name: https
+      port: {{ .Values.services.isvart.ports.https }}
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: isvart-external
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:
+  - port: {{ .Values.services.isvart.ports.https }}
+    name: https-external
+    protocol: TCP
+    nodePort: {{ .Values.services.isvart.ports.external }}
+  selector:
+    app: isvart
+  type: NodePort
+{{- end }}

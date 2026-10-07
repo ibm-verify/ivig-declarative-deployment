@@ -1,0 +1,17 @@
+{{/*
+Copyright IBM Corp. 2026
+SPDX-License-Identifier: MIT
+*/}}
+{{- if .Values.general.install.deployIsvart }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: isvart-pvc
+  namespace: {{ .Values.namespace }}
+spec:
+  accessModes: [ "{{ .Values.storage.mode }}" ]
+  storageClassName: {{ .Values.storage.className }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.volumes.isvart }}
+{{- end }}
