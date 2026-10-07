@@ -1,0 +1,12 @@
+{
+  "service": {
+    "httpsPort": {{ .Values.services.isvart.ports.https }},
+    "httpPort": {{ .Values.services.isvart.ports.http }},
+    "HANDLE_409": {{ .Values.services.isvart.handle409 }},
+    "sslConfig": {
+      "enabled": true,
+      "key": "../config/isvart.key",
+      "cert": "../config/isvart.crt"
+    }
+  }
+}

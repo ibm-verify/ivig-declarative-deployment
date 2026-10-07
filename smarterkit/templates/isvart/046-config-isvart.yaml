@@ -1,0 +1,13 @@
+{{/*
+Copyright IBM Corp. 2026
+SPDX-License-Identifier: MIT
+*/}}
+{{- if .Values.general.install.deployIsvart }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: isvart
+  namespace: {{ .Values.namespace }}
+data:
+{{ tpl (.Files.Glob "config/art/{*.json,*.sh}").AsConfig . | indent 2 }}
+{{- end }}

@@ -1,0 +1,71 @@
+{{/*
+Copyright IBM Corp. 2026
+SPDX-License-Identifier: MIT
+*/}}
+{{- if .Values.general.install.deployIsvart }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: isvart
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.services.isvart.replicas | default 1 }}
+  {{- if eq .Values.storage.mode "ReadWriteOnce" }}
+  strategy:
+    type: Recreate
+  {{- end }}
+  selector:
+    matchLabels:
+      app: isvart
+  template:
+    metadata:
+      labels:
+        app: isvart
+    spec:
+      {{- if not .Values.isOpenShift }}
+      securityContext:
+        fsGroup: 0
+      {{- end }}
+      volumes:
+      - name: adapters
+        persistentVolumeClaim:
+          claimName: isvart-pvc
+      - name: config
+        projected:
+          defaultMode: 0640
+          sources:
+          - configMap:
+              name: isvart
+          - secret:
+              name: isvartcerts
+      imagePullSecrets:
+      - name: regcred
+      containers:
+      - name: isvart
+        image: {{ .Values.images.isvart }}
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: {{ .Values.services.isvart.ports.http }}
+          name: http
+          protocol: TCP
+        - containerPort: {{ .Values.services.isvart.ports.https }}
+          name: https
+          protocol: TCP
+        env:
+        - name: TZ
+          value: ":{{ .Values.timezone }}"
+        - name: NUM_ART_GATEWAY
+          value: "1"
+        - name: LICENSE_KEY
+          value: {{ .Values.general.license.isvartKey | default "None" | quote }}
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        volumeMounts:
+        - name: adapters
+          mountPath: /usr/src/app/scim_gateway/adapter
+        - name: config
+          mountPath: /usr/src/app/scim_gateway/config
+{{- end }}
