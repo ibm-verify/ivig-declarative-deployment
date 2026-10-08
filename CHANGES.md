@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.4.11 (2026-10-08)
+
+This version enables optional deployment of `isvart`.
+
+IBM Verify Identity Governance Unified Adapter Runtime (referred to as `isvart`) is a Node.js based adapter framework available as a separately licensed optional component for both IVIG and IBM Verify SaaS. Configuration keys in `values-config.yaml` and certificate management logic for this component are available since 2.4.0, this version ships a modularized set of Helm templates and updated `values.yaml` to enable optional deployment of `isvart`.
+
+The enhancement of this project to enable declarative deployment of `isvart` is delivered based on inspecting, analysing and testing the publicly available container image recently published. Official documentation and classic install scripts (starterkit) covering `isvart` are expected to arrive when version 11.0.3.0 of IVIG is released.
+
+Objectives:
+- work with `adapter-runtime:11.0.3.0 (ART_VERSION=1.0.1, BUILD_TAG=Dev_68785)`
+- conditionally render Helm templates under `smarterkit/templates/isvart`
+- eliminate issue: container by default uses plaintext password in config file
+- store no password in `values.yaml` or other files in Git (not even encrypted)
+- avoid deadlocks by adjusting deployment strategy based on storage access mode
+- allow to configure number of replicas the deployment will be scaled up to
+
 ## 2.4.10 (2026-10-01)
 
 This version delivers multiple improvements around FIPS compliance normalizing redundant configuration and enabling stricter security settings. Changes are grouped along the components they affect: global, Liberty, MQ and ISVDI.
