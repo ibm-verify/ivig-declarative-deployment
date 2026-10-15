@@ -257,7 +257,7 @@ secrets/pgcreds:
 
 ### PKI/x509 certificate management
 
-The original starterkit performs certificate management within the container, therefore all PKI related files are exposed to both `isvgim` and`isvgimconfig` containers. This includes the private keys of all components and even the certificate authority private key. Additionally, containers such as ISVDI have access to much more than necessary PKI related files including private keys of other components.
+The original starterkit performs certificate management within the container, therefore all PKI related files are exposed to both `isvgim` and `isvgimconfig` containers. This includes the private keys of all components and even the certificate authority private key. Additionally, containers such as ISVDI have access to much more than necessary PKI related files including private keys of other components.
 
 This project enforces a stricter approach to exposing sensitive data where each container has access to certificates and more importantly private keys on a need-to-know basis. The CA private key is not exposed to any of the containers as certificate management is expected to happen in the admin domain (which can be isolated, offline or airgapped), and not within the application/runtime domain.
 
@@ -572,7 +572,7 @@ spec:
     - extract:
        key: secrets/metricscreds
 ```
-Confirm the secret was successfully propagated from Vault to a K8s Secret witin the `ivig-idm` namespace.
+Confirm the secret was successfully propagated from Vault to a K8s Secret within the `ivig-idm` namespace.
 ```
 kubectl get secret metricscreds -n ivig-idm
 NAME           TYPE     DATA   AGE

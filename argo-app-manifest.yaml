@@ -3,7 +3,7 @@ kind: Application
 metadata:
   name: ivig-idm
 spec:
-  # The destination defines the namespace and k8s cluster where to deploy to.
+  # The destination defines the namespace and K8s cluster where to deploy to.
   destination:
     # Set the target namespace to the same value as defined in values.yaml. This
     # feels redundant, but Argo CD performs consistency validation and can be
@@ -28,9 +28,9 @@ spec:
       # 1. Values are read from files listed under source.helm.valueFiles. All
       #    files are merged top-down. Aborts if missing files are referenced.
       #
-      # 2. The equivalent of a values file can be specified directly in the this
-      #    app manifest using the source.helm.valuesObject key, the content of
-      #    which is merged with values files, overriding conflicting values.
+      # 2. The equivalent of a values file can be specified directly in this app
+      #    manifest using the source.helm.valuesObject key, the content of which
+      #    is merged with values files, overriding conflicting values.
       #
       # 3. Individual parameters can be specified under source.helm.parameters
       #    in a path-based notation. These parameters are merged with the
@@ -50,14 +50,14 @@ spec:
       valuesObject:
         # For a demo or developer setup, insert the contents of secrets.yaml and
         # regcred.yaml indented by 8 spaces!
-        # Alternatively, leave this section blank and source secrets from vault.
+        # Alternatively, leave this section blank and source secrets from Vault.
       parameters:
-        # Annotating the k8s namespace with the git commit hash (or any other
+        # Annotating the K8s namespace with the git commit hash (or any other
         # revision identifier of your choice) allows to track what was deployed.
         - name: revision
           value: $ARGO_APP_REVISION_SHORT
         # Instead of storing license keys in git (e.g. in values-config.yaml)
-        # let ArgoCD dynamically inject these values during template rendering.
+        # let Argo CD dynamically inject these values during template rendering.
         # CHANGE DUMMY VALUES in this sample file to your actual license keys!
         - name: general.license.activationKey
           value: XXAZ6-Z7O6E-H6DUA-Y1PBZ-5RS5X

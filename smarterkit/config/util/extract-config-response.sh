@@ -4,7 +4,7 @@
 
 usage() {
   cat <<EOM
-Recreate silent intstaller response files for initial data tier setup or upgrade
+Recreate silent installer response files for initial data tier setup or upgrade
 by extracting configuration information from 'data/erRole*.properties' files
 usage: $0 [OPTION...]
 

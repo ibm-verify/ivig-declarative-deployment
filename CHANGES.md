@@ -37,11 +37,11 @@ This version delivers multiple improvements around FIPS compliance normalizing r
 
 4. Fix Directory Integrator JVM security for FIPS
    - If FIPS is enabled via `values.yaml`, dynamically patch `java.security` file of Directory Integrator to configure FIPS compliant security provider, secure random number generator and disable non-compliant TLS ciphers.
-   - On ISVDI container startup `patch-java.security-for-fips_${VERSION}.sh` is called via `aux-config-programs` in `isvdi_config.yaml` if and only if FIPS is enalbed. The version in the script name is dynamically substituted based on the ISVD version (read from `images.isvdi`) and a patch is provided for ISVDI version 11.0.0.1. **Warning:** If another version is deployed, the user MUST ensure a patching script following the naming convention above is available for the specific ISVDI version. An empty file will allow the container to start but not change the `java.security` file. A missing file will cause a crash loop.
+   - On ISVDI container startup `patch-java.security-for-fips_${VERSION}.sh` is called via `aux-config-programs` in `isvdi_config.yaml` if and only if FIPS is enabled. The version in the script name is dynamically substituted based on the ISVD version (read from `images.isvdi`) and a patch is provided for ISVDI version 11.0.0.1. **Warning:** If another version is deployed, the user MUST ensure a patching script following the naming convention above is available for the specific ISVDI version. An empty file will allow the container to start but not change the `java.security` file. A missing file will cause a crash loop.
 
 Further, improvements are included to avoid deadlocks on restart of internal data tier deployments. Version 2.4.7 delivered changes to avoid deadlocks of ISVDI and MQ on restart. Deadlock elimination is extended to the optional internal data tier components, in particular the LDAP (`isvd-replica-1`) and DB (`postgres`) deployments in the same way already implemented for MQ.
 
-**Warning:** The version of Directory Server components is set to 11.0.0.1. Although there are known issues when upgrading from older versions to this version, currently available 11.0.1.* versions where the upgrade issue is resolved intoduce compatibility issues with IVIG. Therefore it is currently not feasible to move to 11.0.1.* without breaking product functionality.
+**Warning:** The version of Directory Server components is set to 11.0.0.1. Although there are known issues when upgrading from older versions to this version, currently available 11.0.1.* versions where the upgrade issue is resolved introduce compatibility issues with IVIG. Therefore it is currently not feasible to move to 11.0.1.* without breaking product functionality.
 
 In terms of documentation, new content is available on the following topics:
 - PURE-HELM: document how to troubleshoot a restart loop of the isvgim StatefulSet
@@ -50,7 +50,7 @@ In terms of documentation, new content is available on the following topics:
 - SECURITY: disclosure timeline of vulnerabilities reported
 
 General documentation cleanup:
-- Across all documentation, consistently capitalize the terms Kubernetes and K8s, Fixpack, Interim Fix and starterkit. References to directory names or commands are not affected. Code listings, verbatim output an source code in general is also left intact.
+- Across all documentation, consistently capitalize the terms Kubernetes and K8s, Fixpack, Interim Fix and starterkit. References to directory names or commands are not affected. Code listings, verbatim output and source code in general is also left intact.
 - Correct typos.
 
 Additionally, this version introduces new Git dotfiles:
@@ -206,7 +206,7 @@ Fixes to new upstream bugs:
 
 This version bases on upstream version 11.0.2.0 and delivers extra flexibility.
 
-The upstream version adds support for Oracle DB 19c. Declarative deployment increases flexibility and robustness of JDBC configuration beyond what the original product supports. It reads and writes the JDBC URL formats the core product supports with a compatible logic, and additionally offers a new configuration parameter `db.forcedJdbcUrl` in `values-config.yaml` to explicitly set a JDBC connection string rather then providing hostname, port and database name. This allows automated deployment with advanced database configuration (such as load balancing and failover) from scratch, which is not offered by the original product.
+The upstream version adds support for Oracle DB 19c. Declarative deployment increases flexibility and robustness of JDBC configuration beyond what the original product supports. It reads and writes the JDBC URL formats the core product supports with a compatible logic, and additionally offers a new configuration parameter `db.forcedJdbcUrl` in `values-config.yaml` to explicitly set a JDBC connection string rather than providing hostname, port and database name. This allows automated deployment with advanced database configuration (such as load balancing and failover) from scratch, which is not offered by the original product.
 
 New JDBC options one might use with this release:
 - Oracle Thin Driver (basic SID style)
@@ -217,7 +217,7 @@ New JDBC options one might use with this release:
   - multiple addresses, RAC, load balancing and failover
   - timeouts and other advances parameters
 - DB2 Type4 Driver extra parameters
-  - TLS versiona and cipher suite selection
+  - TLS version and cipher suite selection
   - high availability (HADR), failover and client reroute (ACR)
   - performance optimisation
   - many more advanced parameters
@@ -247,7 +247,7 @@ To activate the security measures above, set `server.flags.secureSessionCookies`
 
 HTTP Strict Transport Security (HSTS) is a security policy mechanism that forces web browsers to interact with websites exclusively through secure HTTPS connections. It prevents attackers from downgrading connections to insecure HTTP, protecting against man-in-the-middle attacks and cookie hijacking by ensuring all traffic is encrypted. The server sends a Strict-Transport-Security header to the browser, instructing it to only use HTTPS for a specified time (via max-age).
 
-By default, HSTS header is set for any URL under `/itim`, but endpoints outside of this context (such as `openapi`, `enrole` or `metrics`) are not protected. To globally active this security measure, set `server.flags.globalHSTS` to `true` in `values-config.yaml`.
+By default, HSTS header is set for any URL under `/itim`, but endpoints outside of this context (such as `openapi`, `enrole` or `metrics`) are not protected. To globally activate this security measure, set `server.flags.globalHSTS` to `true` in `values-config.yaml`.
 
 Server version disclosure enables the attacker to find vulnerabilities easier, potentially leading to targeted attacks with version specific exploits. Therefore, production systems should take measures to avoid sending detailed server version information.
 
@@ -278,7 +278,7 @@ ISVDI allows additional configuration scripts to be specified via yaml configura
 
 This creates a chicken and egg problem which does not play well with declarative deployment, as initialization requires a phased approach and deploying the final desired state right away would not yield a correctly functioning environment. This flaw is fixed by adding logic that finds and calls adapter initialization scripts on startup and avoids crash loops caused by missing scripts.
 
-Additionally, a reasonable default value is used for nonexistent or empty `encryptionKey.properties` with the intention to avoid false positives during comparison of the desired state with the actual state (cosmetic improvement for ArgoCD diff).
+Additionally, a reasonable default value is used for nonexistent or empty `encryptionKey.properties` with the intention to avoid false positives during comparison of the desired state with the actual state (cosmetic improvement for Argo CD diff).
 
 ## 2.3.5 (2026-03-19)
 
@@ -301,7 +301,7 @@ Cosmetic changes:
 
 ## 2.3.4 (2026-03-12)
 
-This version delivers compatibility improvements of non-essential convenience scripts which can be run locally to quickly bootstrap an environment. Although GNU/Linux is the primary target platform, MacOS support has been requested. The current version of MacOS still ships with an extremely outdated bash version (3.2.57 from 2007) due to GPLv3 licensing issues. Convenience scripts are compatible with this old bash version as well as BSD sed and grep.
+This version delivers compatibility improvements of non-essential convenience scripts which can be run locally to quickly bootstrap an environment. Although GNU/Linux is the primary target platform, macOS support has been requested. The current version of macOS still ships with an extremely outdated bash version (3.2.57 from 2007) due to GPLv3 licensing issues. Convenience scripts are compatible with this old bash version as well as BSD sed and grep.
 - make `cert-util.sh` work with bash-3.2
 - make `cert-setup.sh` work with BSD sed
 - update documentation of dependencies and compatibility
@@ -337,7 +337,7 @@ This clean separation enables Vault integration for the following secrets which 
 Note:
 - configuring `isvdcerts` and `isvdcred` as external secrets only makes sense if `general.install.deployLdap` is enabled
 - similarly, enabling an external secret for `isvdicerts` is only effective if ISVDI is deployed by the Helm chart (`general.install.deployIsvdi`)
-- setting `pgcerts` and `pgcreds` to `true` will not have no effect unless `general.install.deployDb` is also enabled
+- setting `pgcerts` and `pgcreds` to `true` will have no effect unless `general.install.deployDb` is also enabled
 
 The following fixes and improvements are also included:
 - `vault-setup.sh`: compatibility with very old version of `grep`, such as GNU 3.6
@@ -352,7 +352,7 @@ Reworked logic for retrieving x509 certificates:
 - default to `config/certs` if explicit setting is absent
 - consistently use a named template to create glob pattern for matching files within the certificate directory
 
-The ArgoCD application manifest sample has been updated to demonstrate how Git commit hash can be injected by ArgoCD, in the same format `--set revision=$(git log -n 1 --pretty=format:%h)` would do when using `helm` from the command line (which is already documented in README).
+The Argo CD application manifest sample has been updated to demonstrate how Git commit hash can be injected by Argo CD, in the same format `--set revision=$(git log -n 1 --pretty=format:%h)` would do when using `helm` from the command line (which is already documented in README).
 
 Minor fixes and documentation updates are also included.
 
@@ -373,7 +373,7 @@ Following annotations are generated for the namespace during template rendering:
 
 These annotations provide extra visibility into the last deployed desired state.
 
-Further, `config` and `data` symlinking is switched, that is, the real folders are now the ones within the `argo` directory and symlinks pointing to these are created under `starterkit`. The purpose of this change is compatibility with hardened ArgoCD/Helm where symlinks pointing outside the chart directory are not followed by `.Files.Glob` Helm function.
+Further, `config` and `data` symlinking is switched, that is, the real folders are now the ones within the `argo` directory and symlinks pointing to these are created under `starterkit`. The purpose of this change is compatibility with hardened Argo CD/Helm where symlinks pointing outside the chart directory are not followed by `.Files.Glob` Helm function.
 
 Additionally, minor fixes and documentation updates are included.
 
@@ -433,7 +433,7 @@ The logic is implemented such that existing cryptographic keys and certificate s
 
 Subject alternate names (domain names) are configured according to the requirements of each component, inline with how the original starterkit would create certificates.
 
-This script is intentionally de-couple and self-contained, it does not have dependencies other than `bash` and `openssl`.
+This script is intentionally decoupled and self-contained, it does not have dependencies other than `bash` and `openssl`.
 
 Another script, `cert-setup.sh` is included to auto-detects the part of configuration that is relevant for certificates, once `values.yaml` and `values-config.yaml` have already been adjusted. In particular, it will retrieve the K8s namespace from `values.yaml`, collect extra hostnames (which should be added to the certificate of IVIG server) and the list of optional components to be deployed from `values-config.yaml`. This script, after collecting the information required, will invoke `cert-util.sh` to create certificates, and after that, to list the details of the certificates created.
 
@@ -467,7 +467,7 @@ Deployment of LDAP is also optional, disabled by default and enabled via the fla
 
 This version implements a more secure but at the same time also more convenient approach to protecting sensitive data.
 
-IVIG encrypts sensitive data in property files and also in LDAP via AES, the key used for data encryption is stored in a JCEKS keystore, which is password protected. (Technically, both the keystore and the key entry within it is protected with the same password.) After initial configuration, this password is stored in obfuscated from in the binary file `encryptionKey.properties`. Version 11 introduces another level of encryption - the data encryption key itself is randomly generated during initial configuration and before being stored to the keystore, another randomly generated AES key is used to encrypt the data encryption key. This key encrypting key (KEK) is stored in an obscurely named subdirectory in a file named `masterKey.key`.
+IVIG encrypts sensitive data in property files and also in LDAP via AES, the key used for data encryption is stored in a JCEKS keystore, which is password protected. (Technically, both the keystore and the key entry within it is protected with the same password.) After initial configuration, this password is stored in obfuscated form in the binary file `encryptionKey.properties`. Version 11 introduces another level of encryption - the data encryption key itself is randomly generated during initial configuration and before being stored to the keystore, another randomly generated AES key is used to encrypt the data encryption key. This key encrypting key (KEK) is stored in an obscurely named subdirectory in a file named `masterKey.key`.
 
 The original starterkit requires all these files and directories to be stored under the `data` directory, which would be typically put under version control...
 
@@ -542,7 +542,7 @@ The file `config.yaml` needs to exist in its reduced form (post-installation for
 
 ## 2.0.2 (2025-08-15)
 
-This version attempts to be as close to the original StartetKit as possible, but provide the ability to deploy from Git, with Helm only.
+This version attempts to be as close to the original StarterKit as possible, but provide the ability to deploy from Git, with Helm only.
 - uses the starterkit as a starting point, maintaining as much compatibility as possible (a subset of the original folder structure is used)
 - all modifications are contained in a folder named `argo`
 - include the `config` and `data` folder as-is, via symlinks

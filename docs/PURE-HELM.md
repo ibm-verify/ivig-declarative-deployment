@@ -19,7 +19,7 @@ There are optional user convenience scripts which can be used for quickly settin
 - `cert-util.sh`: bash 3.2, OpenSSL 3
 - `secrets-setup.sh`: bash 3.2, grep (GNU 3.6, BSD 2.6), OpenSSL 3
 
-Note: Although GNU/Linux is the primary target platform, there is at least one user of this project who runs MacOS. The current version of MacOS still ships with an extremely outdated bash version (3.2.57 from 2007) due to GPLv3 licensing issues. Convenience scripts of version 2.3.4 are compatible with this old bash version as well as BSD sed and grep.
+Note: Although GNU/Linux is the primary target platform, there is at least one user of this project who runs macOS. The current version of macOS still ships with an extremely outdated bash version (3.2.57 from 2007) due to GPLv3 licensing issues. Convenience scripts of version 2.3.4 are compatible with this old bash version as well as BSD sed and grep.
 
 ## TL;DR
 
@@ -586,7 +586,7 @@ Check the availability and configuration of your database and LDAP instance.
 A common cause for a restart loop is insufficient time for the application to start up: K8s prematurely identifies the container as unhealthy and therefore restarts it forcefully.
 
 Symptoms:
-1. Data tier components started without errors, deloyment `mqshare` is running without errors
+1. Data tier components started without errors, deployment `mqshare` is running without errors
 2. StatefulSet `isvgim` keeps restarting, but no errors are shown in container logs (e.g. `logs-im`)
 3. Within the StatefulSet, all containers except `isvgim` start without errors, but container `isvgim` never reaches ready state
 4. The startup probe of container `isvgim` fails 3 times, then the container is forcefully restarted (the behavior loops)

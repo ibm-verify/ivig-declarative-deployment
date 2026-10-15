@@ -152,7 +152,7 @@ This section provides a concise but high level overview of the setup process lis
 
 7. **Enable Inbound Connections**
    - *Option A:* Use the [NodePort enabled by default](docs/PURE-HELM.md#via-nodeport-by-default)
-   - *Option B:* Configure and [Ingress](docs/PURE-HELM.md#via-ingress)
+   - *Option B:* Configure an [Ingress](docs/PURE-HELM.md#via-ingress)
    - In both cases, ensure firewalls are configured to allow inbound traffic
 
 8. **Verify the Installation**

@@ -79,7 +79,7 @@ In addition, a full `values-config.yaml` variant for each environment is provide
 
 ### Option B
 
-The previous approach may  yield high redundancy between the `values-config-*.yaml` files which can be eliminated by applying a **default/override approach** to these files as well resulting in the following files common to all stages:
+The previous approach may yield high redundancy between the `values-config-*.yaml` files which can be eliminated by applying a **default/override approach** to these files as well resulting in the following files common to all stages:
 - `values.yaml`
 - `values-config.yaml`
 

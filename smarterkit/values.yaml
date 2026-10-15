@@ -39,13 +39,13 @@ services:
     # EXTRA: configure number of replicas the deployment will be scaled up to
     #replicas: 1
     handle409: true
-    # BANNED: redundant, use values-config.yaml general.license.isvartKey
+    # REMOVED: redundant, use general.license.isvartKey in values-config.yaml
     #isvartKey:
     ports:
       external: 30555
       http: 8001
       https: 9471
-    # BANNED: passwords MUST NOT be stored here, replaced by a superior approach
+    # FORBIDDEN: passwords NOT ALLOWED here, replaced by a superior approach
     #storePassword: ART_STORE_PW
   isvdi:
     # EXTRA: configure number of replicas the deployment will be scaled up to
