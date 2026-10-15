@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.4.12 (2026-10-15)
+
+New dynamic patching mechanism without `ex` dependency, other minor improvements
+
+This version delivers a complete rewrite of the dynamic patching mechanism introduced in 2.4.1 (see changelog entry of 2.4.1 for details). Recent base image RHEL 9.8 ubi9-minimal does not include `ex` any more, it is drastically trimmed down to reduce both image footprint and post-attack surface. The patching mechanism is therefore reimplemented to only depend on `sed` and `sha1sum` as a preparation step for the upcoming switch to this new base image. The net effect of the patch for 11.0.2.0 remains the same.
+
+Further, this version fixes an issue around `DBPurge` caused by a typo in the DB2 JDBC Driver FQCD.
+
+A handful of small improvements to comments and markdown docs are also included:
+- correct spelling and capitalization in markdown files
+- fix typos and capitalization in source code comments
+- adjust phrasing: comment-only changes in `values.yaml`
+
 ## 2.4.11 (2026-10-08)
 
 This version enables optional deployment of `isvart`.
