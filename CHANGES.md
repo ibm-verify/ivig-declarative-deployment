@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.5.0 (2026-10-22)
+
+This version enables and upgrade to IVIG 11.0.3.0 and delivers improvements.
+
+A couple of major enhancements shipped with 11.0.3.0 such as FIPS related improvements, ISVART as well as several bugfixes have already been included in 2.4.1, 2.4.7, 2.4.8, 2.4.10 and 2.4.11 (see details in the changelog sections of these versions). This changelog section only lists updates since the last release of this project.
+
+Changes related to the update from 11.0.2.0 to 11.0.3.0:
+- keystore: transition from IBM JRE to OpenJDK in a backward compatible way
+- add `scim.websocket.response.timeout` to `enRole.properties` (for ISVART)
+- include upstream analytics changes (although analytics module is out of scope)
+- deliver tweaks for 11.0.3.0 via dynamic patching (see details below)
+- update README and explicitly note in EXTRAS what is fixed/included in 11.0.3.0
+
+New hotpatch for IVIG 11.0.3.0 and updates to ISVDI 11.0.0.1 hotpatch:
+- remove dynamically patched chnages accepted and included in 11.0.3.0
+- patch wrong quotation around `$JWT` in `processOptions.sh`
+- re-add ability to dynamically inject liberty metrics password (e.g. via vault)
+- keep our patch to `migrateKeystore.sh`, see EXTRAS
+- keep our customizable java heap size tuning for `DBPurge` and WLP
+- convert patching logic for ISVDI `java.security` for FIPS to use `sed`
+- adjust ISVDI patch with up-to-date FIPS140-3 provider data (original expired)
+
+Further changes:
+- cosmetic (comment-only and whitespace) changes in `values.yaml` and analytics
+- update to roadmap
+
+Technical details on the ISVDI patch update:
+
+The patching logic for ISVDI `java.security` is rewritten to use GNU `sed` instead of `patch`. The `patch` command available in the container is a stripped-down, feature-limited implementation delivered via BusyBox 1.35. Similary, `ed` and `vi` are also provided by BusyBox and feature-reduced to the point that makes them unsuitable for dynamic patching.
+    
+The content of the patch is adjusted to add up-to-date FIPS140-3 provider data, the one originally bundled expired on 2026-09-21 and did not reference a valid FIPS140-3 certificate.
+
 ## 2.4.12 (2026-10-15)
 
 New dynamic patching mechanism without `ex` dependency, other minor improvements
