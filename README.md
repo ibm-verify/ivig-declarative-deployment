@@ -45,6 +45,7 @@ This project delivers a Helm chart that deploys IBM Verify Identity Governance. 
 - 11.0.1.1 (as of chart 2.2.4)
 - 11.0.1.1_IF1 (as of chart 2.3.1)
 - 11.0.2.0 (as of chart 2.4.0)
+- 11.0.3.0 (as of chart 2.5.0)
 
 There is no intention to backport newer chart versions to support older IVIG versions. A version history including all notable changes is maintained in the [Changelog](CHANGES.md). This document covers the most recent version of the Helm chart. Older versions of documentation for older chart version can be retrieved from Git history.
 
@@ -213,6 +214,7 @@ Based on severity, effort required and available capacity, some defects or weakn
 - ~credentials from external secrets (optional, selectively configurable)~ DONE
 - ~x509 certificates and key from external secrets (optional, selectively configurable)~ DONE
 - ~HashiCorp Vault integration walkthrough~ DONE
+- enhance templates to cover External User Registry configuration
 
 ## Further Documentation
 

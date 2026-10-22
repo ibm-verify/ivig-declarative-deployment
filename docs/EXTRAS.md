@@ -73,7 +73,7 @@ When this flag is set, Liberty Application Server configuration is amended durin
 - `cookieHttpOnly`: Specifies that session cookies include the HttpOnly field. Browsers that support the HttpOnly field do not enable cookies to be accessed by client-side scripts. Using the HttpOnly field will help prevent cross-site scripting attacks.
 - `cookieSecure`: Specifies that the session cookies include the secure field.
 
-Note that this flag is not available in the original product.
+Note that this flag is not available in the original product. *Patch accepted and included in 11.0.3.0*
 
 ### HTTP Strict Transport Security (HSTS)
 
@@ -83,7 +83,7 @@ By default, HSTS header is set for any URL under `/itim`, but endpoints outside 
 
 When this flag is set, Liberty Application Server configuration is amended during initialization with `webContainer` property `addStrictTransportSecurityHeader` to globally enable the HTTP Strict Transport Security (HSTS) header for HTTPS responses and set value  `"max-age=31536000;includeSubDomains"` for that header.
 
-Note that this flag is not available in the original product.
+Note that this flag is not available in the original product. *Patch accepted and included in 11.0.3.0*
 
 ### Hide server version
 
@@ -94,7 +94,7 @@ To make the identification of the exact Application Server version harder, set `
 - remove server header: these headers are enabled by default, so server version/implementation information is returned to the caller in certain situations
 - disable `X-Powered-By` header: in servlet-4.0 and earlier, the `X-Powered-By` header is set by default
 
-Note that this flag is not available in the original product.
+Note that this flag is not available in the original product. *Patch accepted and included in 11.0.3.0*
 
 ## Further improvements
 
@@ -124,8 +124,8 @@ When running a `kubectl rollout restart deployment` on a K8s deployment that uti
 This project eliminates the deadlocks of ISVDI, ISVART, MQ, LDAP and DB on restart via a cleaner approach without manual steps involved:
 - When `ReadWriteMany` (RWX) access mode is configured via `storage.mode` in `values.yaml`, ISVDI and ISVART will use `RollingUpdate` deployment strategy with zero-downtime across multiple nodes. **Warning:** The configured storage class must support RWX access mode, otherwise PVC creation during initial deployment will remain in pending state and never complete. This might need infrastructure configuration changes.
 - When `ReadWriteOnce` access mode is configured via `storage.mode` in `values.yaml`, the Helm templates will automatically set the deployment strategy of ISVDI to `Recreate`. This forces K8s to terminate all existing pods and release the volume lock before creating new pods during restart. A few seconds of downtime is introduced during updates of ISVDI and ISVART, but volume attach conflicts are completely eliminated allowing a clean `rollout update`. In practice, the downside is negligible, considering the case where RWX storage is not available or preferred.
-- IBM MQ can use RWX storage exclusively for a specific deployment architecture called a Multi-Instance Queue Manager. Otherwise, if one attempts to run multiple active IBM MQ pods simultaneously against the same RWX storage path, data corruption will occur immediately. Therefore, the `mqshare` deployment will always use `ReadWriteOnce` storage (regardless of `storage.mode` configured in `values.yaml`), but apply a deployment strategy of `Recreate` and set the number of replicas explicitly to `1`. There will be at most 1 active pod at any point in time and a clean `rollout restart` is enabled with a few seconds downtime.
-- Similar measures are taken for the optional internal LDAP (`isvd-replica-1`) and DB (`postgres`) deployments in order to ensure that the PVCs are not simultaneously accessed by multiple pods. PVCs of these components use `ReadWriteOnce` storage regardless of `storage.mode` configured in `values.yaml`, deployments use a deployment strategy of `Recreate` and set the number of replicas explicitly to `1` in order to avoid deadlocks on restart as well as data corruption resulting from multiple concurrent writers.
+- IBM MQ can use RWX storage exclusively for a specific deployment architecture called a Multi-Instance Queue Manager. Otherwise, if one attempts to run multiple active IBM MQ pods simultaneously against the same RWX storage path, data corruption will occur immediately. Therefore, the `mqshare` deployment will always use `ReadWriteOnce` storage (regardless of `storage.mode` configured in `values.yaml`), but apply a deployment strategy of `Recreate` and set the number of replicas explicitly to `1`. There will be at most 1 active pod at any point in time and a clean `rollout restart` is enabled with a few seconds downtime. *Patch accepted and included 11.0.3.0*
+- Similar measures are taken for the optional internal LDAP (`isvd-replica-1`) and DB (`postgres`) deployments in order to ensure that the PVCs are not simultaneously accessed by multiple pods. PVCs of these components use `ReadWriteOnce` storage regardless of `storage.mode` configured in `values.yaml`, deployments use a deployment strategy of `Recreate` and set the number of replicas explicitly to `1` in order to avoid deadlocks on restart as well as data corruption resulting from multiple concurrent writers. *Included in 11.0.3.0*
 
 ## Bugfixes
 
@@ -133,7 +133,7 @@ Some bugs identified in the original product carry high impact and therefore are
 
 ### Correctly import all certificates from PEM files
 
-During container initialization, certificates are read from PEM files and added to truststores and keystores. Due to a bug in IVIG, only the first entry from a PEM file is processed, causing certificate validation errors when PEM files consisting of multiple entries are used. This project fixes the bug by overriding `parseYaml.sh` in the IVIG container with a tweaked version that properly imports all certificates from PEM files when building the truststores.
+During container initialization, certificates are read from PEM files and added to truststores and keystores. Due to a bug in IVIG, only the first entry from a PEM file is processed, causing certificate validation errors when PEM files consisting of multiple entries are used. This project fixes the bug by overriding `parseYaml.sh` in the IVIG container with a tweaked version that properly imports all certificates from PEM files when building the truststores. *Patch accepted and included in 11.0.3.0*
 
 ### Correctly handle long passwords
 
@@ -142,6 +142,6 @@ A bug inherited from the original product is corrected. Platform credentials (sp
 ### Fix a handful of bugs caused by an erroneous repeating pattern in scripts
 
 Multiple bugs were introduced in 11.0.2.0 with the common root cause of improper quoting preventing wildcard expansion in shell scripts and thereby breaking functionality that used to work in earlier versions.
-- Custom java extensions such as workflow, script or REST, are not loaded
-- Broken keystore migration (superseded in this project, but fixing anyway)
-- Broken certificate renewal (obsoleted by this project, but fixing anyway)
+- Custom java extensions such as workflow, script or REST, are not loaded *Patch accepted and included in 11.0.3.0*
+- Broken keystore migration (superseded in this project, but fixing anyway) *Fixed in 11.0.3.0, but better fix available*
+- Broken certificate renewal (obsoleted by this project, but fixing anyway) *Patch accepted and included in 11.0.3.0*
