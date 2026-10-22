@@ -1,20 +1,26 @@
-e work/processOptions.sh "69175392b3a0018031435e217f5062a25f04ee66
-61c61
+#!/bin/bash
+# Copyright IBM Corp. 2026
+# SPDX-License-Identifier: MIT
+
+sha1sum -c - << 'EOF' || exit 1
+69175392b3a0018031435e217f5062a25f04ee66  work/processOptions.sh
+c9a137d7ecaa05d59f97d9eae2d6abf3c1982d37  work/DBPurge.sh
+79f1ee3ee8205fbd5a14ea11c2709c9ee8252442  opt/ibm/wlp/usr/servers/defaultServer/jvm.options
+64bb1aa55ef8eb1373eaefa5931378b956b32cb3  work/migrateKeystore.sh
+EOF
+
+sed -i -e '61r /dev/stdin' -e '61d' work/processOptions.sh << 'EOF'
         <user>$JWT</user>
-.
-49c
+EOF
+
+sed -i -e '49r /dev/stdin' -e '49d' work/processOptions.sh << 'EOF'
 	PASSWORD=$(/opt/ibm/wlp/bin/securityUtility encode --encoding=aes --base64Key="$WLP_AES_ENCRYPTION_KEY" "${PASSWORD_CLEAR:-$PASSWORD}")
-.
-w
-e work/DBPurge.sh "c9a137d7ecaa05d59f97d9eae2d6abf3c1982d37
-$s/-Xmx[0-9]\+m/-Xmx4096m/
-w
-e opt/ibm/wlp/usr/servers/defaultServer/jvm.options "79f1ee3ee8205fbd5a14ea11c2709c9ee8252442
-2s/-Xmx4096m/-Xmx16384m/
-w
-e work/migrateKeystore.sh "64bb1aa55ef8eb1373eaefa5931378b956b32cb3
-145c
+EOF
+
+sed -i -e '$s/-Xmx[0-9]\+m/-Xmx4096m/' work/DBPurge.sh
+
+sed -i -e '2s/-Xmx4096m/-Xmx16384m/' opt/ibm/wlp/usr/servers/defaultServer/jvm.options
+
+sed -i -e '145r /dev/stdin' -e '145d' work/migrateKeystore.sh << 'EOF'
 	rm -rf "${IM_HOME}"/data/keystore/kek*
-.
-w
-q
+EOF
