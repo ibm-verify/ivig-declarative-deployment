@@ -2,7 +2,7 @@
 # Copyright IBM Corp. 2026
 # SPDX-License-Identifier: MIT
 
-CACERTS=/opt/ibm/java/jre/lib/security/cacerts
+CACERTS=/opt/ibm/java/lib/security/cacerts
 CERTDIR=/tmp/isvgimcfg
 
 certflag=0

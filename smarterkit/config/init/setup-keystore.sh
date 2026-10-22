@@ -9,7 +9,7 @@ if [ "$DEBUG" = "true" ]; then
   set -x
 fi
 
-JAVA="/opt/ibm/java/jre/bin/java"
+JAVA="java" # resolves to java in OpenJDK on >=11.0.3.0 and IBM JRE on <11.0.3.0
 KERNEL_SERVICE_JAR=$(find /opt/ibm/wlp/lib/ -name 'com.ibm.ws.kernel.service_*.jar')
 IM_HOME="/opt/ibm/wlp/usr/servers/defaultServer/config"
 CLASSPATH="/opt/ibm/wlp/usr/servers/defaultServer/apps/EAR_STANDARD.ear/lib/itim_server_1.0.0.jar:\
