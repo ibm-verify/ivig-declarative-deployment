@@ -45,8 +45,6 @@ services:
       external: 30555
       http: 8001
       https: 9471
-    # FORBIDDEN: passwords NOT ALLOWED here, replaced by a superior approach
-    #storePassword: ART_STORE_PW
   isvdi:
     # EXTRA: configure number of replicas the deployment will be scaled up to
     #replicas: 1
