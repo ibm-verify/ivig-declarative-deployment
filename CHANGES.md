@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.5.1 (2026-10-29)
+
+This version enables declarative setup of external user registry
+
+The release introduces a Helm template to define EUR configuration in a declarative manner. Structure and format of the configuration fields are identical to those of starterkit, with the exception of how sensitive data is handled. While starterkit requires the `bindPassword` and `isimsystemPassword` to be included in `config.yaml` during installation, this project does not read those passwords from a configuration file but applies the already established more secure approach (including the option for Vault integration) to these credentials as well. 
+
+External registry configuration is activated if the following conditions are met:
+- the field `general.install.useExternalRegistry` is `true` (`false` by default)
+- the section `externalRegistry` is not empty (stubs provided by default)
+
+An old `values-config.yaml` file lacking these fields is gracefully handled, keeping external registry inactive unless explicitly activated.
+
+With external registry inactive, `enRoleAuthentication.properties` is generated to match the product defaults: the default identity mapper is configured, `enrole.authentication.registry.external` is set to `false` and other `enrole.authentication.registry.*` properties are emtpy.
+
+Changes associated with external user registry support:
+- `enRoleAuthentication.properties`: new Helm template
+- `enRole.properties`: template expression for `enrole.appServer.realm`
+- `values-config.yaml`: enhance with new configuration keys
+- `secrets-setup.sh`: generate strong random password for the EUR bind user
+- `secrets.yaml.envsubst`: add reference
+- `pre-init.sh`: add dynamic credential injection for EUR bind password
+- K8s Secret `extcreds`: add `EXT_EURBIND_PASSWORD` if external secret disabled
+- VAULT documentation: update secret structure in code listing
+
+Further, this version adds a minor improvement to ensure idempotent behavior of the init container: Address edge case where an `emtpyDir` (tmpfs) volume is not wiped between successful init container runs. This may happen when the Pod sandbox recycles and the init container is rerun but the Pod remains active.
+
 ## 2.5.0 (2026-10-22)
 
 This version enables and upgrade to IVIG 11.0.3.0 and delivers improvements.

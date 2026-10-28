@@ -29,7 +29,7 @@ The desired state is stored in Git and based on this, declarative deployment (di
 
 ### Out of Scope
 - ~deployment of data tier (expected to be present as prerequisite)~(chart 2.2.1 enables optional deployment of DB and LDAP intended for non-production use)
-- configuration of External User Registry
+- ~configuration of External User Registry~(version 2.5.1 enables declarative setup of External User Registry)
 - configuration of the analytics module
 - ~issuing x509 certificates (expected to be present as prerequisite)~(version 2.2.2 ships setup scripts which automate certificate generation)
 
@@ -214,7 +214,7 @@ Based on severity, effort required and available capacity, some defects or weakn
 - ~credentials from external secrets (optional, selectively configurable)~ DONE
 - ~x509 certificates and key from external secrets (optional, selectively configurable)~ DONE
 - ~HashiCorp Vault integration walkthrough~ DONE
-- enhance templates to cover External User Registry configuration
+- ~enhance templates to cover External User Registry configuration~ DONE
 
 ## Further Documentation
 
