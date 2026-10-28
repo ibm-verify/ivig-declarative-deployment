@@ -41,6 +41,7 @@ inject_ext_cred EXT_MAIL_PASSWORD 'mail\.smtp\.auth\.password=' enRoleMail.prope
 
 echo "Exporting KS and DATA"
 
+rm -rfv ${DESTDIR}/* # idempotency (edge case: emptyDir not wiped between runs)
 cp -rLv ${DATADIR}/{encryptionKey.properties,keystore} /tmp/isvgimdata/* ${DESTDIR}/
 cp -rLv ${DATADIR}/enRole{,Database,LDAPConnection,Mail}.properties ${DESTDIR}/
 
