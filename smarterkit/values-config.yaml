@@ -93,7 +93,19 @@ externalRegistry:
     userFilter:
     userIdMap:
   attributeConfiguration:
-    attributes:
+  # attributes:
+  # - defaultValue: default0
+  #   entityType: entityType0
+  #   id: attrId0
+  #   name: attrName0
+  #   propertyName: propName0
+  #   syntax: syntax0
+  # - defaultValue: default1
+  #   entityType: entityType1
+  #   id: attrId1
+  #   name: attrName1
+  #   propertyName: propName1
+  #   syntax: syntax1
 server:
   options:
   - name: libertyMetrics
