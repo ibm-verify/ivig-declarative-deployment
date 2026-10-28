@@ -19,6 +19,7 @@ general:
       pgcerts: false
       pgcreds: false
       regcred: false
+    useExternalRegistry: false
   license:
     activationKey:
     accepted: false
@@ -72,6 +73,27 @@ office365:
   graph.token.endpoint:
   graph.messages.endpoint:
   graph.user.agent:
+externalRegistry:
+  type:
+  realm:
+  useSSL:
+  ignoreCase:
+  registryHost:
+  registryPort:
+  baseDN:
+  bindDN:
+  # DO NOT STORE sensitive data here! See documentation for secure alternatives!
+  # bindPassword:
+  # DO NOT STORE sensitive data here! See documentation for secure alternatives!
+  # isimsystemPassword:
+  filterProperties:
+    groupFilter:
+    groupIdMap:
+    groupMemberIdMap:
+    userFilter:
+    userIdMap:
+  attributeConfiguration:
+    attributes:
 server:
   options:
   - name: libertyMetrics

@@ -38,6 +38,7 @@ inject_ext_cred EXT_DBADMIN_PASSWORD 'database\.db\.adminPwd=' enRoleDatabase.pr
 inject_ext_cred EXT_DB_PASSWORD 'database\.db\.password=' enRoleDatabase.properties
 inject_ext_cred EXT_LDAP_PASSWORD 'java\.naming\.security\.credentials=' enRoleLDAPConnection.properties
 inject_ext_cred EXT_MAIL_PASSWORD 'mail\.smtp\.auth\.password=' enRoleMail.properties
+inject_ext_cred EXT_EURBIND_PASSWORD 'enrole\.authentication\.registry\.bindPassword' enRoleAuthentication.properties
 
 echo "Exporting KS and DATA"
 
