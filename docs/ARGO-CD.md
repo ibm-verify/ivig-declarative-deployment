@@ -1,6 +1,6 @@
 # Recommended approach for a multi-stage project via Argo CD
 
-**TL;DR:** Use [this application manifest](../argo-app-manifest.yaml) as the starting point for your project.
+**TL;DR:** Use [this application manifest](examples/argo-app-manifest.yaml) as the starting point for your project.
 
 ## Short introduction to Argo CD
 
@@ -17,7 +17,7 @@ Key Capabilities:
 In a nutshell: Argo CD monitors a Git repository containing a Helm chart, renders the chart using environment-specific configuration, and deploys the resulting Kubernetes resources into the target namespace. Any changes committed to the configured Git branch can then be automatically synchronized to the cluster according to the application's sync policy. All one needs to do is:
 1. Create and populate your Git repository as described under [repo setup](PURE-HELM.md#repo-setup)
 2. Configure a repository connection, tell Argo CD where your Git repo is located and how to access it (preferably use HTTPS and API key based authentication)
-3. Adjust the [application manifest](../argo-app-manifest.yaml) and import it to Argo CD
+3. Adjust the [application manifest](examples/argo-app-manifest.yaml) and import it to Argo CD
 4. Ensure data tier is initialized, see [post-deployment steps](PURE-HELM.md#post-deployment-steps)
 
 If unfamiliar but interested, feel free to [learn more about Argo CD](https://argo-cd.readthedocs.io/en/stable/).
@@ -117,7 +117,7 @@ Argo CD exposes an environment variable `$ARGO_APP_REVISION_SHORT` which the man
 
 While leaking license data and activation keys does not represent an inherent security risk and storing these in a private corporate Git repository would be fine for many users, some might prefer to not store such information under version control at all (especially, when access to the repo is not restricted).
 
-Instead of storing license keys in Git repositories (inside `values-config.yaml`), Argo CD can dynamically inject license values during Helm template rendering.  The [sample application manifest](../argo-app-manifest.yaml) demonstrates dynamic injection of the following licenses via Helm parameters:
+Instead of storing license keys in Git repositories (inside `values-config.yaml`), Argo CD can dynamically inject license values during Helm template rendering.  The [sample application manifest](examples/argo-app-manifest.yaml) demonstrates dynamic injection of the following licenses via Helm parameters:
 - `general.license.activationKey`
 - `general.license.ldapKey`
 - `general.license.isvdiKey`
