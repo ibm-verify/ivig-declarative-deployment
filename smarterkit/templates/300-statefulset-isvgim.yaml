@@ -199,7 +199,7 @@ spec:
             port: {{ .Values.services.isvgim.ports.https }}
             scheme: HTTPS
           failureThreshold: {{ .Values.services.isvgim.probes.failureThreshold }}
-          initialDelaySeconds: {{ .Values.services.isvgim.probes.initialDelaySeconds }}
+          initialDelaySeconds: 0
           periodSeconds: {{ .Values.services.isvgim.probes.periodSeconds }}
           successThreshold: {{ .Values.services.isvgim.probes.successThreshold }}
           timeoutSeconds: {{ .Values.services.isvgim.probes.timeoutSeconds }}
@@ -209,7 +209,7 @@ spec:
             port: {{ .Values.services.isvgim.ports.https }}
             scheme: HTTPS
           failureThreshold: {{ .Values.services.isvgim.probes.failureThreshold }}
-          initialDelaySeconds: {{ .Values.services.isvgim.probes.initialDelaySeconds }}
+          initialDelaySeconds: 0
           periodSeconds: {{ .Values.services.isvgim.probes.periodSeconds }}
           successThreshold: {{ .Values.services.isvgim.probes.successThreshold }}
           timeoutSeconds: {{ .Values.services.isvgim.probes.timeoutSeconds }}
@@ -218,9 +218,9 @@ spec:
             path: /healthcheck
             port: {{ .Values.services.isvgim.ports.https }}
             scheme: HTTPS
-          failureThreshold: {{ .Values.services.isvgim.probes.failureThreshold }}
-          initialDelaySeconds: {{ add .Values.services.isvgim.probes.initialDelaySeconds 30 }}
-          periodSeconds: {{ add .Values.services.isvgim.probes.periodSeconds 15 }}
+          failureThreshold: {{ .Values.services.isvgim.probes.startupFailureThreshold | default 30 }}
+          initialDelaySeconds: {{ .Values.services.isvgim.probes.initialDelaySeconds }}
+          periodSeconds: {{ .Values.services.isvgim.probes.periodSeconds }}
           successThreshold: {{ .Values.services.isvgim.probes.successThreshold }}
           timeoutSeconds: {{ .Values.services.isvgim.probes.timeoutSeconds }}
       - name: mqlocal
@@ -262,7 +262,7 @@ spec:
             command:
             - /usr/local/bin/chkmqready
           failureThreshold: {{ .Values.services.mqlocal.probes.failureThreshold }}
-          initialDelaySeconds: {{ .Values.services.mqlocal.probes.initialDelaySeconds }}
+          initialDelaySeconds: 0
           periodSeconds: {{ .Values.services.mqlocal.probes.periodSeconds }}
           successThreshold: {{ .Values.services.mqlocal.probes.successThreshold }}
           timeoutSeconds: {{ .Values.services.mqlocal.probes.timeoutSeconds }}
@@ -271,7 +271,7 @@ spec:
             command:
             - /usr/local/bin/chkmqhealthy
           failureThreshold: {{ .Values.services.mqlocal.probes.failureThreshold }}
-          initialDelaySeconds: {{ .Values.services.mqlocal.probes.initialDelaySeconds }}
+          initialDelaySeconds: 0
           periodSeconds: {{ .Values.services.mqlocal.probes.periodSeconds }}
           successThreshold: {{ .Values.services.mqlocal.probes.successThreshold }}
           timeoutSeconds: {{ .Values.services.mqlocal.probes.timeoutSeconds }}
@@ -279,7 +279,7 @@ spec:
           exec:
             command:
             - /usr/local/bin/chkmqstarted
-          failureThreshold: {{ .Values.services.mqlocal.probes.failureThreshold }}
+          failureThreshold: {{ .Values.services.mqlocal.probes.startupFailureThreshold | default 10 }}
           initialDelaySeconds: {{ .Values.services.mqlocal.probes.initialDelaySeconds }}
           periodSeconds: {{ .Values.services.mqlocal.probes.periodSeconds }}
           successThreshold: {{ .Values.services.mqlocal.probes.successThreshold }}

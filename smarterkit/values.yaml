@@ -58,8 +58,10 @@ services:
     ports:
       ldaps: 9636
     probes:
-      initialDelaySeconds: 30
+      initialDelaySeconds: 20
       periodSeconds: 10
+      # EXTRA: failure threshold specifically for startupProbe, defaults to 30
+      #startupFailureThreshold: 30
     rootSuffix: dc=ivig
     user: 1000
     pgSharedMemory: 64Mi
@@ -100,6 +102,8 @@ services:
       periodSeconds: 10
       successThreshold: 1
       timeoutSeconds: 10
+      # EXTRA: failure threshold specifically for startupProbe, defaults to 30
+      #startupFailureThreshold: 30
   mqlocal:
     group: 1001
     ports:
@@ -107,10 +111,12 @@ services:
       console: 9444
     probes:
       failureThreshold: 3
-      initialDelaySeconds: 30
+      initialDelaySeconds: 20
       periodSeconds: 10
       successThreshold: 1
       timeoutSeconds: 10
+      # EXTRA: failure threshold specifically for startupProbe, defaults to 10
+      #startupFailureThreshold: 10
     qmgr: ISVGQueueMgr
     user: app
   mqshare:
@@ -125,6 +131,8 @@ services:
       periodSeconds: 10
       successThreshold: 1
       timeoutSeconds: 10
+      # EXTRA: failure threshold specifically for startupProbe, defaults to 10
+      #startupFailureThreshold: 10
     qmgr: ISVGQMgrShared
     user: app
   postgres:

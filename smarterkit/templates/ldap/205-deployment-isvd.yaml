@@ -92,14 +92,14 @@ spec:
             command:
             - /sbin/health_check.sh
             - livenessProbe
-          initialDelaySeconds: {{ .Values.services.isvd.probes.initialDelaySeconds }}
+          initialDelaySeconds: 0
           periodSeconds: {{ .Values.services.isvd.probes.periodSeconds }}
 
         readinessProbe:
           exec:
             command:
             - /sbin/health_check.sh
-          initialDelaySeconds: {{ .Values.services.isvd.probes.initialDelaySeconds }}
+          initialDelaySeconds: 0
           periodSeconds: {{ .Values.services.isvd.probes.periodSeconds }}
 
         startupProbe:
@@ -109,5 +109,6 @@ spec:
             - startupProbe
           initialDelaySeconds: {{ .Values.services.isvd.probes.initialDelaySeconds }}
           periodSeconds: {{ .Values.services.isvd.probes.periodSeconds }}
+          failureThreshold: {{ .Values.services.isvd.probes.startupFailureThreshold | default 30 }}
 
 {{- end }}

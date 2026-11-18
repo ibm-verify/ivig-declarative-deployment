@@ -84,7 +84,7 @@ spec:
             command:
             - /usr/local/bin/chkmqready
           failureThreshold: {{ .Values.services.mqshare.probes.failureThreshold }}
-          initialDelaySeconds: {{ .Values.services.mqshare.probes.initialDelaySeconds }}
+          initialDelaySeconds: 0
           periodSeconds: {{ .Values.services.mqshare.probes.periodSeconds }}
           successThreshold: {{ .Values.services.mqshare.probes.successThreshold }}
           timeoutSeconds: {{ .Values.services.mqshare.probes.timeoutSeconds }}
@@ -93,7 +93,7 @@ spec:
             command:
             - /usr/local/bin/chkmqhealthy
           failureThreshold: {{ .Values.services.mqshare.probes.failureThreshold }}
-          initialDelaySeconds: {{ .Values.services.mqshare.probes.initialDelaySeconds }}
+          initialDelaySeconds: 0
           periodSeconds: {{ .Values.services.mqshare.probes.periodSeconds }}
           successThreshold: {{ .Values.services.mqshare.probes.successThreshold }}
           timeoutSeconds: {{ .Values.services.mqshare.probes.timeoutSeconds }}
@@ -101,7 +101,7 @@ spec:
           exec:
             command:
             - /usr/local/bin/chkmqstarted
-          failureThreshold: {{ .Values.services.mqshare.probes.failureThreshold }}
+          failureThreshold: {{ .Values.services.mqshare.probes.startupFailureThreshold | default 10 }}
           initialDelaySeconds: {{ .Values.services.mqshare.probes.initialDelaySeconds }}
           periodSeconds: {{ .Values.services.mqshare.probes.periodSeconds }}
           successThreshold: {{ .Values.services.mqshare.probes.successThreshold }}
