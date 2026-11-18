@@ -469,13 +469,18 @@ One can select any of the following Kubernetes resources and define extra annota
 - Services
     - hazelcast-headless
     - isvdi
+    - isvd-replica-1
     - isvgim
+    - mqshare
     - mq-headless
-    - mqshare
+    - postgres
 - Pod templates of deployments and stateful sets
-    - isvgim
     - isvdi
+    - isvd-replica-1
+    - isvgim
+    - isvgimconfig
     - mqshare
+    - postgres
 
 The following example would be appended to `values-config.yaml` to enable the discovery of monitoring endpoints by the popular monitoring tool prometheus and to hint centralized log management to correctly tag and parse log sources (assuming prometheus and fluentbit are up and running and configured for this use case).
 

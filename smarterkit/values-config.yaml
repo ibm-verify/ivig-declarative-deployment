@@ -1,10 +1,13 @@
 general:
   install:
+    # EXTRA: override directory to read certificates from, default: config/certs
+    #certDir:
     createTablespace: true
     deployIsvdi: true
     deployDb: true
     deployLdap: true
     deployIsvart: false
+    # EXTRA: external secrets toggled selectively, see documentation for details
     externalSecret:
       extcreds: false
       isvartcerts: false
@@ -35,6 +38,8 @@ db:
   ip:
   port:
   name: ivig
+  # EXTRA: optional advanced database configuration via explicit JDBC URL
+  #forcedJdbcUrl:
   admin: postgres
   # DO NOT STORE sensitive data here! See documentation for secure alternatives!
   # adminPwd:
@@ -70,6 +75,7 @@ office365:
   client.id:
   client.secret:
   scan.interval.minutes:
+  # EXTRA: override Graph API settings - defaults used if left empty
   graph.token.endpoint:
   graph.messages.endpoint:
   graph.user.agent:
@@ -127,3 +133,45 @@ server:
   truststore:
   - '@isvgimRootCA.crt'
   keystore: null
+# EXTRA: optional vault integration (find details in documentation)
+#vault:
+#  secretStore:
+#  refreshInterval:
+#  server:
+#  namespace:
+#  caProvider:
+
+# EXTRA: dynamic metadata injection (find details in documentation)
+#extra:
+#  annotations:
+#    pod:
+#      isvdi:
+#      isvd-replica-1:
+#      isvgim:
+#      isvgimconfig:
+#      mqshare:
+#      postgres:
+#    service:
+#      hazelcast-headless:
+#      isvdi:
+#      isvd-replica-1:
+#      isvgim:
+#      mqshare:
+#      mq-headless:
+#      postgres:
+#  labels:
+#    pod:
+#      isvdi:
+#      isvd-replica-1:
+#      isvgim:
+#      isvgimconfig:
+#      mqshare:
+#      postgres:
+#    service:
+#      hazelcast-headless:
+#      isvdi:
+#      isvd-replica-1:
+#      isvgim:
+#      mqshare:
+#      mq-headless:
+#      postgres:

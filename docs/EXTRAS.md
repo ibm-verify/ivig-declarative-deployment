@@ -112,6 +112,8 @@ Specifically, at startup of the ISVDI pod, first the directory `/home/isvdi/init
 
 ISVDI init script autodiscovery is intentionally run right after `initAdapterContainer.sh` so `setHostname.sh` would be executed after autodiscovered init scripts are run. This avoids a potential issue where changes made by `setHostname.sh` could be overwritten by autodiscovered scripts on some setups, specifically by an ISVA adapter init script which replaces the original `ibmdisrv` script with an adjusted version, where the original at that point would have already been modified by `setHostname.sh`.
 
+A [script to override default RMI Dispatcher properties](examples/override-itim_listener.properties.sh) is provided as a reference in the [examples](examples) directory, it is intended to be adjusted and then placed under `config/adapters` so it will be included in the configmap and picked up by autodiscovery.
+
 ### Avoid deadlocks on restart
 
 With the original starterkit, a `rollout restart` causes a deadlock for ISVDI and ISVART (when `storage.mode` is set to `ReadWriteOnce`), and also MQ, LDAP and DB (always, with any value of `storage.mode` in `values.yaml`) when starting the new pod on a different node. A known workaround is to manually scale the deployments down to `0` replicas, wait for the old pods to die and release the volume, and then scale back up.
