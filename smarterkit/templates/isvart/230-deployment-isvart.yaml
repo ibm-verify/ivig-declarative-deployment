@@ -10,7 +10,7 @@ metadata:
   namespace: {{ .Values.namespace }}
 spec:
   replicas: {{ .Values.services.isvart.replicas | default 1 }}
-  {{- if eq .Values.storage.mode "ReadWriteOnce" }}
+  {{- if hasPrefix "ReadWriteOnce" .Values.storage.mode }}
   strategy:
     type: Recreate
   {{- end }}
