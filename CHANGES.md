@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.5.3 (2026-11-19)
+
+This version optimizes health check probes and extends deadlock elimination
+
+Optimized health check probes enable faster application start by reducing delays while they still gracefully handle situations where startup takes longer, e.g. during LDAP upgrade. Health check probes are tuned for isvgim, isvd, mqlocal and mqshare as follows:
+- startup probes are triggered after a shorter initial delay
+- higher failure threshold specifically for startup probes by default
+  - isvd and isvgim startup probes are allowed to fail 30 times
+  - mqlocal and mqshare startup probes are allowed to fail 10 times
+- initial delay of readiness and liveness probes is set to 0 (these are
+  triggered immediately after startup probe successfully completes)
+- failure threshold for readiness and liveness probes remains 3 by default
+
+This release also enhances deadlock elimination to cover `RWOP` access mode as well. Access mode `ReadWriteOncePod` limits access to only one pod across the entire cluster. It helps prevent write conflicts, race conditions and data corruption in stateful workloads that require strict single-pod access. This access mode graduated to GA with K8s v1.29. The deadlock elimination logic introduced in 2.4.7 is extended to also cover `storage.mode` set to `ReadWriteOncePod` in `values.yaml`.
+
+Documentation updates:
+- add examples directory under docs
+  - move `argo-app-manifest.yaml` to examples
+  - add `override-itim_listener.properties.sh` to examples
+- EXTRA: mention example script `override-itim_listener.properties.sh`
+- PURE-HELM: amend pod and service list in metadata injection section
+- `values-config.yaml`: add comments for all extra keys for reference
+
 ## 2.5.2 (2026-11-05)
 
 This version includes improvements for ISVDI, an IVIG image update and docs
